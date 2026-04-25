@@ -7,7 +7,9 @@ on:
     branches: [ main, develop ]
   release:
     types: [ created ]
-
+permissions:
+  contents: read
+  packages: write
 env:
   JAVA_VERSION: '17'
   JAVA_DISTRIBUTION: 'temurin'
