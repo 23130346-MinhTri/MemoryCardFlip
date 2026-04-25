@@ -1,13 +1,127 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
+
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.*?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.example.memorycardflip.HelloController"
-            prefHeight="400.0" prefWidth="600.0">
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.example.memorycardflip.controller.MainMenuController"
+      styleClass="root-container"
+      stylesheets="@../styles/game.css"
+      alignment="CENTER"
+      spacing="0">
 
-</AnchorPane>
+    <!-- Background card decorations (non-interactive) -->
+    <StackPane VBox.vgrow="ALWAYS">
+
+        <!-- Main content -->
+        <VBox alignment="CENTER" spacing="0" styleClass="menu-content">
+
+            <!-- Logo area -->
+            <VBox alignment="CENTER" spacing="6" styleClass="logo-area">
+                <!-- Mini card row -->
+                <HBox alignment="CENTER" spacing="10" styleClass="card-icon-row">
+                    <Label text="🌙" styleClass="mini-card"/>
+                    <Label text="⭐" styleClass="mini-card mini-card-lg"/>
+                    <Label text="🔮" styleClass="mini-card"/>
+                    <Label text="🎯" styleClass="mini-card"/>
+                    <Label text="🦋" styleClass="mini-card"/>
+                </HBox>
+
+                <Label text="Memory Flip" styleClass="logo-title"/>
+                <Label text="CARD MATCHING GAME" styleClass="logo-subtitle"/>
+            </VBox>
+
+            <!-- High Score Bar -->
+            <HBox alignment="CENTER" spacing="10" styleClass="highscore-bar">
+                <VBox alignment="CENTER" spacing="4" styleClass="hs-card">
+                    <Label text="EASY" styleClass="hs-label"/>
+                    <Label fx:id="scoreEasy" text="0" styleClass="hs-value hs-easy"/>
+                </VBox>
+                <VBox alignment="CENTER" spacing="4" styleClass="hs-card">
+                    <Label text="MEDIUM" styleClass="hs-label"/>
+                    <Label fx:id="scoreMedium" text="0" styleClass="hs-value hs-medium"/>
+                </VBox>
+                <VBox alignment="CENTER" spacing="4" styleClass="hs-card">
+                    <Label text="HARD" styleClass="hs-label"/>
+                    <Label fx:id="scoreHard" text="0" styleClass="hs-value hs-hard"/>
+                </VBox>
+            </HBox>
+
+            <!-- Section label -->
+            <Label text="CHỌN ĐỘ KHÓ" styleClass="section-label"/>
+
+            <!-- Difficulty buttons -->
+            <VBox alignment="CENTER" spacing="12" styleClass="diff-buttons">
+
+                <!-- Easy -->
+                <Button fx:id="btnEasy"
+                        styleClass="diff-btn btn-easy"
+                        maxWidth="320">
+                    <graphic>
+                        <HBox alignment="CENTER_LEFT" spacing="14">
+                            <Label text="🍀" styleClass="btn-icon btn-icon-easy"/>
+                            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                                <Label text="Easy" styleClass="btn-name btn-name-easy"/>
+                                <Label text="4×4 · 8 cặp · 30 giây" styleClass="btn-desc"/>
+                            </VBox>
+                            <Label text="Dễ" styleClass="btn-badge btn-badge-easy"/>
+                        </HBox>
+                    </graphic>
+                </Button>
+
+                <!-- Medium -->
+                <Button fx:id="btnMedium"
+                        styleClass="diff-btn btn-medium"
+                        maxWidth="320">
+                    <graphic>
+                        <HBox alignment="CENTER_LEFT" spacing="14">
+                            <Label text="🔥" styleClass="btn-icon btn-icon-medium"/>
+                            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                                <Label text="Medium" styleClass="btn-name btn-name-medium"/>
+                                <Label text="6×6 · 18 cặp · 60 giây" styleClass="btn-desc"/>
+                            </VBox>
+                            <Label text="Vừa" styleClass="btn-badge btn-badge-medium"/>
+                        </HBox>
+                    </graphic>
+                </Button>
+
+                <!-- Hard -->
+                <Button fx:id="btnHard"
+                        styleClass="diff-btn btn-hard"
+                        maxWidth="320">
+                    <graphic>
+                        <HBox alignment="CENTER_LEFT" spacing="14">
+                            <Label text="💀" styleClass="btn-icon btn-icon-hard"/>
+                            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                                <Label text="Hard" styleClass="btn-name btn-name-hard"/>
+                                <Label text="8×8 · 32 cặp · 90 giây" styleClass="btn-desc"/>
+                            </VBox>
+                            <Label text="Khó" styleClass="btn-badge btn-badge-hard"/>
+                        </HBox>
+                    </graphic>
+                </Button>
+
+            </VBox>
+
+            <!-- Footer buttons -->
+            <HBox alignment="CENTER" spacing="20" styleClass="footer-row">
+                <Button fx:id="btnSound" text="🔊  Âm thanh"
+                        onAction="#onSoundToggle"
+                        styleClass="footer-btn"/>
+                <Button text="ℹ  Về game"
+                        onAction="#onAbout"
+                        styleClass="footer-btn"/>
+                <Button text="📋  Lịch sử"
+                        onAction="#onHistory"
+                        styleClass="footer-btn"/>
+            </HBox>
+
+            <!-- Version -->
+            <Label text="v1.0.0 · Memory Card Flip" styleClass="version-label"/>
+
+        </VBox>
+    </StackPane>
+</VBox>
