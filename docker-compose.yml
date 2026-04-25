@@ -1,0 +1,30 @@
+version: '3.9'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: memory-card-flip:dev
+    container_name: mcf-app
+    environment:
+      - DISPLAY_NUM=99
+      - VNC_PORT=5900
+      - SCREEN_RESOLUTION=1280x720x24
+      - VNC_PASSWORD=mcf2026
+    ports:
+      - "5901:5900"       # VNC: kết nối bằng VNC viewer → localhost:5901
+    volumes:
+      # Persist high scores và settings ra ngoài container
+      - mcf-data:/home/gameuser/.memorycardflip
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "app.jar"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  mcf-data:
+    driver: local

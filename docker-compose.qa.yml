@@ -1,0 +1,40 @@
+version: '3.9'
+# ============================================================
+# Memory Card Flip — docker-compose.qa.yml
+# Môi trường QA: verbose logging, test DB riêng, VNC
+# Chạy: docker-compose -f docker-compose.qa.yml up
+# VNC: localhost:5902 | password: qa2026
+# ============================================================
+services:
+  app-qa:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: memory-card-flip:qa
+    container_name: mcf-app-qa
+    environment:
+      - DISPLAY_NUM=99
+      - VNC_PORT=5900
+      - SCREEN_RESOLUTION=1920x1080x24
+      - VNC_PASSWORD=qa2026
+      # QA-specific JVM flags
+      - JAVA_OPTS=-Dapp.profile=qa -Dlogback.configurationFile=/app/logback-qa.xml
+      # Dùng DB riêng để không ảnh hưởng data dev
+      - APP_DATA_DIR=/home/gameuser/.memorycardflip-qa
+    ports:
+      - "5902:5900"       # VNC port khác với dev (5901)
+    volumes:
+      - mcf-qa-data:/home/gameuser/.memorycardflip-qa
+      # Mount log ra ngoài để xem realtime
+      - ./logs/qa:/home/gameuser/.memorycardflip-qa/logs
+    restart: "no"         # QA không tự restart
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "app.jar"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+volumes:
+  mcf-qa-data:
+    driver: local
