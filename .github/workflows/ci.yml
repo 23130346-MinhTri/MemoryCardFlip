@@ -27,7 +27,9 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           cache: maven
       - name: Install JavaFX dependencies (headless)
-        run: sudo apt-get install -y xvfb libgtk-3-0 libgl1-mesa-glx
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgtk-3-0 libgl1
       - name: Build with Maven
         run: mvn clean compile -B
       - name: Run Unit Tests (JUnit 5)
