@@ -109,7 +109,7 @@ public class GameState {
      * time bonus = timeRemaining × 3
      */
     public int calculateScore() {
-        if (difficulty.totalPairs() == 0) return 0;
+        if (matchedPairs.get() == 0) return 0;  // ← thêm dòng này
         int base        = matchedPairs.get() * 100;
         int comboBonus  = comboCount * 20;
         int movePenalty = moves.get() * 5;
