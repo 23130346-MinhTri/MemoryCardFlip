@@ -1,6 +1,5 @@
 package com.example.memorycardflip.model;
 
-import com.example.memorycardflip.model.GameStatus;
 import javafx.beans.property.*;
 
 import java.util.ArrayList;

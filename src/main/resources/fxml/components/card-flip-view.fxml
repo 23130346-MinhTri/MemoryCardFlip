@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.StackPane?>
+
+<fx:root type="StackPane"
+         xmlns="http://javafx.com/javafx/21"
+         xmlns:fx="http://javafx.com/fxml/1"
+         styleClass="card-back">
+    <children>
+        <ImageView fx:id="backImageView"
+                   fitWidth="52"
+                   fitHeight="52"
+                   preserveRatio="true"/>
+        <ImageView fx:id="frontImageView"
+                   fitWidth="42"
+                   fitHeight="42"
+                   preserveRatio="true"
+                   visible="false"/>
+        <Label fx:id="contentLabel"
+               text="?"
+             styleClass="card-content-label card-content-label-back"/>
+    </children>
+</fx:root>
