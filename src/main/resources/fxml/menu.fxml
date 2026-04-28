@@ -2,6 +2,7 @@
 
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.text.*?>
 <?import javafx.geometry.*?>
 
@@ -21,6 +22,11 @@
 
             <!-- Logo area -->
             <VBox alignment="CENTER" spacing="6" styleClass="logo-area">
+                <ImageView fitWidth="120" fitHeight="120" preserveRatio="true" styleClass="menu-logo-image">
+                    <image>
+                        <Image url="@../assets/icons/logogame.png"/>
+                    </image>
+                </ImageView>
                 <!-- Mini card row -->
                 <HBox alignment="CENTER" spacing="10" styleClass="card-icon-row">
                     <Label text="🌙" styleClass="mini-card"/>
@@ -58,6 +64,7 @@
 
                 <!-- Easy -->
                 <Button fx:id="btnEasy"
+                    onAction="#onStartEasy"
                         styleClass="diff-btn btn-easy"
                         maxWidth="320">
                     <graphic>
@@ -74,6 +81,7 @@
 
                 <!-- Medium -->
                 <Button fx:id="btnMedium"
+                    onAction="#onStartMedium"
                         styleClass="diff-btn btn-medium"
                         maxWidth="320">
                     <graphic>
@@ -90,6 +98,7 @@
 
                 <!-- Hard -->
                 <Button fx:id="btnHard"
+                    onAction="#onStartHard"
                         styleClass="diff-btn btn-hard"
                         maxWidth="320">
                     <graphic>

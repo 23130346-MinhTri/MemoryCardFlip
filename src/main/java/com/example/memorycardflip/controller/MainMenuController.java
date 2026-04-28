@@ -1,10 +1,16 @@
 package com.example.memorycardflip.controller;
 
+import com.example.memorycardflip.model.Difficulty;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -57,5 +63,38 @@ public class MainMenuController implements Initializable {
     @FXML
     public void onHistory() {
         // TODO: SceneManager.getInstance().showHistoryDialog();
+    }
+
+    @FXML
+    public void onStartEasy() {
+        openGameScene(Difficulty.EASY);
+    }
+
+    @FXML
+    public void onStartMedium() {
+        openGameScene(Difficulty.MEDIUM);
+    }
+
+    @FXML
+    public void onStartHard() {
+        openGameScene(Difficulty.HARD);
+    }
+
+    private void openGameScene(Difficulty difficulty) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/game.fxml"));
+            Parent root = loader.load();
+
+            GameController gameController = loader.getController();
+            gameController.setDifficulty(difficulty);
+
+            Stage stage = (Stage) btnEasy.getScene().getWindow();
+            Scene scene = new Scene(root, 900, 700);
+            stage.setTitle("Memory Card Flip - " + difficulty.getDisplayName());
+            stage.setScene(scene);
+            stage.centerOnScreen();
+        } catch (IOException exception) {
+            throw new IllegalStateException("Cannot open game scene", exception);
+        }
     }
 }
