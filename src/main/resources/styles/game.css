@@ -17,7 +17,7 @@
    ════════════════════════════════════════════════════════════ */
 
 .root-container {
-    -fx-pref-width: 560px; -fx-pref-height: 720px;
+    -fx-pref-width: 640px; -fx-pref-height: 740px;
     -fx-min-width:  480px; -fx-min-height:  600px;
 }
 
@@ -128,7 +128,7 @@
     -fx-pref-height: 54px; -fx-min-height: 54px;
 }
 .hud-group         { -fx-alignment: CENTER; -fx-spacing: 2; -fx-padding: 4 10 4 10; }
-.hud-progress-group{ -fx-alignment: CENTER; -fx-spacing: 3; -fx-padding: 4 10 4 10; -fx-min-width: 120px; }
+.hud-progress-group, .hud-time-group { -fx-alignment: CENTER; -fx-spacing: 3; -fx-padding: 4 10 4 10; -fx-min-width: 120px; }
 .hud-divider       { -fx-background-color: rgba(255,255,255,0.07); -fx-pref-width: 1px; -fx-pref-height: 28px; -fx-max-height: 28px; }
 .hud-label         { -fx-font-size: 8px; -fx-text-fill: #5a8bb0; -fx-font-weight: bold; }
 .hud-value         { -fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #e0ecff; }
@@ -142,6 +142,33 @@
     -fx-padding: 5 10 5 10; -fx-cursor: hand;
 }
 .restart-btn:hover { -fx-background-color: rgba(74,144,217,0.30); -fx-text-fill: #ffffff; }
+
+/* Thêm style cho thanh thời gian */
+.time-progress-full {
+    -fx-accent: #22c55e;
+    -fx-padding: 0 0 0 0;
+    -fx-pref-height: 10px;
+    -fx-max-height: 10px;
+    -fx-background-color: #16263f;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: rgba(255,255,255,0.08);
+    -fx-border-width: 0 0 1 0;
+}
+.time-progress-full .track {
+    -fx-background-color: rgba(255,255,255,0.08);
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+}
+.time-progress-full .bar {
+    -fx-background-color: linear-gradient(to right, #22c55e, #84cc16);
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 0;
+}
+.time-progress-warning .bar {
+    -fx-background-color: linear-gradient(to right, #f59e0b, #ef4444);
+}
 
 /* Progress bar */
 .match-progress {

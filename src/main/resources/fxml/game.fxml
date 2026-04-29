@@ -19,53 +19,64 @@
          TOP — HUD bar
          ══════════════════════════════════════ -->
     <top>
-        <HBox styleClass="hud-bar" alignment="CENTER" spacing="0">
+        <VBox>
+            <HBox styleClass="hud-bar" alignment="CENTER" spacing="0">
 
-            <!-- Độ khó -->
-            <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
-                <Label text="ĐỘ KHÓ" styleClass="hud-label"/>
-                <Label fx:id="lblDifficulty" text="Easy (4×4)" styleClass="hud-value"/>
-            </VBox>
+                <!-- Độ khó -->
+                <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
+                    <Label text="ĐỘ KHÓ" styleClass="hud-label"/>
+                    <Label fx:id="lblDifficulty" text="Easy (4×4)" styleClass="hud-value"/>
+                </VBox>
 
-            <Separator orientation="VERTICAL" styleClass="hud-divider"/>
+                <Separator orientation="VERTICAL" styleClass="hud-divider"/>
 
-            <!-- Số cặp đã tìm -->
-            <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
-                <Label text="ĐÃ KHỚP" styleClass="hud-label"/>
-                <Label fx:id="lblPairs" text="0 / 8 cặp" styleClass="hud-value"/>
-            </VBox>
+                <!-- Số cặp đã tìm -->
+                <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
+                    <Label text="ĐÃ KHỚP" styleClass="hud-label"/>
+                    <Label fx:id="lblPairs" text="0 / 8 cặp" styleClass="hud-value"/>
+                </VBox>
 
-            <Separator orientation="VERTICAL" styleClass="hud-divider"/>
+                <Separator orientation="VERTICAL" styleClass="hud-divider"/>
 
-            <!-- Còn lại -->
-            <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
-                <Label text="CÒN LẠI" styleClass="hud-label"/>
-                <Label fx:id="lblMatched" text="8" styleClass="hud-value hud-value-remain"/>
-            </VBox>
+                <!-- Còn lại -->
+                <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
+                    <Label text="CÒN LẠI" styleClass="hud-label"/>
+                    <Label fx:id="lblMatched" text="8" styleClass="hud-value hud-value-remain"/>
+                </VBox>
 
-            <Separator orientation="VERTICAL" styleClass="hud-divider"/>
+                <Separator orientation="VERTICAL" styleClass="hud-divider"/>
 
-            <!-- Tiến độ -->
-            <VBox styleClass="hud-group hud-progress-group" alignment="CENTER" HBox.hgrow="ALWAYS">
-                <Label text="TIẾN ĐỘ" styleClass="hud-label"/>
-                <ProgressBar fx:id="progressBar"
-                             progress="0"
-                             prefWidth="130"
-                             prefHeight="8"
-                             styleClass="match-progress"/>
-            </VBox>
+                <!-- Tiến độ -->
+                <VBox styleClass="hud-group hud-progress-group" alignment="CENTER" HBox.hgrow="ALWAYS">
+                    <Label text="TIẾN ĐỘ" styleClass="hud-label"/>
+                    <ProgressBar fx:id="progressBar"
+                                 progress="0"
+                                 prefWidth="130"
+                                 prefHeight="8"
+                                 styleClass="match-progress"/>
+                </VBox>
 
-            <Separator orientation="VERTICAL" styleClass="hud-divider"/>
+                <Separator orientation="VERTICAL" styleClass="hud-divider"/>
+                <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
+                    <Label text="THỜI GIAN" styleClass="hud-label"/>
+                    <Label fx:id="lblTime" text="60s" styleClass="hud-value"/>
+                </VBox>
 
-            <!-- Nút restart -->
-            <VBox styleClass="hud-group" alignment="CENTER">
-                <Button fx:id="btnRestart"
-                        text="🔄 Chơi lại"
-                        onAction="#handleUC01Restart"
-                        styleClass="restart-btn"/>
-            </VBox>
+                <Separator orientation="VERTICAL" styleClass="hud-divider"/>
+                <!-- Nút restart -->
+                <VBox styleClass="hud-group" alignment="CENTER">
+                    <Button fx:id="btnRestart"
+                            text="🔄 Chơi lại"
+                            onAction="#handleUC01Restart"
+                            styleClass="restart-btn"/>
+                </VBox>
 
-        </HBox>
+            </HBox>
+            <ProgressBar fx:id="timeProgressBar"
+                         progress="1.0"
+                         maxWidth="Infinity"
+                         styleClass="time-progress-full"/>
+        </VBox>
     </top>
 
     <!-- ══════════════════════════════════════

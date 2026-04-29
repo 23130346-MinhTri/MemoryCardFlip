@@ -96,13 +96,15 @@ public class CardFlipView extends StackPane {
         if (matched) {
             getStyleClass().add("card-matched");
             setDisable(true);
-            setVisible(false);
-            setManaged(false);
+            setVisible(true);
+            setManaged(true);
+            setMouseTransparent(true);
         } else {
             getStyleClass().remove("card-matched");
             setDisable(false);
             setVisible(true);
             setManaged(true);
+            setMouseTransparent(false);
         }
     }
 

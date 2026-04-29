@@ -7,7 +7,9 @@ import com.example.memorycardflip.model.GameState;
 import com.example.memorycardflip.model.GameStatus;
 import com.example.memorycardflip.ui.CardFlipView;
 import com.example.memorycardflip.ui.SceneManager;
+import javafx.animation.KeyFrame;
 import javafx.animation.PauseTransition;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -43,13 +45,15 @@ public class GameController implements Initializable {
     @FXML private Label       lblDifficulty;
     @FXML private Label       lblPairs;
     @FXML private Label       lblMatched;
+    @FXML private Label       lblTime;
+    @FXML private ProgressBar timeProgressBar;
     @FXML private Label       lblStatus;
     @FXML private ProgressBar progressBar;
     @FXML private Button      btnRestart;
 
     // ── Layout constants ──────────────────────────────────────
     // HUD bar height (pref) + status bar height (pref)
-    private static final double HUD_H    = 54.0;
+    private static final double HUD_H    = 64.0;
     private static final double STATUS_H = 40.0;
     private static final double GRID_PAD = 14.0; // padding mỗi phía trong GridPane
     private static final double CARD_RATIO = 1.18; // height / width
@@ -70,6 +74,7 @@ public class GameController implements Initializable {
     private boolean resolving    = false;
     private int     matchedPairs = 0;
     private int     totalPairs   = 0;
+    private Timeline gameTimer;
 
     // ══════════════════════════════════════════════════════════
     // Lifecycle
@@ -97,6 +102,7 @@ public class GameController implements Initializable {
     public void setDifficulty(Difficulty d) {
         if (d == null) return;
         difficulty = d;
+        if (gameState == null) gameState = new GameState(difficulty);
         loadIconPool();
         javafx.application.Platform.runLater(this::startBoard);
     }
@@ -106,6 +112,7 @@ public class GameController implements Initializable {
     // ══════════════════════════════════════════════════════════
 
     private void startBoard() {
+        stopUCGM06Timer();
         viewMap.clear();
         firstCard    = null;
         secondCard   = null;
@@ -115,6 +122,13 @@ public class GameController implements Initializable {
 
         int gs = difficulty.getGridSize();
         lblDifficulty.setText(difficulty.getDisplayName() + "  " + gs + "×" + gs);
+        if (lblTime != null) {
+            lblTime.setStyle("");
+        }
+        if (timeProgressBar != null) {
+            timeProgressBar.setProgress(1.0);
+            timeProgressBar.getStyleClass().remove("time-progress-warning");
+        }
         updateHUD();
         lblStatus.setText("Lật thẻ để bắt đầu!");
         progressBar.setProgress(0);
@@ -123,9 +137,12 @@ public class GameController implements Initializable {
         renderGrid(deck);
 
         if (gameState != null) {
+            gameState.reset();
             gameState.setCards(deck.toArray(new Card[0]));
             gameState.setStatus(GameStatus.PLAYING);
         }
+        renderUCGM06Time();
+        startUCGM06Timer();
     }
 
     private List<Card> buildDeck() {
@@ -206,6 +223,7 @@ public class GameController implements Initializable {
     // ══════════════════════════════════════════════════════════
 
     private void onCardClick(Card card, CardFlipView view) {
+        if (gameState != null && gameState.getStatus() != GameStatus.PLAYING) return;
         if (resolving || !card.isClickable()) return;
         if (firstCard != null && firstCard.getId().equals(card.getId())) return;
 
@@ -268,6 +286,7 @@ public class GameController implements Initializable {
     }
 
     private void onWin() {
+        stopUCGM06Timer();
         lblStatus.setText("🎉  Bạn đã thắng! Tìm hết " + totalPairs + " cặp!");
         if (gameState != null) gameState.setStatus(GameStatus.WON);
     }
@@ -278,6 +297,118 @@ public class GameController implements Initializable {
         lblPairs.setText(matchedPairs + " / " + totalPairs);
         lblMatched.setText("Còn: " + (totalPairs - matchedPairs));
         progressBar.setProgress(totalPairs == 0 ? 0 : (double) matchedPairs / totalPairs);
+    }
+
+    /**
+     * [UC-GM-06] Cập nhật hiển thị thời gian còn lại trên HUD.
+     *
+     * <p>Precondition: Difficulty đã được chọn cho ván hiện tại.</p>
+     * <p>Postcondition: Nhãn thời gian hiển thị đúng số giây còn lại.</p>
+     */
+    private void renderUCGM06Time() {
+        int remaining = difficulty.getTimeLimit();
+        if (gameState != null) {
+            remaining = gameState.getTimeRemaining();
+        }
+        if (lblTime != null) {
+            lblTime.setText(remaining + "s");
+        }
+        if (timeProgressBar != null) {
+            double progress = difficulty.getTimeLimit() == 0
+                    ? 0
+                    : (double) remaining / difficulty.getTimeLimit();
+            timeProgressBar.setProgress(progress);
+        }
+
+    }
+
+    /**
+     * [UC-GM-06] Khởi động bộ đếm ngược cho ván hiện tại.
+     *
+     * <p>Precondition: gameState != null và trạng thái đang PLAYING.</p>
+     * <p>Postcondition: Mỗi giây sẽ gọi xử lý UC-GM-06.</p>
+     */
+    private void startUCGM06Timer() {
+        if (gameState == null) {
+            return;
+        }
+
+        gameTimer = new Timeline(new KeyFrame(Duration.seconds(1), e -> handleUCGM06TimerTick()));
+        gameTimer.setCycleCount(Timeline.INDEFINITE);
+        gameTimer.play();
+    }
+
+    /**
+     * [UC-GM-06] Dừng bộ đếm ngược hiện tại.
+     *
+     * <p>Postcondition: Không còn nhịp timer nào chạy cho ván hiện tại.</p>
+     */
+    private void stopUCGM06Timer() {
+        if (gameTimer != null) {
+            gameTimer.stop();
+            gameTimer = null;
+        }
+    }
+
+    /**
+     * [UC-GM-06] Giảm thời gian còn lại sau mỗi giây.
+     *
+     * <p>Precondition: GameStatus == PLAYING.</p>
+     * <p>Postcondition: timeRemaining giảm 1; gần hết giờ gọi UC-GM-07; hết giờ gọi UC-GM-09.</p>
+     */
+    private void handleUCGM06TimerTick() {
+        if (gameState == null || gameState.getStatus() != GameStatus.PLAYING) {
+            stopUCGM06Timer();
+            return;
+        }
+
+        gameState.decrementTime();
+        renderUCGM06Time();
+
+        if (gameState.getTimeRemaining() <= 10) {
+            handleUCGM07TimerWarning();
+        }
+
+        if (gameState.isTimeUp()) {
+            handleUCGM09LoseGame();
+        }
+    }
+
+    /**
+     * [UC-GM-07] Cảnh báo người chơi khi sắp hết giờ.
+     *
+     * <p>Precondition: timeRemaining <= 10.</p>
+     * <p>Postcondition: Nhãn thời gian chuyển đỏ, đậm và status hiển thị cảnh báo.</p>
+     */
+    private void handleUCGM07TimerWarning() {
+        if (lblTime != null) {
+            lblTime.setStyle("-fx-text-fill: #ffeb3b; -fx-font-weight: bold;"); // Đổi màu chữ vàng sáng cho thời gian cảnh báo
+        }
+        if (timeProgressBar != null && !timeProgressBar.getStyleClass().contains("time-progress-warning")) {
+            timeProgressBar.getStyleClass().add("time-progress-warning");
+        }
+
+        if (gameState != null && !gameState.isTimeUp()) {
+            lblStatus.setText("Sap het gio! Con " + gameState.getTimeRemaining() + " giay.");
+        }
+    }
+
+    /**
+     * [UC-GM-09] Xử lý thua game khi hết giờ.
+     *
+     * <p>Precondition: timeRemaining <= 0.</p>
+     * <p>Postcondition: Dừng timer, khóa input bằng LOST state và cập nhật HUD.</p>
+     */
+    private void handleUCGM09LoseGame() {
+        stopUCGM06Timer();
+
+        if (gameState != null) {
+            gameState.setTimeRemaining(0);
+            gameState.setStatus(GameStatus.LOST);
+        }
+
+        renderUCGM06Time();
+        lblStatus.setText("Het gio! Ban da thua van nay.");
     }
 
     private void clearSel() { firstCard = null; secondCard = null; }
@@ -323,5 +454,8 @@ public class GameController implements Initializable {
     }
 
     @FXML
-    public void onBackToMenu() { SceneManager.getInstance().showMenu(); }
+    public void onBackToMenu() {
+        stopUCGM06Timer();
+        SceneManager.getInstance().showMenu();
+    }
 }
