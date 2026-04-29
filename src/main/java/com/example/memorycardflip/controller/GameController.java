@@ -234,7 +234,13 @@ public class GameController implements Initializable {
             firstCard = card;
             lblStatus.setText("Chọn thẻ thứ hai...");
         } else {
+            if (gameState != null) {
+                gameState.resetCombo();
+            }
             secondCard = card;
+            if (gameState != null) {
+                gameState.incrementMoves();
+            }
             checkMatch();
         }
     }
@@ -256,6 +262,10 @@ public class GameController implements Initializable {
             firstCard.match();
             secondCard.match();
             matchedPairs++;
+            if (gameState != null) {
+                gameState.incrementMatchedPairs();
+                gameState.incrementCombo();
+            }
             updateHUD();
             lblStatus.setText("✅  Khớp rồi! " + matchedPairs + "/" + totalPairs);
 
@@ -289,6 +299,10 @@ public class GameController implements Initializable {
         stopUCGM06Timer();
         lblStatus.setText("🎉  Bạn đã thắng! Tìm hết " + totalPairs + " cặp!");
         if (gameState != null) gameState.setStatus(GameStatus.WON);
+
+        PauseTransition p = new PauseTransition(Duration.millis(500));
+        p.setOnFinished(e -> SceneManager.getInstance().showResult());
+        p.play();
     }
 
     // ── Helpers ───────────────────────────────────────────────
@@ -409,6 +423,10 @@ public class GameController implements Initializable {
 
         renderUCGM06Time();
         lblStatus.setText("Het gio! Ban da thua van nay.");
+
+        PauseTransition p = new PauseTransition(Duration.millis(500));
+        p.setOnFinished(e -> SceneManager.getInstance().showResult());
+        p.play();
     }
 
     private void clearSel() { firstCard = null; secondCard = null; }
