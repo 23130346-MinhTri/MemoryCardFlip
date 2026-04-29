@@ -1,0 +1,184 @@
+package com.example.memorycardflip.ui;
+
+import com.example.memorycardflip.model.Difficulty;
+import com.example.memorycardflip.model.GameState;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * Singleton quản lý toàn bộ việc chuyển đổi Scene trong ứng dụng.
+ *
+ * <p>UseCase phụ trách:</p>
+ * <ul>
+ *   <li>[UC-01] Chuyển sang GameScene sau khi chọn độ khó</li>
+ *   <li>[UC-07] Kết thúc game → chuyển sang ResultScene</li>
+ *   <li>[UC-10] Replay → reset GameScene</li>
+ *   <li>[UC-09] Quay về MainMenu</li>
+ * </ul>
+ *
+ * <p>Cách dùng:</p>
+ * <pre>
+ *   // Khởi tạo 1 lần duy nhất trong Main.java
+ *   SceneManager.getInstance().init(primaryStage);
+ *
+ *   // Từ bất kỳ Controller nào
+ *   SceneManager.getInstance().showGame(Difficulty.EASY);
+ * </pre>
+ */
+public class SceneManager {
+
+    private static final Logger LOGGER = Logger.getLogger(SceneManager.class.getName());
+
+    // ── Đường dẫn FXML ───────────────────────────────────────
+    private static final String FXML_MENU   = "/fxml/menu.fxml";
+    private static final String FXML_GAME   = "/fxml/game.fxml";
+    private static final String FXML_RESULT = "/fxml/result.fxml";
+
+    // ── Kích thước cửa sổ ────────────────────────────────────
+    private static final double WIDTH  = 540;
+    private static final double HEIGHT = 700;
+
+    // ── Singleton instance ────────────────────────────────────
+    private static SceneManager instance;
+
+    // ── State ─────────────────────────────────────────────────
+    private Stage primaryStage;
+    private GameState currentGameState;
+
+    // ── Private constructor ───────────────────────────────────
+    private SceneManager() {}
+
+    /**
+     * Lấy instance duy nhất — thread-safe double-checked locking.
+     */
+    public static SceneManager getInstance() {
+        if (instance == null) {
+            synchronized (SceneManager.class) {
+                if (instance == null) {
+                    instance = new SceneManager();
+                }
+            }
+        }
+        return instance;
+    }
+
+// ── Khởi tạo ─────────────────────────────────────────────
+
+/**
+ * Khởi tạo với Stage chính. Gọi 1 lần trong {@code Main.start()}.
+ *
+ * @param stage Stage chính của ứng dụng JavaFX
+ */
+public void init(Stage stage) {
+    this.primaryStage = stage;
+    primaryStage.setTitle("Memory Card Flip");
+    primaryStage.setResizable(false);
+    primaryStage.setWidth(WIDTH);
+    primaryStage.setHeight(HEIGHT);
+}
+
+    // ══════════════════════════════════════════════════════════
+    // UC-01 — Chuyển sang GameScene
+    // ══════════════════════════════════════════════════════════
+
+    /**
+     * [UC-01] Chuyển sang màn hình chơi game với độ khó đã chọn.
+     *
+     * <p>Precondition:  difficulty != null, primaryStage đã init.</p>
+     * <p>Postcondition: GameScene hiển thị, GameState mới được tạo.</p>
+     *
+     * @param difficulty độ khó người dùng chọn ở UC-01
+     */
+    public void showGame(Difficulty difficulty) {
+        currentGameState = new GameState(difficulty);
+        switchScene(FXML_GAME);
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // UC-07 — Kết thúc game → ResultScene
+    // ══════════════════════════════════════════════════════════
+
+    /**
+     * [UC-07] Chuyển sang màn hình kết quả (WIN hoặc LOSE).
+     * GameState giữ nguyên để ResultController đọc thống kê.
+     *
+     * <p>Precondition:  currentGameState != null, game đã kết thúc.</p>
+     * <p>Postcondition: ResultScene hiển thị với đúng thống kê.</p>
+     */
+    public void showResult() {
+        switchScene(FXML_RESULT);
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // UC-10 — Replay
+    // ══════════════════════════════════════════════════════════
+
+    /**
+     * [UC-10] Chơi lại cùng độ khó — tạo GameState mới, load lại GameScene.
+     *
+     * <p>Precondition:  currentGameState != null.</p>
+     * <p>Postcondition: GameScene mới, GameState reset về 0.</p>
+     */
+    public void replayGame() {
+        if (currentGameState == null) {
+            LOGGER.warning("[UC-10] currentGameState null → fallback EASY");
+            showGame(Difficulty.EASY);
+            return;
+        }
+        showGame(currentGameState.getDifficulty());
+    }
+// ══════════════════════════════════════════════════════════
+    // Quay về Menu
+    // ══════════════════════════════════════════════════════════
+
+    /**
+     * Quay về MainMenu, xoá GameState hiện tại.
+     *
+     * <p>Postcondition: MainMenuScene hiển thị, currentGameState = null.</p>
+     */
+    public void showMenu() {
+        currentGameState = null;
+        switchScene(FXML_MENU);
+    }
+
+    // ── Getter ────────────────────────────────────────────────
+
+    /**
+     * Lấy GameState ván vừa kết thúc.
+     * ResultController dùng để hiển thị thống kê [UC-07].
+     */
+    public GameState getCurrentGameState() {
+        return currentGameState;
+    }
+
+    // ── Internal ─────────────────────────────────────────────
+
+    /**
+     * Load FXML và set Scene lên primaryStage.
+     *
+     * @param fxmlPath đường dẫn FXML trong classpath
+     */
+    private void switchScene(String fxmlPath) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource(fxmlPath)
+            );
+            Parent root  = loader.load();
+            Scene  scene = new Scene(root, WIDTH, HEIGHT);
+            primaryStage.setScene(scene);
+            primaryStage.show();
+
+            LOGGER.info("Switched to: " + fxmlPath);
+
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Failed to load FXML: " + fxmlPath, e);
+            throw new RuntimeException("Cannot load scene: " + fxmlPath, e);
+        }
+    }
+}

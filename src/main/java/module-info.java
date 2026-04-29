@@ -1,6 +1,7 @@
 module com.example.memorycardflip {
     requires javafx.controls;
     requires javafx.fxml;
+    requires java.logging;
 
     opens com.example.memorycardflip to javafx.graphics;
     opens com.example.memorycardflip.controller to javafx.fxml;

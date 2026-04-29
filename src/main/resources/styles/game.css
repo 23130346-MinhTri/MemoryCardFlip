@@ -1,336 +1,239 @@
 /* ============================================================
    Memory Card Flip — game.css
-   JavaFX CSS (subset of W3C CSS, -fx- prefix required)
+   JavaFX CSS  ·  -fx- prefix required
    ============================================================ */
 
-/* ── Root / Background ─────────────────────────────────────── */
-.root-container {
-    -fx-background-color: #0f1b2d;
-    -fx-min-width: 480px;
-    -fx-min-height: 620px;
-    -fx-pref-width: 540px;
-    -fx-pref-height: 680px;
-}
+/* ════════════════════════════════════════════════════════════
+   SHARED / ROOT
+   ════════════════════════════════════════════════════════════ */
 
-.menu-content {
-    -fx-padding: 32 24 28 24;
-    -fx-spacing: 0;
-}
-
-/* ── Logo Area ──────────────────────────────────────────────── */
-.logo-area {
-    -fx-padding: 0 0 8 0;
-    -fx-spacing: 6;
-    -fx-alignment: CENTER;
-}
-
-.card-icon-row {
-    -fx-spacing: 10;
-    -fx-padding: 0 0 14 0;
-    -fx-alignment: CENTER;
-}
-
-.mini-card {
-    -fx-background-color: #1e3a5f;
-    -fx-border-color: rgba(255,255,255,0.12);
-    -fx-border-width: 1.5;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
-    -fx-min-width: 44px;
-    -fx-min-height: 56px;
-    -fx-alignment: CENTER;
-    -fx-font-size: 22px;
-}
-
-.mini-card-lg {
-    -fx-min-width: 52px;
-    -fx-min-height: 66px;
-}
-
-.logo-title {
-    -fx-font-family: "Arial Black";
-    -fx-font-size: 42px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #f5c842;
-    -fx-effect: dropshadow(gaussian, rgba(245,200,66,0.3), 12, 0, 0, 2);
-}
-
-.logo-subtitle {
-    -fx-font-size: 11px;
-    -fx-text-fill: #7fb3d3;
-    -fx-font-weight: bold;
-}
-
-/* ── High Score Bar ─────────────────────────────────────────── */
-.highscore-bar {
-    -fx-spacing: 10;
-    -fx-padding: 20 0 28 0;
-    -fx-alignment: CENTER;
-}
-
-.hs-card {
-    -fx-background-color: #162032;
-    -fx-border-color: rgba(255,255,255,0.08);
-    -fx-border-width: 1;
-    -fx-border-radius: 10;
-    -fx-background-radius: 10;
-    -fx-padding: 10 18 10 18;
-    -fx-min-width: 90px;
-    -fx-alignment: CENTER;
-    -fx-spacing: 4;
-}
-
-.hs-label {
-    -fx-font-size: 10px;
-    -fx-text-fill: #7fb3d3;
-    -fx-font-weight: bold;
-}
-
-.hs-value {
-    -fx-font-size: 20px;
-    -fx-font-weight: bold;
-    -fx-font-family: "Arial Black";
-}
-
-.hs-easy   { -fx-text-fill: #22c55e; }
-.hs-medium { -fx-text-fill: #f59e0b; }
-.hs-hard   { -fx-text-fill: #ef4444; }
-
-/* ── Section Label ──────────────────────────────────────────── */
-.section-label {
-    -fx-font-size: 11px;
-    -fx-text-fill: #7fb3d3;
-    -fx-font-weight: bold;
-    -fx-padding: 0 0 14 0;
-}
-
-/* ── Difficulty Buttons ─────────────────────────────────────── */
-.diff-buttons {
-    -fx-spacing: 12;
-    -fx-alignment: CENTER;
-    -fx-padding: 0 0 0 0;
-}
-
-.diff-btn {
-    -fx-cursor: hand;
-    -fx-border-radius: 14;
-    -fx-background-radius: 14;
-    -fx-padding: 16 22 16 22;
-    -fx-pref-width: 320px;
-    -fx-min-height: 72px;
-    -fx-alignment: CENTER_LEFT;
-}
-
-.btn-easy {
-    -fx-background-color: rgba(34,197,94,0.12);
-    -fx-border-color: rgba(34,197,94,0.4);
-    -fx-border-width: 1.5;
-}
-.btn-easy:hover {
-    -fx-background-color: rgba(34,197,94,0.2);
-    -fx-border-color: rgba(34,197,94,0.65);
-    -fx-scale-x: 1.02;
-    -fx-scale-y: 1.02;
-}
-.btn-easy:pressed { -fx-scale-x: 0.98; -fx-scale-y: 0.98; }
-
-.btn-medium {
-    -fx-background-color: rgba(245,158,11,0.12);
-    -fx-border-color: rgba(245,158,11,0.4);
-    -fx-border-width: 1.5;
-}
-.btn-medium:hover {
-    -fx-background-color: rgba(245,158,11,0.2);
-    -fx-border-color: rgba(245,158,11,0.65);
-    -fx-scale-x: 1.02;
-    -fx-scale-y: 1.02;
-}
-.btn-medium:pressed { -fx-scale-x: 0.98; -fx-scale-y: 0.98; }
-
-.btn-hard {
-    -fx-background-color: rgba(239,68,68,0.12);
-    -fx-border-color: rgba(239,68,68,0.4);
-    -fx-border-width: 1.5;
-}
-.btn-hard:hover {
-    -fx-background-color: rgba(239,68,68,0.2);
-    -fx-border-color: rgba(239,68,68,0.65);
-    -fx-scale-x: 1.02;
-    -fx-scale-y: 1.02;
-}
-.btn-hard:pressed { -fx-scale-x: 0.98; -fx-scale-y: 0.98; }
-
-/* Button internals */
-.btn-icon {
-    -fx-background-radius: 10;
-    -fx-min-width: 42px;
-    -fx-min-height: 42px;
-    -fx-alignment: CENTER;
-    -fx-font-size: 20px;
-}
-.btn-icon-easy   { -fx-background-color: rgba(34,197,94,0.2); }
-.btn-icon-medium { -fx-background-color: rgba(245,158,11,0.2); }
-.btn-icon-hard   { -fx-background-color: rgba(239,68,68,0.2); }
-.btn-name {
-    -fx-font-size: 17px;
-    -fx-font-weight: bold;
-}
-.btn-name-easy   { -fx-text-fill: #22c55e; }
-.btn-name-medium { -fx-text-fill: #f59e0b; }
-.btn-name-hard   { -fx-text-fill: #ef4444; }
-.btn-desc {
-    -fx-font-size: 12px;
-    -fx-text-fill: #7fb3d3;
-}
-
-.btn-badge {
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-    -fx-padding: 3 9 3 9;
-    -fx-background-radius: 20;
-    -fx-border-radius: 20;
-}
-.btn-badge-easy   { -fx-background-color: rgba(34,197,94,0.2);  -fx-text-fill: #22c55e; }
-.btn-badge-medium { -fx-background-color: rgba(245,158,11,0.2); -fx-text-fill: #f59e0b; }
-.btn-badge-hard   { -fx-background-color: rgba(239,68,68,0.2);  -fx-text-fill: #ef4444; }
-
-/* ── Footer ─────────────────────────────────────────────────── */
-.footer-row {
-    -fx-spacing: 20;
-    -fx-padding: 28 0 0 0;
-    -fx-alignment: CENTER;
-}
-
-.footer-btn {
-    -fx-background-color: transparent;
-    -fx-border-color: rgba(255,255,255,0.1);
-    -fx-border-width: 1;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
-    -fx-text-fill: #7fb3d3;
-    -fx-font-size: 13px;
-    -fx-font-weight: bold;
-    -fx-padding: 8 18 8 18;
-    -fx-cursor: hand;
-}
-.footer-btn:hover {
-    -fx-border-color: rgba(255,255,255,0.25);
-    -fx-text-fill: #e8f4fd;
-}
-
-/* ── Version ─────────────────────────────────────────────────── */
-.version-label {
-    -fx-font-size: 11px;
-    -fx-text-fill: rgba(255,255,255,0.2);
-    -fx-padding: 20 0 0 0;
-}
-
-/* ── Card game styles (dùng cho GameScene) ──────────────────── */
+.root-container,
 .game-scene {
     -fx-background-color: #0f1b2d;
 }
 
-/* HUD top bar */
-.hud-bar {
-    -fx-background-color: #162032;
-    -fx-border-color: rgba(255,255,255,0.08);
-    -fx-border-width: 0 0 1 0;
-    -fx-padding: 12 20 12 20;
-    -fx-spacing: 20;
+/* ════════════════════════════════════════════════════════════
+   MENU SCENE
+   ════════════════════════════════════════════════════════════ */
+
+.root-container {
+    -fx-pref-width: 560px; -fx-pref-height: 720px;
+    -fx-min-width:  480px; -fx-min-height:  600px;
+}
+
+.menu-content {
+    -fx-padding: 24 28 20 28;
+    -fx-spacing: 0;
     -fx-alignment: CENTER;
 }
 
-.hud-label {
-    -fx-font-size: 13px;
-    -fx-text-fill: #7fb3d3;
-    -fx-font-weight: bold;
-}
+/* Logo */
+.logo-area      { -fx-alignment: CENTER; -fx-spacing: 6; -fx-padding: 0 0 8 0; }
+.card-icon-row  { -fx-spacing: 8; -fx-alignment: CENTER; -fx-padding: 0 0 10 0; }
 
-.hud-value {
-    -fx-font-size: 22px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #f5c842;
-    -fx-font-family: "Arial Black";
-}
-
-.timer-warning {
-    -fx-text-fill: #ef4444 !important;
-}
-
-/* Card grid */
-.card-grid {
-    -fx-padding: 20;
-    -fx-hgap: 10;
-    -fx-vgap: 10;
-    -fx-alignment: CENTER;
-}
-
-/* Card view styles */
-.card-back {
+.mini-card {
     -fx-background-color: #1e3a5f;
-    -fx-border-color: rgba(255,255,255,0.12);
-    -fx-border-width: 1.5;
-    -fx-border-radius: 10;
-    -fx-background-radius: 10;
+    -fx-border-color: rgba(255,255,255,0.12); -fx-border-width: 1.5;
+    -fx-border-radius: 8; -fx-background-radius: 8;
+    -fx-min-width: 40px; -fx-min-height: 50px;
+    -fx-alignment: CENTER; -fx-font-size: 18px;
+}
+.mini-card-lg { -fx-min-width: 48px; -fx-min-height: 60px; }
+
+.logo-title {
+    -fx-font-family: "Arial"; -fx-font-weight: bold; -fx-font-size: 38px;
+    -fx-text-fill: #f5c842;
+    -fx-effect: dropshadow(gaussian, rgba(245,200,66,0.3), 12, 0, 0, 2);
+}
+.logo-subtitle { -fx-font-size: 10px; -fx-text-fill: #7fb3d3; -fx-font-weight: bold; }
+
+/* High score bar */
+.highscore-bar { -fx-spacing: 8; -fx-padding: 14 0 18 0; -fx-alignment: CENTER; }
+.hs-card {
+    -fx-background-color: #162032;
+    -fx-border-color: rgba(255,255,255,0.08); -fx-border-width: 1;
+    -fx-border-radius: 10; -fx-background-radius: 10;
+    -fx-padding: 8 16 8 16; -fx-min-width: 86px;
+    -fx-alignment: CENTER; -fx-spacing: 3;
+}
+.hs-label  { -fx-font-size: 9px; -fx-text-fill: #7fb3d3; -fx-font-weight: bold; }
+.hs-value  { -fx-font-size: 18px; -fx-font-weight: bold; -fx-font-family: "Arial"; }
+.hs-easy   { -fx-text-fill: #22c55e; }
+.hs-medium { -fx-text-fill: #f59e0b; }
+.hs-hard   { -fx-text-fill: #ef4444; }
+
+/* Section label */
+.section-label { -fx-font-size: 10px; -fx-text-fill: #7fb3d3; -fx-font-weight: bold; -fx-padding: 0 0 10 0; }
+
+/* Difficulty buttons */
+.diff-buttons { -fx-spacing: 10; -fx-alignment: CENTER; }
+.diff-btn {
+    -fx-cursor: hand; -fx-border-radius: 12; -fx-background-radius: 12;
+    -fx-padding: 12 18 12 18; -fx-pref-width: 320px; -fx-alignment: CENTER_LEFT;
+}
+
+.btn-easy   { -fx-background-color: rgba(34,197,94,0.10);  -fx-border-color: rgba(34,197,94,0.35);  -fx-border-width: 1.5; }
+.btn-medium { -fx-background-color: rgba(245,158,11,0.10); -fx-border-color: rgba(245,158,11,0.35); -fx-border-width: 1.5; }
+.btn-hard   { -fx-background-color: rgba(239,68,68,0.10);  -fx-border-color: rgba(239,68,68,0.35);  -fx-border-width: 1.5; }
+
+.btn-easy:hover   { -fx-background-color: rgba(34,197,94,0.18);  -fx-border-color: rgba(34,197,94,0.6);  -fx-scale-x: 1.02; -fx-scale-y: 1.02; }
+.btn-medium:hover { -fx-background-color: rgba(245,158,11,0.18); -fx-border-color: rgba(245,158,11,0.6); -fx-scale-x: 1.02; -fx-scale-y: 1.02; }
+.btn-hard:hover   { -fx-background-color: rgba(239,68,68,0.18);  -fx-border-color: rgba(239,68,68,0.6);  -fx-scale-x: 1.02; -fx-scale-y: 1.02; }
+
+.btn-easy:pressed   { -fx-scale-x: 0.97; -fx-scale-y: 0.97; }
+.btn-medium:pressed { -fx-scale-x: 0.97; -fx-scale-y: 0.97; }
+.btn-hard:pressed   { -fx-scale-x: 0.97; -fx-scale-y: 0.97; }
+
+.btn-icon {
+    -fx-min-width: 38px; -fx-min-height: 38px;
+    -fx-background-radius: 9; -fx-alignment: CENTER; -fx-font-size: 18px;
+}
+.btn-icon-easy   { -fx-background-color: rgba(34,197,94,0.18); }
+.btn-icon-medium { -fx-background-color: rgba(245,158,11,0.18); }
+.btn-icon-hard   { -fx-background-color: rgba(239,68,68,0.18); }
+
+.btn-name { -fx-font-size: 15px; -fx-font-weight: bold; }
+.btn-name-easy   { -fx-text-fill: #22c55e; }
+.btn-name-medium { -fx-text-fill: #f59e0b; }
+.btn-name-hard   { -fx-text-fill: #ef4444; }
+.btn-desc  { -fx-font-size: 11px; -fx-text-fill: #7fb3d3; }
+
+.btn-badge { -fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 2 8 2 8; -fx-background-radius: 20; }
+.btn-badge-easy   { -fx-background-color: rgba(34,197,94,0.18);  -fx-text-fill: #22c55e; }
+.btn-badge-medium { -fx-background-color: rgba(245,158,11,0.18); -fx-text-fill: #f59e0b; }
+.btn-badge-hard   { -fx-background-color: rgba(239,68,68,0.18);  -fx-text-fill: #ef4444; }
+
+/* Footer */
+.footer-row { -fx-spacing: 12; -fx-alignment: CENTER; }
+.footer-btn {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(255,255,255,0.10); -fx-border-width: 1;
+    -fx-border-radius: 8; -fx-background-radius: 8;
+    -fx-text-fill: #7fb3d3; -fx-font-size: 11px; -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14; -fx-cursor: hand;
+}
+.footer-btn:hover { -fx-border-color: rgba(255,255,255,0.25); -fx-text-fill: #e8f4fd; -fx-background-color: rgba(255,255,255,0.04); }
+
+.version-label { -fx-font-size: 9px; -fx-text-fill: rgba(255,255,255,0.18); }
+
+/* ════════════════════════════════════════════════════════════
+   GAME SCENE
+   ════════════════════════════════════════════════════════════ */
+
+/* ── HUD bar ─────────────────────────────────────────────── */
+.hud-bar {
+    -fx-background-color: #111f35;
+    -fx-border-color: rgba(255,255,255,0.07); -fx-border-width: 0 0 1 0;
+    -fx-padding: 0 10 0 10;
+    -fx-pref-height: 54px; -fx-min-height: 54px;
+}
+.hud-group         { -fx-alignment: CENTER; -fx-spacing: 2; -fx-padding: 4 10 4 10; }
+.hud-progress-group{ -fx-alignment: CENTER; -fx-spacing: 3; -fx-padding: 4 10 4 10; -fx-min-width: 120px; }
+.hud-divider       { -fx-background-color: rgba(255,255,255,0.07); -fx-pref-width: 1px; -fx-pref-height: 28px; -fx-max-height: 28px; }
+.hud-label         { -fx-font-size: 8px; -fx-text-fill: #5a8bb0; -fx-font-weight: bold; }
+.hud-value         { -fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #e0ecff; }
+.hud-value-accent  { -fx-text-fill: #f5c842; }
+
+.restart-btn {
+    -fx-background-color: rgba(74,144,217,0.15);
+    -fx-border-color: rgba(74,144,217,0.35); -fx-border-width: 1;
+    -fx-border-radius: 7; -fx-background-radius: 7;
+    -fx-text-fill: #7ec8e3; -fx-font-size: 11px;
+    -fx-padding: 5 10 5 10; -fx-cursor: hand;
+}
+.restart-btn:hover { -fx-background-color: rgba(74,144,217,0.30); -fx-text-fill: #ffffff; }
+
+/* Progress bar */
+.match-progress {
+    -fx-accent: #22c55e;
+    -fx-background-color: rgba(255,255,255,0.07);
+    -fx-background-radius: 3; -fx-border-radius: 3;
+    -fx-pref-height: 6px; -fx-max-height: 6px; -fx-pref-width: 110px;
+}
+
+/* ── Grid & wrapper ──────────────────────────────────────── */
+.grid-wrapper {
+    -fx-background-color: #0f1b2d;
+    -fx-alignment: CENTER;
+}
+.card-grid {
+    -fx-alignment: CENTER;
+    -fx-padding: 14;
+}
+
+/* ── Thẻ bài: mặt sau ────────────────────────────────────── */
+.card-back {
+    -fx-background-color: linear-gradient(to bottom right, #1b3558, #0e2040);
+    -fx-border-color: rgba(74,144,217,0.30); -fx-border-width: 1.5;
+    -fx-border-radius: 10; -fx-background-radius: 10;
     -fx-cursor: hand;
-    -fx-min-width: 80px;
-    -fx-min-height: 100px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 6, 0, 0, 2);
 }
 .card-back:hover {
-    -fx-background-color: #254d7a;
-    -fx-border-color: rgba(255,255,255,0.25);
-    -fx-scale-x: 1.05;
-    -fx-scale-y: 1.05;
+    -fx-background-color: linear-gradient(to bottom right, #254b7a, #163060);
+    -fx-border-color: rgba(74,144,217,0.65);
+    -fx-effect: dropshadow(gaussian, rgba(74,144,217,0.35), 10, 0, 0, 0);
+}
+.card-back-icon {
+    -fx-font-size: 16px;
+    -fx-text-fill: rgba(74,144,217,0.25);
 }
 
+/* ── Thẻ bài: mặt trước (icon) ───────────────────────────── */
 .card-front {
-    -fx-background-color: #eaf2fb;
-    -fx-border-color: #378add;
-    -fx-border-width: 2;
-    -fx-border-radius: 10;
-    -fx-background-radius: 10;
-    -fx-min-width: 80px;
-    -fx-min-height: 100px;
+    -fx-background-color: linear-gradient(to bottom right, #f0f7ff, #ddeeff);
+    -fx-border-color: #4a90d9; -fx-border-width: 2;
+    -fx-border-radius: 10; -fx-background-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(74,144,217,0.45), 10, 0, 0, 0);
 }
-
-.card-matched {
-    -fx-opacity: 0.45;
-    -fx-effect: dropshadow(gaussian, #22c55e, 10, 0, 0, 0);
-}
-
-.card-content-label {
-    -fx-font-weight: bold;
-}
-
-.card-content-label-back {
-    -fx-font-size: 20px;
-    -fx-text-fill: #e8f4fd;
-}
-
 .card-content-label-front {
-    -fx-font-size: 30px;
-    -fx-text-fill: #254d7a;
+    -fx-font-size: 28px;
+    -fx-text-fill: #1a3a6b;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 1);
 }
 
-/* Result scene */
+/* ── Thẻ đã khớp → ẩn (setVisible false trong code) ─────── */
+.card-matched {
+    -fx-opacity: 0;
+}
+
+/* ── Status bar ──────────────────────────────────────────── */
+.status-bar {
+    -fx-background-color: #111f35;
+    -fx-border-color: rgba(255,255,255,0.06); -fx-border-width: 1 0 0 0;
+    -fx-padding: 6 14 6 14; -fx-spacing: 10;
+    -fx-pref-height: 40px; -fx-min-height: 40px;
+}
+.status-text { -fx-font-size: 12px; -fx-text-fill: #7fb3d3; }
+
+.back-btn {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(255,255,255,0.10); -fx-border-width: 1;
+    -fx-border-radius: 7; -fx-background-radius: 7;
+    -fx-text-fill: #7fb3d3; -fx-font-size: 11px;
+    -fx-padding: 4 10 4 10; -fx-cursor: hand;
+}
+.back-btn:hover { -fx-text-fill: #e8f4fd; -fx-border-color: rgba(255,255,255,0.25); }
+
+/* ── Card content labels ─────────────────────────────────── */
+.card-content-label-back {
+    -fx-font-size: 18px;
+    -fx-text-fill: rgba(74,144,217,0.22);
+}
+
+/* ════════════════════════════════════════════════════════════
+   RESULT SCENE
+   ════════════════════════════════════════════════════════════ */
+
 .result-win {
     -fx-background-color: rgba(34,197,94,0.15);
-    -fx-border-color: rgba(34,197,94,0.4);
-    -fx-border-width: 2;
-    -fx-border-radius: 14;
-    -fx-background-radius: 14;
-    -fx-text-fill: #22c55e;
-    -fx-font-size: 36px;
-    -fx-font-weight: bold;
+    -fx-border-color: rgba(34,197,94,0.4); -fx-border-width: 2;
+    -fx-border-radius: 14; -fx-background-radius: 14;
+    -fx-text-fill: #22c55e; -fx-font-size: 32px; -fx-font-weight: bold;
 }
-
 .result-lose {
     -fx-background-color: rgba(239,68,68,0.15);
-    -fx-border-color: rgba(239,68,68,0.4);
-    -fx-border-width: 2;
-    -fx-border-radius: 14;
-    -fx-background-radius: 14;
-    -fx-text-fill: #ef4444;
-    -fx-font-size: 36px;
-    -fx-font-weight: bold;
+    -fx-border-color: rgba(239,68,68,0.4); -fx-border-width: 2;
+    -fx-border-radius: 14; -fx-background-radius: 14;
+    -fx-text-fill: #ef4444; -fx-font-size: 32px; -fx-font-weight: bold;
 }

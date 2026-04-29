@@ -1,27 +1,108 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
 
+<!--
+    game.fxml — Màn hình chơi game
+    Controller : com.example.memorycardflip.controller.GameController
+    UseCase    : UC-01 (init board), UC-02 (card flip), UC-03 (check match)
+-->
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.example.memorycardflip.controller.GameController"
-            styleClass="root-container game-scene"
+            styleClass="game-scene"
             stylesheets="@../styles/game.css">
 
+    <!-- ══════════════════════════════════════
+         TOP — HUD bar
+         ══════════════════════════════════════ -->
+    <top>
+        <HBox styleClass="hud-bar" alignment="CENTER" spacing="0">
+
+            <!-- Độ khó -->
+            <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
+                <Label text="ĐỘ KHÓ" styleClass="hud-label"/>
+                <Label fx:id="lblDifficulty" text="Easy (4×4)" styleClass="hud-value"/>
+            </VBox>
+
+            <Separator orientation="VERTICAL" styleClass="hud-divider"/>
+
+            <!-- Số cặp đã tìm -->
+            <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
+                <Label text="ĐÃ KHỚP" styleClass="hud-label"/>
+                <Label fx:id="lblPairs" text="0 / 8 cặp" styleClass="hud-value"/>
+            </VBox>
+
+            <Separator orientation="VERTICAL" styleClass="hud-divider"/>
+
+            <!-- Còn lại -->
+            <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
+                <Label text="CÒN LẠI" styleClass="hud-label"/>
+                <Label fx:id="lblMatched" text="8" styleClass="hud-value hud-value-remain"/>
+            </VBox>
+
+            <Separator orientation="VERTICAL" styleClass="hud-divider"/>
+
+            <!-- Tiến độ -->
+            <VBox styleClass="hud-group hud-progress-group" alignment="CENTER" HBox.hgrow="ALWAYS">
+                <Label text="TIẾN ĐỘ" styleClass="hud-label"/>
+                <ProgressBar fx:id="progressBar"
+                             progress="0"
+                             prefWidth="130"
+                             prefHeight="8"
+                             styleClass="match-progress"/>
+            </VBox>
+
+            <Separator orientation="VERTICAL" styleClass="hud-divider"/>
+
+            <!-- Nút restart -->
+            <VBox styleClass="hud-group" alignment="CENTER">
+                <Button fx:id="btnRestart"
+                        text="🔄 Chơi lại"
+                        onAction="#handleUC01Restart"
+                        styleClass="restart-btn"/>
+            </VBox>
+
+        </HBox>
+    </top>
+
+    <!-- ══════════════════════════════════════
+         CENTER — Lưới thẻ bài
+         Populate bởi GameController.renderUC01Grid()
+         ══════════════════════════════════════ -->
     <center>
-        <StackPane>
-            <padding>
-                <Insets top="18" right="18" bottom="18" left="18"/>
-            </padding>
-            <GridPane fx:id="cardGrid" styleClass="card-grid" alignment="CENTER"/>
+        <StackPane fx:id="gridWrapper" styleClass="grid-wrapper" alignment="CENTER">
+            <GridPane fx:id="cardGrid"
+                      styleClass="card-grid"
+                      alignment="CENTER"
+                      hgap="10"
+                      vgap="10">
+                <padding>
+                    <Insets top="16" bottom="16" left="16" right="16"/>
+                </padding>
+            </GridPane>
         </StackPane>
     </center>
 
+    <!-- ══════════════════════════════════════
+         BOTTOM — Status bar
+         ══════════════════════════════════════ -->
     <bottom>
-        <HBox alignment="CENTER" spacing="16" styleClass="footer-row">
-            <Button fx:id="btnRestart" text="Chơi lại" styleClass="footer-btn"/>
+        <HBox styleClass="status-bar" alignment="CENTER_LEFT" spacing="12">
+            <padding>
+                <Insets top="8" bottom="8" left="16" right="16"/>
+            </padding>
+
+            <Label fx:id="lblStatus"
+                   text="Lật thẻ để bắt đầu!"
+                   styleClass="status-text"
+                   HBox.hgrow="ALWAYS"/>
+
+            <Button text="← Menu"
+                    onAction="#onBackToMenu"
+                    styleClass="back-btn"/>
         </HBox>
     </bottom>
 

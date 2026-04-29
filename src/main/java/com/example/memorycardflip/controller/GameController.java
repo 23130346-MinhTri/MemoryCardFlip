@@ -3,12 +3,18 @@ package com.example.memorycardflip.controller;
 import com.example.memorycardflip.model.Card;
 import com.example.memorycardflip.model.CardType;
 import com.example.memorycardflip.model.Difficulty;
+import com.example.memorycardflip.model.GameState;
+import com.example.memorycardflip.model.GameStatus;
 import com.example.memorycardflip.ui.CardFlipView;
+import com.example.memorycardflip.ui.SceneManager;
 import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 
 import java.io.IOException;
@@ -21,202 +27,301 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.ResourceBundle;
 
-public class GameController {
+/**
+ * Controller màn hình chơi game — game.fxml
+ * UC-01 : Nhận Difficulty → khởi tạo bàn chơi
+ * UC-02 : Lật thẻ — dùng CardFlipView + icon từ /assets/icons/
+ * UC-03 : Kiểm tra cặp — khớp thì xóa, không khớp thì lật lại
+ */
+public class GameController implements Initializable {
 
-    @FXML private GridPane cardGrid;
+    // ── FXML ──────────────────────────────────────────────────
+    @FXML private GridPane    cardGrid;
+    @FXML private StackPane   gridWrapper;
+    @FXML private Label       lblDifficulty;
+    @FXML private Label       lblPairs;
+    @FXML private Label       lblMatched;
+    @FXML private Label       lblStatus;
+    @FXML private ProgressBar progressBar;
+    @FXML private Button      btnRestart;
 
-    @FXML private Button btnRestart;
+    // ── Layout constants ──────────────────────────────────────
+    // HUD bar height (pref) + status bar height (pref)
+    private static final double HUD_H    = 54.0;
+    private static final double STATUS_H = 40.0;
+    private static final double GRID_PAD = 14.0; // padding mỗi phía trong GridPane
+    private static final double CARD_RATIO = 1.18; // height / width
 
-    private Difficulty difficulty = Difficulty.EASY;
-    private final List<Card> cards = new ArrayList<>();
-    private final Map<String, CardFlipView> viewsByCardId = new HashMap<>();
+    private static final double[] GAP     = { 10, 8, 6 };   // EASY, MEDIUM, HARD
+    private static final double[] MAX_W   = { 115, 95, 75 }; // giới hạn trên
 
-    private Card firstCard;
-    private Card secondCard;
-    private boolean resolvingTurn;
+    // ── Icon pool ─────────────────────────────────────────────
+    private final List<String> iconPool = new ArrayList<>();
 
-    @FXML
-    public void initialize() {
-        btnRestart.setOnAction(event -> startNewGame());
-        startNewGame();
-    }
+    // ── Game state ────────────────────────────────────────────
+    private Difficulty difficulty   = Difficulty.EASY;
+    private GameState  gameState;
 
-    public void setDifficulty(Difficulty difficulty) {
-        if (difficulty == null) {
-            return;
-        }
-        this.difficulty = difficulty;
-        startNewGame();
-    }
+    private final Map<String, CardFlipView> viewMap = new HashMap<>();
+    private Card    firstCard;
+    private Card    secondCard;
+    private boolean resolving    = false;
+    private int     matchedPairs = 0;
+    private int     totalPairs   = 0;
 
-    private void startNewGame() {
-        cards.clear();
-        viewsByCardId.clear();
-        firstCard = null;
-        secondCard = null;
-        resolvingTurn = false;
+    // ══════════════════════════════════════════════════════════
+    // Lifecycle
+    // ══════════════════════════════════════════════════════════
 
-        buildDeck();
-        renderBoard();
-    }
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        gameState = SceneManager.getInstance().getCurrentGameState();
+        if (gameState != null) difficulty = gameState.getDifficulty();
+        loadIconPool();
 
-    private void buildDeck() {
-        List<String> symbolPool = buildSymbolPool();
-        List<String> imagePool = loadFrontFaceImages();
-        int totalPairs = difficulty.totalPairs();
-
-        int position = 0;
-        for (int pairIndex = 0; pairIndex < totalPairs; pairIndex++) {
-            String pairId = "pair-" + pairIndex;
-            String symbol = symbolPool.get(pairIndex);
-            String imageUrl = imagePool.isEmpty() ? null : imagePool.get(pairIndex % imagePool.size());
-
-            cards.add(new Card("card-" + position, pairId, CardType.EMOJI, symbol, imageUrl, position));
-            position++;
-            cards.add(new Card("card-" + position, pairId, CardType.EMOJI, symbol, imageUrl, position));
-            position++;
-        }
-
-        Collections.shuffle(cards);
-    }
-
-    private List<String> buildSymbolPool() {
-        List<String> symbols = new ArrayList<>();
-        for (CardType type : CardType.values()) {
-            Collections.addAll(symbols, type.getSymbols());
-        }
-        return symbols;
-    }
-
-    private List<String> loadFrontFaceImages() {
-        try {
-            URL directoryUrl = getClass().getResource("/assets/icons");
-            if (directoryUrl == null || !"file".equalsIgnoreCase(directoryUrl.getProtocol())) {
-                return List.of();
+        // Chờ scene gắn vào stage để BorderPane phân bổ kích thước xong
+        gridWrapper.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                javafx.application.Platform.runLater(this::startBoard);
             }
-
-            Path directory = Path.of(directoryUrl.toURI());
-            try (var pathStream = Files.list(directory)) {
-                return pathStream
-                        .filter(Files::isRegularFile)
-                        .filter(path -> isSupportedImage(path.getFileName().toString()))
-                        .filter(path -> !path.getFileName().toString().toLowerCase().startsWith("logogame"))
-                        .sorted()
-                        .map(path -> "/assets/icons/" + path.getFileName())
-                        .collect(Collectors.toList());
-            }
-        } catch (IOException | URISyntaxException exception) {
-            return List.of();
+        });
+        // Fallback nếu scene đã có sẵn (trường hợp reload)
+        if (gridWrapper.getScene() != null) {
+            javafx.application.Platform.runLater(this::startBoard);
         }
     }
 
-    private boolean isSupportedImage(String fileName) {
-        String lower = fileName.toLowerCase();
-        return lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg")
-                || lower.endsWith(".gif") || lower.endsWith(".webp");
+    /** Dùng khi MainMenuController.openGameScene() truyền difficulty trực tiếp */
+    public void setDifficulty(Difficulty d) {
+        if (d == null) return;
+        difficulty = d;
+        loadIconPool();
+        javafx.application.Platform.runLater(this::startBoard);
     }
 
-    private void renderBoard() {
+    // ══════════════════════════════════════════════════════════
+    // [UC-01] Khởi tạo bàn chơi
+    // ══════════════════════════════════════════════════════════
+
+    private void startBoard() {
+        viewMap.clear();
+        firstCard    = null;
+        secondCard   = null;
+        resolving    = false;
+        matchedPairs = 0;
+        totalPairs   = difficulty.totalPairs();
+
+        int gs = difficulty.getGridSize();
+        lblDifficulty.setText(difficulty.getDisplayName() + "  " + gs + "×" + gs);
+        updateHUD();
+        lblStatus.setText("Lật thẻ để bắt đầu!");
+        progressBar.setProgress(0);
+
+        List<Card> deck = buildDeck();
+        renderGrid(deck);
+
+        if (gameState != null) {
+            gameState.setCards(deck.toArray(new Card[0]));
+            gameState.setStatus(GameStatus.PLAYING);
+        }
+    }
+
+    private List<Card> buildDeck() {
+        List<String> symbols = buildSymbolPool();
+        List<Card>   deck    = new ArrayList<>();
+        for (int i = 0; i < totalPairs; i++) {
+            String pairId   = "pair-" + i;
+            String symbol   = symbols.get(i % symbols.size());
+            String imageUrl = iconPool.isEmpty() ? null : iconPool.get(i % iconPool.size());
+            deck.add(new Card("c" + (i * 2),     pairId, CardType.EMOJI, symbol, imageUrl, i * 2));
+            deck.add(new Card("c" + (i * 2 + 1), pairId, CardType.EMOJI, symbol, imageUrl, i * 2 + 1));
+        }
+        Collections.shuffle(deck);
+        return deck;
+    }
+
+    /**
+     * [UC-01] Tính card size động để lưới luôn vừa khít vùng center.
+     *
+     * Chiều cao available = scene height - HUD - status bar - grid padding
+     * Chiều rộng available = gridWrapper width - grid padding
+     * cardW = min(byWidth, byHeight/ratio), giới hạn max.
+     */
+    private void renderGrid(List<Card> deck) {
         cardGrid.getChildren().clear();
         cardGrid.getColumnConstraints().clear();
         cardGrid.getRowConstraints().clear();
 
-        int gridSize = difficulty.getGridSize();
-        double cardWidth = switch (difficulty) {
-            case EASY -> 120;
-            case MEDIUM -> 82;
-            case HARD -> 58;
-        };
-        double cardHeight = switch (difficulty) {
-            case EASY -> 140;
-            case MEDIUM -> 98;
-            case HARD -> 70;
-        };
-        double gap = switch (difficulty) {
-            case EASY -> 10;
-            case MEDIUM -> 8;
-            case HARD -> 6;
-        };
+        int    gs  = difficulty.getGridSize();
+        int    idx = idx();
+        double gap = GAP[idx];
+
+        // ── Tính available space ──────────────────────────────
+        // Chiều rộng: lấy từ gridWrapper (đã layout xong nhờ Platform.runLater)
+        double availW = gridWrapper.getWidth();
+        if (availW <= 0) {
+            // Backup: lấy từ scene nếu gridWrapper chưa có width
+            availW = gridWrapper.getScene() != null
+                    ? gridWrapper.getScene().getWidth()
+                    : 540;
+        }
+
+        // Chiều cao: scene height trừ HUD và status bar (luôn chính xác)
+        double sceneH = gridWrapper.getScene() != null
+                ? gridWrapper.getScene().getHeight()
+                : 700;
+        double availH = sceneH - HUD_H - STATUS_H;
+
+        double usableW = availW  - GRID_PAD * 2;
+        double usableH = availH  - GRID_PAD * 2;
+
+        // ── Tính kích thước thẻ ──────────────────────────────
+        double cardByW = (usableW - gap * (gs - 1)) / gs;
+        double cardByH = (usableH - gap * (gs - 1)) / gs;
+
+        // Chọn chiều nhỏ hơn → thẻ không tràn theo cả ngang lẫn dọc
+        double cardW = Math.min(cardByW, cardByH / CARD_RATIO);
+        cardW = Math.min(cardW, MAX_W[idx]);
+        cardW = Math.max(cardW, 32); // tối thiểu 32px
+
+        double cardH = cardW * CARD_RATIO;
 
         cardGrid.setHgap(gap);
         cardGrid.setVgap(gap);
-        cardGrid.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
 
-        for (int i = 0; i < cards.size(); i++) {
-            Card card = cards.get(i);
+        for (int i = 0; i < deck.size(); i++) {
+            Card         card = deck.get(i);
             CardFlipView view = new CardFlipView();
-            view.setCardSize(cardWidth, cardHeight);
-            view.setOnFlipRequested(() -> onCardClicked(card, view));
-
-            int row = i / gridSize;
-            int col = i % gridSize;
-            cardGrid.add(view, col, row);
-
-            viewsByCardId.put(card.getId(), view);
+            view.setCardSize(cardW, cardH);
+            view.setOnFlipRequested(() -> onCardClick(card, view));
+            cardGrid.add(view, i % gs, i / gs);
+            viewMap.put(card.getId(), view);
         }
     }
 
-    private void onCardClicked(Card card, CardFlipView view) {
-        if (resolvingTurn || !card.isClickable()) {
-            return;
-        }
+    // ══════════════════════════════════════════════════════════
+    // [UC-02] Lật thẻ
+    // ══════════════════════════════════════════════════════════
+
+    private void onCardClick(Card card, CardFlipView view) {
+        if (resolving || !card.isClickable()) return;
+        if (firstCard != null && firstCard.getId().equals(card.getId())) return;
 
         card.flip();
         view.showFront(card.getSymbol(), card.getImageURL());
 
         if (firstCard == null) {
             firstCard = card;
-            return;
+            lblStatus.setText("Chọn thẻ thứ hai...");
+        } else {
+            secondCard = card;
+            checkMatch();
         }
-
-        secondCard = card;
-        resolveTurn();
     }
 
-    private void resolveTurn() {
-        if (firstCard == null || secondCard == null) {
-            return;
-        }
+    // ══════════════════════════════════════════════════════════
+    // [UC-03] Kiểm tra cặp thẻ
+    // ══════════════════════════════════════════════════════════
 
-        CardFlipView firstView = viewsByCardId.get(firstCard.getId());
-        CardFlipView secondView = viewsByCardId.get(secondCard.getId());
-        if (firstView == null || secondView == null) {
-            clearSelection();
-            return;
-        }
+    private void checkMatch() {
+        if (firstCard == null || secondCard == null) return;
+
+        CardFlipView v1 = viewMap.get(firstCard.getId());
+        CardFlipView v2 = viewMap.get(secondCard.getId());
+        if (v1 == null || v2 == null) { clearSel(); return; }
+
+        resolving = true;
 
         if (firstCard.isPairOf(secondCard)) {
             firstCard.match();
             secondCard.match();
-            resolvingTurn = true;
-            PauseTransition pause = new PauseTransition(Duration.millis(220));
-            pause.setOnFinished(event -> {
-                firstView.setMatched(true);
-                secondView.setMatched(true);
-                clearSelection();
-                resolvingTurn = false;
+            matchedPairs++;
+            updateHUD();
+            lblStatus.setText("✅  Khớp rồi! " + matchedPairs + "/" + totalPairs);
+
+            PauseTransition p = new PauseTransition(Duration.millis(280));
+            p.setOnFinished(e -> {
+                v1.setMatched(true);
+                v2.setMatched(true);
+                clearSel();
+                resolving = false;
+                if (matchedPairs == totalPairs) onWin();
             });
-            pause.play();
-            return;
+            p.play();
+
+        } else {
+            lblStatus.setText("❌  Không khớp, thử lại...");
+            PauseTransition p = new PauseTransition(Duration.millis(750));
+            p.setOnFinished(e -> {
+                firstCard.faceDown();
+                secondCard.faceDown();
+                v1.showBack();
+                v2.showBack();
+                clearSel();
+                resolving = false;
+                lblStatus.setText("Tiếp tục lật thẻ...");
+            });
+            p.play();
         }
-
-        resolvingTurn = true;
-        PauseTransition pause = new PauseTransition(Duration.millis(700));
-        pause.setOnFinished(event -> {
-            firstCard.faceDown();
-            secondCard.faceDown();
-            firstView.showBack();
-            secondView.showBack();
-            clearSelection();
-            resolvingTurn = false;
-        });
-        pause.play();
     }
 
-    private void clearSelection() {
-        firstCard = null;
-        secondCard = null;
+    private void onWin() {
+        lblStatus.setText("🎉  Bạn đã thắng! Tìm hết " + totalPairs + " cặp!");
+        if (gameState != null) gameState.setStatus(GameStatus.WON);
     }
+
+    // ── Helpers ───────────────────────────────────────────────
+
+    private void updateHUD() {
+        lblPairs.setText(matchedPairs + " / " + totalPairs);
+        lblMatched.setText("Còn: " + (totalPairs - matchedPairs));
+        progressBar.setProgress(totalPairs == 0 ? 0 : (double) matchedPairs / totalPairs);
+    }
+
+    private void clearSel() { firstCard = null; secondCard = null; }
+
+    private int idx() {
+        return switch (difficulty) { case EASY -> 0; case MEDIUM -> 1; case HARD -> 2; };
+    }
+
+    private void loadIconPool() {
+        iconPool.clear();
+        try {
+            URL dir = getClass().getResource("/assets/icons");
+            if (dir == null || !"file".equalsIgnoreCase(dir.getProtocol())) return;
+            Path directory = Path.of(dir.toURI());
+            try (var s = Files.list(directory)) {
+                s.filter(Files::isRegularFile)
+                        .filter(p -> isImage(p.getFileName().toString()))
+                        .filter(p -> !p.getFileName().toString().toLowerCase().startsWith("logogame"))
+                        .sorted()
+                        .map(p -> "/assets/icons/" + p.getFileName())
+                        .forEach(iconPool::add);
+            }
+        } catch (IOException | URISyntaxException ignored) {}
+    }
+
+    private boolean isImage(String n) {
+        String l = n.toLowerCase();
+        return l.endsWith(".png") || l.endsWith(".jpg") || l.endsWith(".jpeg")
+                || l.endsWith(".gif") || l.endsWith(".webp");
+    }
+
+    private List<String> buildSymbolPool() {
+        List<String> s = new ArrayList<>();
+        for (CardType t : CardType.values()) Collections.addAll(s, t.getSymbols());
+        return s;
+    }
+
+    // ── FXML handlers ─────────────────────────────────────────
+
+    @FXML
+    private void handleUC01Restart() {
+        javafx.application.Platform.runLater(this::startBoard);
+    }
+
+    @FXML
+    public void onBackToMenu() { SceneManager.getInstance().showMenu(); }
 }
