@@ -1,22 +1,22 @@
 package com.example.memorycardflip;
 
+import com.example.memorycardflip.ui.SceneManager;
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+/**
+ * Entry point của ứng dụng Memory Card Flip.
+ * Khởi tạo SceneManager và load màn hình chính.
+ */
 public class Main extends Application {
 
     @Override
-    public void start(Stage stage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(
-                getClass().getResource("/fxml/menu.fxml")
-        );
-        Scene scene = new Scene(loader.load(), 540, 680);
-        stage.setTitle("Memory Card Flip");
-        stage.setScene(scene);
-        stage.setResizable(false);
-        stage.show();
+    public void start(Stage primaryStage) {
+        // Khởi tạo SceneManager 1 lần duyF nhất
+        SceneManager.getInstance().init(primaryStage);
+
+        // Load màn hình chính
+        SceneManager.getInstance().showMenu();
     }
 
     public static void main(String[] args) {
