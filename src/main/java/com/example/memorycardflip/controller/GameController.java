@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-
+import javafx.beans.binding.Bindings;
 /**
  * Controller màn hình chơi game — game.fxml
  * UC-01 : Nhận Difficulty → khởi tạo bàn chơi
@@ -50,7 +50,11 @@ public class GameController implements Initializable {
     @FXML private Label       lblStatus;
     @FXML private ProgressBar progressBar;
     @FXML private Button      btnRestart;
-
+    // =============== THÊM CÁC FXML BINDING MỚI ===============
+    @FXML private Label lblScore;      // Hiển thị điểm số
+    @FXML private Label lblMoves;      // Hiển thị số lượt di chuyển
+    @FXML private Label lblRemaining;  // Hiển thị số cặp còn lại
+    @FXML private Label lblCombo;      // Hiển thị combo (giữ đà ghép đúng)
     // ── Layout constants ──────────────────────────────────────
     // HUD bar height (pref) + status bar height (pref)
     private static final double HUD_H    = 64.0;
@@ -122,16 +126,33 @@ public class GameController implements Initializable {
 
         int gs = difficulty.getGridSize();
         lblDifficulty.setText(difficulty.getDisplayName() + "  " + gs + "×" + gs);
+
+        // KHỞI TẠO UI HIỂN THỊ BAN ĐẦU
         if (lblTime != null) {
+            lblTime.setText("00:00");
             lblTime.setStyle("");
+        }
+        if (lblScore != null) {
+            lblScore.setText("0");
+        }
+        if (lblMoves != null) {
+            lblMoves.setText("0");
+        }
+        if (lblPairs != null) {
+            lblPairs.setText("0 / " + totalPairs);
+        }
+        if (lblRemaining != null) {
+            lblRemaining.setText(String.valueOf(totalPairs));
         }
         if (timeProgressBar != null) {
             timeProgressBar.setProgress(1.0);
             timeProgressBar.getStyleClass().remove("time-progress-warning");
         }
-        updateHUD();
+
         lblStatus.setText("Lật thẻ để bắt đầu!");
-        progressBar.setProgress(0);
+        if (progressBar != null) {
+            progressBar.setProgress(0);
+        }
 
         List<Card> deck = buildDeck();
         renderGrid(deck);
@@ -141,8 +162,17 @@ public class GameController implements Initializable {
             gameState.setCards(deck.toArray(new Card[0]));
             gameState.setStatus(GameStatus.PLAYING);
         }
+
         renderUCGM06Time();
         startUCGM06Timer();
+    }
+    /**
+     * Cập nhật hiển thị điểm số
+     */
+    private void updateScoreDisplay() {
+        if (gameState != null && lblScore != null) {
+            lblScore.setText(String.valueOf(gameState.calculateScore()));
+        }
     }
 
     private List<Card> buildDeck() {
@@ -265,7 +295,11 @@ public class GameController implements Initializable {
             if (gameState != null) {
                 gameState.incrementMatchedPairs();
                 gameState.incrementCombo();
+                if (lblScore != null && gameState != null) {
+                    lblScore.setText(String.valueOf(gameState.calculateScore()));
+                }
             }
+
             updateHUD();
             lblStatus.setText("✅  Khớp rồi! " + matchedPairs + "/" + totalPairs);
 
@@ -279,6 +313,12 @@ public class GameController implements Initializable {
             });
             p.play();
 
+            if (gameState.getComboCount() >= 2) {
+                lblCombo.setText("🔥 x" + gameState.getComboCount());
+            } else {
+                lblCombo.setText("");
+            }
+
         } else {
             lblStatus.setText("❌  Không khớp, thử lại...");
             PauseTransition p = new PauseTransition(Duration.millis(750));
@@ -289,6 +329,7 @@ public class GameController implements Initializable {
                 v2.showBack();
                 clearSel();
                 resolving = false;
+                lblCombo.setText("");
                 lblStatus.setText("Tiếp tục lật thẻ...");
             });
             p.play();
@@ -308,9 +349,18 @@ public class GameController implements Initializable {
     // ── Helpers ───────────────────────────────────────────────
 
     private void updateHUD() {
-        lblPairs.setText(matchedPairs + " / " + totalPairs);
-        lblMatched.setText("Còn: " + (totalPairs - matchedPairs));
-        progressBar.setProgress(totalPairs == 0 ? 0 : (double) matchedPairs / totalPairs);
+        if (lblPairs != null) {
+            lblPairs.setText(matchedPairs + " / " + totalPairs);
+        }
+        if (lblRemaining != null) {
+            lblRemaining.setText(String.valueOf(totalPairs - matchedPairs));
+        }
+        if (progressBar != null) {
+            progressBar.setProgress(totalPairs == 0 ? 0 : (double) matchedPairs / totalPairs);
+        }
+        if (lblScore != null && gameState != null) {
+            lblScore.setText(String.valueOf(gameState.calculateScore()));
+        }
     }
 
     /**
@@ -325,17 +375,15 @@ public class GameController implements Initializable {
             remaining = gameState.getTimeRemaining();
         }
         if (lblTime != null) {
-            lblTime.setText(remaining + "s");
+            int minutes = remaining / 60;
+            int seconds = remaining % 60;
+            lblTime.setText(String.format("%02d:%02d", minutes, seconds));
         }
         if (timeProgressBar != null) {
-            double progress = difficulty.getTimeLimit() == 0
-                    ? 0
-                    : (double) remaining / difficulty.getTimeLimit();
+            double progress = difficulty.getTimeLimit() == 0 ? 0 : (double) remaining / difficulty.getTimeLimit();
             timeProgressBar.setProgress(progress);
         }
-
     }
-
     /**
      * [UC-GM-06] Khởi động bộ đếm ngược cho ván hiện tại.
      *
@@ -372,12 +420,16 @@ public class GameController implements Initializable {
      */
     private void handleUCGM06TimerTick() {
         if (gameState == null || gameState.getStatus() != GameStatus.PLAYING) {
-            stopUCGM06Timer();
             return;
         }
 
         gameState.decrementTime();
         renderUCGM06Time();
+
+        // Cập nhật điểm khi thời gian thay đổi
+        if (lblScore != null) {
+            lblScore.setText(String.valueOf(gameState.calculateScore()));
+        }
 
         if (gameState.getTimeRemaining() <= 10) {
             handleUCGM07TimerWarning();

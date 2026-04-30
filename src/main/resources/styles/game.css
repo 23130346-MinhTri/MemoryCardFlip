@@ -133,7 +133,9 @@
 .hud-label         { -fx-font-size: 8px; -fx-text-fill: #5a8bb0; -fx-font-weight: bold; }
 .hud-value         { -fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #e0ecff; }
 .hud-value-accent  { -fx-text-fill: #f5c842; }
-
+.hud-value-remain {
+    -fx-text-fill: #f59e0b;
+}
 .restart-btn {
     -fx-background-color: rgba(74,144,217,0.15);
     -fx-border-color: rgba(74,144,217,0.35); -fx-border-width: 1;
