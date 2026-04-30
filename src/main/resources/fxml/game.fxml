@@ -1,13 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
 
 <!--
-    game.fxml — Màn hình chơi game
+    game.fxml — Màn hình chơi game chính
     Controller : com.example.memorycardflip.controller.GameController
-    UseCase    : UC-01 (init board), UC-02 (card flip), UC-03 (check match)
+    UseCase    : UC-01 (Khởi tạo), UC-02 (Lật thẻ), UC-03 (Kiểm tra), UC-04(Tiính điểm)
+                 UC-05 (Đếm ngược thời gian), UC-07 (Đếm số & Dữ liệu)
+    Updated    : Bổ sung Score, Moves, Time và ràng buộc dữ liệu
 -->
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -16,7 +25,7 @@
             stylesheets="@../styles/game.css">
 
     <!-- ══════════════════════════════════════
-         TOP — HUD bar
+         TOP — HUD bar (Thanh thông tin chính)
          ══════════════════════════════════════ -->
     <top>
         <VBox>
@@ -30,7 +39,7 @@
 
                 <Separator orientation="VERTICAL" styleClass="hud-divider"/>
 
-                <!-- Số cặp đã tìm -->
+                <!-- Số cặp đã tìm (Matched Pairs) -->
                 <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
                     <Label text="ĐÃ KHỚP" styleClass="hud-label"/>
                     <Label fx:id="lblPairs" text="0 / 8 cặp" styleClass="hud-value"/>
@@ -38,28 +47,43 @@
 
                 <Separator orientation="VERTICAL" styleClass="hud-divider"/>
 
-                <!-- Còn lại -->
+                <!-- Còn lại (Remaining Pairs) -->
                 <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
                     <Label text="CÒN LẠI" styleClass="hud-label"/>
-                    <Label fx:id="lblMatched" text="8" styleClass="hud-value hud-value-remain"/>
+                    <Label fx:id="lblRemaining" text="8" styleClass="hud-value hud-value-remain"/>
                 </VBox>
 
                 <Separator orientation="VERTICAL" styleClass="hud-divider"/>
 
-                <!-- Tiến độ -->
-                <VBox styleClass="hud-group hud-progress-group" alignment="CENTER" HBox.hgrow="ALWAYS">
+                <!-- ĐIỂM SỐ (Score) - Dữ liệu từ GameState -->
+                <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
+                    <Label text="ĐIỂM" styleClass="hud-label"/>
+                    <Label fx:id="lblScore" text="0" styleClass="hud-value hud-value-accent"/>
+                </VBox>
+
+                <Separator orientation="VERTICAL" styleClass="hud-divider"/>
+
+                <!-- SỐ LƯỢT (Moves) - Dữ liệu từ GameState -->
+                <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
+                    <Label text="LƯỢT" styleClass="hud-label"/>
+                    <Label fx:id="lblMoves" text="0" styleClass="hud-value"/>
+                </VBox>
+
+                <Separator orientation="VERTICAL" styleClass="hud-divider"/>
+
+                <!-- Tiến độ (Progress Bar) -->
+                <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
                     <Label text="TIẾN ĐỘ" styleClass="hud-label"/>
                     <ProgressBar fx:id="progressBar"
-                                 progress="0"
-                                 prefWidth="130"
+                                 progress="0.0"
+                                 prefWidth="100"
                                  prefHeight="8"
                                  styleClass="match-progress"/>
                 </VBox>
 
-
-
                 <Separator orientation="VERTICAL" styleClass="hud-divider"/>
-                <!-- Nút restart -->
+
+                <!-- Nút chơi lại (Restart) -->
                 <VBox styleClass="hud-group" alignment="CENTER">
                     <Button fx:id="btnRestart"
                             text="🔄 Chơi lại"
@@ -68,33 +92,43 @@
                 </VBox>
 
             </HBox>
-            <ProgressBar fx:id="timeProgressBar"
-                         progress="1.0"
-                         maxWidth="Infinity"
-                         styleClass="time-progress-full"/>
+
+            <!-- ══════════════════════════════════════
+                 THANH THỜI GIAN & CẢNH BÁO
+                 ══════════════════════════════════════ -->
+            <!-- Thời gian còn lại (Time Remaining) -->
+            <HBox styleClass="time-bar" alignment="CENTER_LEFT" spacing="10">
+                <padding>
+                    <Insets left="16" right="16"/>
+                </padding>
+                <Label text="⏱️ THỜI GIAN" styleClass="hud-label"/>
+                <Label fx:id="lblTime" text="00:00" styleClass="time-value" HBox.hgrow="ALWAYS"/>
+                <ProgressBar fx:id="timeProgressBar"
+                             progress="1.0"
+                             prefWidth="200"
+                             prefHeight="10"
+                             styleClass="time-progress"/>
+            </HBox>
         </VBox>
     </top>
 
     <!-- ══════════════════════════════════════
-         CENTER — Lưới thẻ bài
-         Populate bởi GameController.renderUC01Grid()
+         CENTER — Lưới thẻ bài (Card Grid)
          ══════════════════════════════════════ -->
     <center>
         <StackPane fx:id="gridWrapper" styleClass="grid-wrapper" alignment="CENTER">
             <GridPane fx:id="cardGrid"
                       styleClass="card-grid"
-                      alignment="CENTER"
-                      hgap="10"
-                      vgap="10">
+                      alignment="CENTER">
                 <padding>
-                    <Insets top="16" bottom="16" left="16" right="16"/>
+                    <Insets top="20" bottom="20" left="20" right="20"/>
                 </padding>
             </GridPane>
         </StackPane>
     </center>
 
     <!-- ══════════════════════════════════════
-         BOTTOM — Status bar
+         BOTTOM — Thanh trạng thái (Status Bar)
          ══════════════════════════════════════ -->
     <bottom>
         <HBox styleClass="status-bar" alignment="CENTER_LEFT" spacing="12">
@@ -102,6 +136,8 @@
                 <Insets top="8" bottom="8" left="16" right="16"/>
             </padding>
 
+            <!-- Combo hiển thị (nếu có) và thông báo -->
+            <Label fx:id="lblCombo" text="" styleClass="combo-text"/>
             <Label fx:id="lblStatus"
                    text="Lật thẻ để bắt đầu!"
                    styleClass="status-text"

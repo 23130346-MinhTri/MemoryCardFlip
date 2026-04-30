@@ -7,69 +7,87 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
+<!--
+    result.fxml — Màn hình hiển thị kết quả sau khi thắng/thua
+    Controller : com.example.memorycardflip.controller.ResultController
+    UseCase    : UC-06 (Kết thúc game & Kết quả)
+-->
 <StackPane xmlns="http://javafx.com/javafx/21"
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="com.example.memorycardflip.controller.ResultController"
            styleClass="game-scene"
            stylesheets="@../styles/game.css">
 
-    <VBox alignment="CENTER" spacing="18" maxWidth="420">
+    <VBox alignment="CENTER" spacing="24" maxWidth="500">
         <padding>
-            <Insets top="36" right="28" bottom="36" left="28"/>
+            <Insets top="40" right="32" bottom="40" left="32"/>
         </padding>
 
-        <Label text="KET QUA VAN CHOI" styleClass="hud-label"/>
-
+        <!-- Tiêu đề kết quả (WIN / GAME OVER) -->
         <Label fx:id="lblResultTitle"
-               text="YOU WIN"
-               styleClass="result-win"
+               text="KẾT QUẢ"
+               styleClass="result-title"
                maxWidth="Infinity"
                alignment="CENTER"/>
 
-        <VBox spacing="12"
+        <!-- Khung thống kê chi tiết -->
+        <VBox spacing="16"
               alignment="CENTER"
-              style="-fx-background-color: #162032; -fx-background-radius: 14; -fx-border-radius: 14; -fx-border-color: rgba(255,255,255,0.08); -fx-padding: 20;">
+              styleClass="stats-card">
 
-            <HBox alignment="CENTER_LEFT" spacing="16">
-                <Label text="DO KHO" styleClass="hud-label"/>
-                <Label fx:id="lblDifficultyValue" text="Easy 4x4" styleClass="hud-value"/>
+            <!-- Độ khó -->
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="ĐỘ KHÓ" styleClass="stats-label" minWidth="100"/>
+                <Label fx:id="lblDifficultyValue" text="Easy (4x4)" styleClass="stats-value"/>
             </HBox>
 
-            <HBox alignment="CENTER_LEFT" spacing="16">
-                <Label text="DIEM" styleClass="hud-label"/>
-                <Label fx:id="lblScoreValue" text="0" styleClass="hud-value hud-value-accent"/>
+            <!-- Điểm số -->
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="ĐIỂM SỐ" styleClass="stats-label" minWidth="100"/>
+                <Label fx:id="lblScoreValue" text="0" styleClass="stats-value stats-score"/>
             </HBox>
 
-            <HBox alignment="CENTER_LEFT" spacing="16">
-                <Label text="SO LUOT" styleClass="hud-label"/>
-                <Label fx:id="lblMovesValue" text="0" styleClass="hud-value"/>
+            <!-- Số lượt di chuyển -->
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="SỐ LƯỢT" styleClass="stats-label" minWidth="100"/>
+                <Label fx:id="lblMovesValue" text="0" styleClass="stats-value"/>
             </HBox>
 
-            <HBox alignment="CENTER_LEFT" spacing="16">
-                <Label text="THOI GIAN CON" styleClass="hud-label"/>
-                <Label fx:id="lblTimeValue" text="0s" styleClass="hud-value"/>
+            <!-- Thời gian còn lại -->
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="THỜI GIAN CÒN" styleClass="stats-label" minWidth="100"/>
+                <Label fx:id="lblTimeRemainingValue" text="00:00" styleClass="stats-value stats-time"/>
             </HBox>
 
-            <HBox alignment="CENTER_LEFT" spacing="16">
-                <Label text="CAP DA GHEP" styleClass="hud-label"/>
-                <Label fx:id="lblPairsValue" text="0 / 0" styleClass="hud-value"/>
+            <!-- Số cặp đã ghép -->
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="CẶP ĐÃ GHÉP" styleClass="stats-label" minWidth="100"/>
+                <Label fx:id="lblPairsValue" text="0 / 0" styleClass="stats-value"/>
+            </HBox>
+
+            <!-- High Score / Kỷ lục (sẽ được cập nhật sau khi lưu) -->
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="KỶ LỤC MỚI" styleClass="stats-label" minWidth="100"/>
+                <Label fx:id="lblNewHighScore" text="---" styleClass="stats-value stats-highscore"/>
             </HBox>
         </VBox>
 
+        <!-- Thông báo tổng kết -->
         <Label fx:id="lblSummary"
-               text="Ban da hoan thanh van choi."
-               styleClass="status-text"
+               text=""
+               styleClass="summary-text"
                wrapText="true"
                alignment="CENTER"/>
 
-        <HBox alignment="CENTER" spacing="14">
-            <Button text="CHOI LAI"
+        <!-- Các nút hành động -->
+        <HBox alignment="CENTER" spacing="20">
+            <Button text="CHƠI LẠI"
                     onAction="#onUCRS02Replay"
-                    styleClass="restart-btn"/>
+                    styleClass="primary-btn"/>
 
-            <Button text="VE MENU"
+            <Button text="VỀ MENU"
                     onAction="#onUCRS03BackToMenu"
-                    styleClass="back-btn"/>
+                    styleClass="secondary-btn"/>
         </HBox>
     </VBox>
 
