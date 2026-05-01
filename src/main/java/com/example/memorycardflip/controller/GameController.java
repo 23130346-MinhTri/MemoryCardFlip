@@ -181,7 +181,8 @@ public class GameController implements Initializable {
         for (int i = 0; i < totalPairs; i++) {
             String pairId   = "pair-" + i;
             String symbol   = symbols.get(i % symbols.size());
-            String imageUrl = iconPool.isEmpty() ? null : iconPool.get(i % iconPool.size());
+            // String imageUrl = iconPool.isEmpty() ? null : iconPool.get(i % iconPool.size());
+            String imageUrl = null;
             deck.add(new Card("c" + (i * 2),     pairId, CardType.EMOJI, symbol, imageUrl, i * 2));
             deck.add(new Card("c" + (i * 2 + 1), pairId, CardType.EMOJI, symbol, imageUrl, i * 2 + 1));
         }
