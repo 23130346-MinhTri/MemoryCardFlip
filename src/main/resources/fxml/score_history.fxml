@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.example.memorycardflip.controller.ScoreHistoryController"
+      spacing="15"
+      alignment="CENTER"
+      styleClass="game-scene"
+      stylesheets="@../styles/game.css">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="📜 LỊCH SỬ ĐIỂM" styleClass="result-title"/>
+
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <Label text="Lọc theo độ khó:" styleClass="stats-label"/>
+        <ComboBox fx:id="comboFilter" prefWidth="120"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblTotalGames" styleClass="stats-value"/>
+    </HBox>
+
+    <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colDate" text="Thời gian" prefWidth="150"/>
+            <TableColumn fx:id="colDifficulty" text="Độ khó" prefWidth="100"/>
+            <TableColumn fx:id="colScore" text="Điểm" prefWidth="80"/>
+            <TableColumn fx:id="colMoves" text="Số lượt" prefWidth="80"/>
+            <TableColumn fx:id="colTimeUsed" text="Thời gian dùng" prefWidth="100"/>
+        </columns>
+    </TableView>
+
+    <HBox alignment="CENTER">
+        <Button text="← Quay lại" onAction="#onBackToMenu" styleClass="primary-btn"/>
+    </HBox>
+
+</VBox>

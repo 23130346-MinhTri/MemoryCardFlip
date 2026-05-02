@@ -181,4 +181,43 @@ public void init(Stage stage) {
             throw new RuntimeException("Cannot load scene: " + fxmlPath, e);
         }
     }
+    /**
+     * Hiển thị màn hình Lịch sử điểm (tất cả các ván đã chơi)
+     */
+    public void showScoreHistory() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/score_history.fxml"));
+            Parent root = loader.load();
+            Stage stage = getPrimaryStage();
+            stage.setScene(new Scene(root, 900, 600));
+            stage.setTitle("Lịch sử điểm - Memory Card Flip");
+            stage.centerOnScreen();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Hiển thị màn hình Bảng xếp hạng (top điểm cao)
+     */
+    public void showLeaderboard() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/leaderboard.fxml"));
+            Parent root = loader.load();
+            Stage stage = getPrimaryStage();
+            stage.setScene(new Scene(root, 900, 600));
+            stage.setTitle("Bảng xếp hạng - Memory Card Flip");
+            stage.centerOnScreen();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Stage getPrimaryStage() {
+        // Bạn cần lưu primaryStage khi khởi động app
+        // Hoặc dùng: (Stage) Stage.getWindows().get(0)
+        return (Stage) javafx.stage.Stage.getWindows().get(0);
+    }
+
+
 }

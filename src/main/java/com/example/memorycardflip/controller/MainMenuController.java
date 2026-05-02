@@ -163,7 +163,11 @@ public class MainMenuController implements Initializable {
     /** Nút Lịch sử — hiển thị bảng điểm */
     @FXML
     public void onHistory() {
-        // TODO: SceneManager.getInstance().showHistoryDialog();
+        SceneManager.getInstance().showScoreHistory();   // ← Đổi thành showScoreHistory()
+    }
+    @FXML
+    public void onLeaderboard() {
+        SceneManager.getInstance().showLeaderboard();   // Mở BẢNG XẾP HẠNG
     }
 
     @FXML
@@ -198,4 +202,5 @@ public class MainMenuController implements Initializable {
             throw new IllegalStateException("Cannot open game scene", exception);
         }
     }
+
 }

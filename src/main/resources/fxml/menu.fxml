@@ -126,6 +126,9 @@
                 <Button text="📋  Lịch sử"
                         onAction="#onHistory"
                         styleClass="footer-btn"/>
+                <Button text="🏆  Bảng xếp hạng"
+                        onAction="#onLeaderboard"
+                        styleClass="footer-btn"/>
             </HBox>
 
             <!-- Version -->
