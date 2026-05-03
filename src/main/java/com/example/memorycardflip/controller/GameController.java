@@ -139,7 +139,7 @@ public class GameController implements Initializable {
             lblMoves.setText("0");
         }
         if (lblPairs != null) {
-            lblPairs.setText("0 / " + totalPairs);
+            lblPairs.setText("0/ " + totalPairs);
         }
         if (lblRemaining != null) {
             lblRemaining.setText(String.valueOf(totalPairs));
