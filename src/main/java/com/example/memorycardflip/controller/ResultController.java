@@ -21,6 +21,7 @@ public class ResultController implements Initializable {
     @FXML private Label lblSummary;
 
     private GameState gameState;
+    private final ScoreManager scoreManager = ScoreManager.getInstance();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -67,14 +68,30 @@ public class ResultController implements Initializable {
         int totalPairs = gameState.getDifficulty().totalPairs();
         lblPairsValue.setText(gameState.getMatchedPairs() + " / " + totalPairs);
 
-        // TODO: Kiểm tra High Score từ database
-        boolean isNewHighScore = checkIfNewHighScore(score);
-        if (isNewHighScore) {
-            lblNewHighScore.setText("🏆 NEW HIGH SCORE! 🏆");
-            lblNewHighScore.setStyle("-fx-text-fill: #ffd700;");
+        // ========== THÊM ĐOẠN CODE NÀY VÀO ĐÂY ==========
+        System.out.println("===== SAVING SCORE =====");
+        System.out.println("Matched pairs: " + gameState.getMatchedPairs());
+        System.out.println("Total pairs: " + gameState.getDifficulty().totalPairs());
+        String playerName = "Player";
+        scoreManager.saveScore(gameState, playerName);  // ← BỎ if(won), gọi trực tiếp
+
+// Kiểm tra high score (chỉ hiển thị khi thắng)
+        if (won) {
+            boolean isNewHighScore = scoreManager.isNewHighScore(
+                    gameState.getDifficulty(),
+                    gameState.calculateScore()
+            );
+
+            if (isNewHighScore) {
+                lblNewHighScore.setText("🏆 NEW HIGH SCORE! 🏆");
+                lblNewHighScore.setStyle("-fx-text-fill: #ffd700;");
+            } else {
+                lblNewHighScore.setText("---");
+            }
         } else {
             lblNewHighScore.setText("---");
         }
+        // ========== KẾT THÚC PHẦN THÊM ==========
 
         lblSummary.setText(won
                 ? "Xuất sắc! Bạn đã hoàn thành " + totalPairs + " cặp thẻ."
