@@ -7,14 +7,14 @@ import com.example.memorycardflip.model.GameState;
 import com.example.memorycardflip.model.GameStatus;
 import com.example.memorycardflip.ui.CardFlipView;
 import com.example.memorycardflip.ui.SceneManager;
-import javafx.animation.KeyFrame;
-import javafx.animation.PauseTransition;
-import javafx.animation.Timeline;
+import javafx.animation.*;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.effect.Glow;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
@@ -79,7 +79,8 @@ public class GameController implements Initializable {
     private int     matchedPairs = 0;
     private int     totalPairs   = 0;
     private Timeline gameTimer;
-
+    private ComboNotificationController comboNotification;
+    private StackPane notificationOverlay;
     // ══════════════════════════════════════════════════════════
     // Lifecycle
     // ══════════════════════════════════════════════════════════
@@ -99,6 +100,43 @@ public class GameController implements Initializable {
         // Fallback nếu scene đã có sẵn (trường hợp reload)
         if (gridWrapper.getScene() != null) {
             javafx.application.Platform.runLater(this::startBoard);
+        }
+        loadComboNotification();
+    }
+    private void loadComboNotification() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/combo_notification.fxml"));
+            notificationOverlay = loader.load();
+            comboNotification = loader.getController();
+
+            // Đợi scene sẵn sàng rồi mới thêm
+            if (gridWrapper.getScene() != null) {
+                addNotificationToScene();
+            } else {
+                gridWrapper.sceneProperty().addListener((obs, old, newScene) -> {
+                    if (newScene != null) {
+                        addNotificationToScene();
+                    }
+                });
+            }
+        } catch (IOException e) {
+            System.err.println("Không thể load combo notification: " + e.getMessage());
+            comboNotification = null;
+        }
+    }
+    private void addNotificationToScene() {
+        if (notificationOverlay == null || comboNotification == null) return;
+
+        if (notificationOverlay.getParent() != null) {
+            ((StackPane) notificationOverlay.getParent()).getChildren().remove(notificationOverlay);
+        }
+
+        if (gridWrapper.getScene().getRoot() instanceof StackPane) {
+            StackPane root = (StackPane) gridWrapper.getScene().getRoot();
+            if (!root.getChildren().contains(notificationOverlay)) {
+                StackPane.setAlignment(notificationOverlay, javafx.geometry.Pos.CENTER);
+                root.getChildren().add(notificationOverlay);
+            }
         }
     }
 
@@ -123,6 +161,10 @@ public class GameController implements Initializable {
         resolving    = false;
         matchedPairs = 0;
         totalPairs   = difficulty.totalPairs();
+        // Ẩn combo notification khi restart game
+        if (comboNotification != null) {
+            comboNotification.hide();
+        }
 
         int gs = difficulty.getGridSize();
         lblDifficulty.setText(difficulty.getDisplayName() + "  " + gs + "×" + gs);
@@ -265,9 +307,7 @@ public class GameController implements Initializable {
             firstCard = card;
             lblStatus.setText("Chọn thẻ thứ hai...");
         } else {
-            if (gameState != null) {
-                gameState.resetCombo();
-            }
+
             secondCard = card;
             if (gameState != null) {
                 gameState.incrementMoves();
@@ -279,7 +319,6 @@ public class GameController implements Initializable {
     // ══════════════════════════════════════════════════════════
     // [UC-03] Kiểm tra cặp thẻ
     // ══════════════════════════════════════════════════════════
-
     private void checkMatch() {
         if (firstCard == null || secondCard == null) return;
 
@@ -293,16 +332,20 @@ public class GameController implements Initializable {
             firstCard.match();
             secondCard.match();
             matchedPairs++;
+
             if (gameState != null) {
                 gameState.incrementMatchedPairs();
                 gameState.incrementCombo();
-                if (lblScore != null && gameState != null) {
+                if (lblScore != null) {
                     lblScore.setText(String.valueOf(gameState.calculateScore()));
                 }
             }
 
             updateHUD();
             lblStatus.setText("✅  Khớp rồi! " + matchedPairs + "/" + totalPairs);
+
+            playMatchEffect(v1);
+            playMatchEffect(v2);
 
             PauseTransition p = new PauseTransition(Duration.millis(280));
             p.setOnFinished(e -> {
@@ -314,14 +357,36 @@ public class GameController implements Initializable {
             });
             p.play();
 
-            if (gameState.getComboCount() >= 2) {
-                lblCombo.setText("🔥 x" + gameState.getComboCount());
-            } else {
-                lblCombo.setText("");
+            // ========== PHẦN HIỂN THỊ COMBO (CHỈ 1 LẦN) ==========
+            if (gameState != null) {
+                int currentCombo = gameState.getComboCount();
+                if (currentCombo >= 2) {
+                    lblCombo.setText("🔥 x" + currentCombo);
+                    if (comboNotification != null) {
+                        comboNotification.showCombo(currentCombo);
+                    }
+                } else {
+                    lblCombo.setText("");
+                }
             }
+            // ========== KẾT THÚC ==========
 
         } else {
+            // XỬ LÝ SAI
+            if (gameState != null) {
+                gameState.incrementWrongAttempts();
+                gameState.resetCombo();
+            }
+
+            if (comboNotification != null) {
+                comboNotification.hide();
+            }
+
+            playShakeAnimation(v1);
+            playShakeAnimation(v2);
+
             lblStatus.setText("❌  Không khớp, thử lại...");
+
             PauseTransition p = new PauseTransition(Duration.millis(750));
             p.setOnFinished(e -> {
                 firstCard.faceDown();
@@ -335,6 +400,29 @@ public class GameController implements Initializable {
             });
             p.play();
         }
+    }
+    private void playMatchEffect(CardFlipView view) {
+        // Scale effect
+        ScaleTransition scale = new ScaleTransition(Duration.millis(150), view);
+        scale.setToX(1.1);
+        scale.setToY(1.1);
+        scale.setAutoReverse(true);
+        scale.setCycleCount(2);
+
+        // Glow effect
+        Glow glow = new Glow(0.7);
+        view.setEffect(glow);
+
+        scale.setOnFinished(e -> view.setEffect(null));
+        scale.play();
+    }
+    private void playShakeAnimation(CardFlipView view) {
+        TranslateTransition shake = new TranslateTransition(Duration.millis(50), view);
+        shake.setFromX(0);
+        shake.setByX(8);
+        shake.setCycleCount(6);
+        shake.setAutoReverse(true);
+        shake.play();
     }
 
     private void onWin() {
