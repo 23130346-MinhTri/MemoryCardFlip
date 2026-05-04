@@ -22,7 +22,7 @@ public class GameState {
     private final IntegerProperty moves;
     private final IntegerProperty timeRemaining; // Đếm ngược từ difficulty.timeLimit
     private final ObjectProperty<GameStatus> status;
-
+    private final IntegerProperty wrongAttempts;
     // ── Score multiplier ──────────────────────────────────────
     private int comboCount;    // Số cặp đúng liên tiếp (cho combo bonus)
 
@@ -35,12 +35,16 @@ public class GameState {
         this.moves          = new SimpleIntegerProperty(0);
         this.timeRemaining  = new SimpleIntegerProperty(difficulty.getTimeLimit());
         this.status         = new SimpleObjectProperty<>(GameStatus.IDLE);
+        this.wrongAttempts = new SimpleIntegerProperty(0);
         this.comboCount     = 0;
     }
 
     // ── Getters / Setters ─────────────────────────────────────
     public Difficulty getDifficulty()   { return difficulty; }
-
+    public int getWrongAttempts() { return wrongAttempts.get(); }
+    public IntegerProperty wrongAttemptsProperty() { return wrongAttempts; }
+    public void setWrongAttempts(int v) { wrongAttempts.set(v); }
+    public void incrementWrongAttempts() { wrongAttempts.set(wrongAttempts.get() + 1); }
     public Card[] getCards()            { return cards.get(); }
     public ObjectProperty<Card[]> cardsProperty() { return cards; }
     public void setCards(Card[] cards)  { this.cards.set(cards); }
@@ -124,6 +128,7 @@ public class GameState {
         timeRemaining.set(difficulty.getTimeLimit());
         status.set(GameStatus.IDLE);
         comboCount = 0;
+        wrongAttempts.set(0);
     }
     @Override
     public String toString() {

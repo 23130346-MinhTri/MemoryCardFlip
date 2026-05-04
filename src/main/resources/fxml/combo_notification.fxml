@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
+
+<!--
+    combo_notification.fxml - Thông báo Streak/Combo khi người chơi ghép đúng liên tiếp
+    Hiển thị animation bật lên và fade out sau 1.5 giây
+-->
+<StackPane xmlns="http://javafx.com/javafx/21"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.example.memorycardflip.controller.ComboNotificationController"
+           styleClass="combo-notification-root"
+           fx:id="rootPane"
+           alignment="CENTER">
+
+    <StackPane styleClass="combo-bubble"
+               fx:id="bubblePane"
+               alignment="CENTER">
+
+        <!-- Icon và text combo -->
+        <Label fx:id="lblComboIcon"
+               text="🔥"
+               styleClass="combo-icon"
+               StackPane.alignment="CENTER"/>
+
+        <Label fx:id="lblComboText"
+               text="x2"
+               styleClass="combo-text"
+               StackPane.alignment="CENTER"/>
+
+    </StackPane>
+
+    <!-- Text phụ mô tả -->
+    <Label fx:id="lblSubText"
+           text="STREAK!"
+           styleClass="combo-subtext"
+           StackPane.alignment="BOTTOM_CENTER"
+    />
+
+</StackPane>
