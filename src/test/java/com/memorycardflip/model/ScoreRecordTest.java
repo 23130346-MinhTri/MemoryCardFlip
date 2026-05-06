@@ -86,8 +86,13 @@ class ScoreRecordTest {
         @DisplayName("Tạo đúng từ GameState hoàn chỉnh")
         void shouldCreateFromCompletedGameState() {
             GameState state = new GameState(Difficulty.EASY);
-            state.setMatchedPairs(8);
-            state.setMoves(15);
+            for (int i = 0; i < Difficulty.EASY.totalPairs(); i++) {
+                state.incrementMatchedPairs();
+            }
+            for (int i = 0; i < 15; i++) {
+                state.incrementMoves();
+            }
+
             state.setTimeRemaining(20); // 60 - 20 = 40s đã dùng
 
             ScoreRecord r = ScoreRecord.fromGameState("Nam", state);

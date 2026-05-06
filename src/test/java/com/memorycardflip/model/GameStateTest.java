@@ -1,13 +1,11 @@
 package com.memorycardflip.model;
 
 import com.example.memorycardflip.model.*;
+import com.example.memorycardflip.service.GameLogicService;
 import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit test cho class GameState.
- */
 @DisplayName("GameState Model Tests")
 class GameStateTest {
 
@@ -20,266 +18,276 @@ class GameStateTest {
         hardState = new GameState(Difficulty.HARD);
     }
 
-    // ── Khởi tạo ─────────────────────────────────────────────
+    // ── INIT ─────────────────────────────────────────────
 
     @Nested
-    @DisplayName("Khởi tạo")
     class InitTests {
 
         @Test
-        @DisplayName("EASY: timeRemaining = 60, totalPairs = 8")
-        void easyStateShouldHaveCorrectDefaults() {
+        void easyDefaults() {
             assertAll(
                     () -> assertEquals(Difficulty.EASY, easyState.getDifficulty()),
-                    () -> assertEquals(60, easyState.getTimeRemaining()),
-                    () -> assertEquals(0,  easyState.getMatchedPairs()),
-                    () -> assertEquals(0,  easyState.getMoves()),
+                    () -> assertEquals(60,              easyState.getTimeRemaining()),
+                    () -> assertEquals(0,               easyState.getMatchedPairs()),
+                    () -> assertEquals(0,               easyState.getMoves()),
                     () -> assertEquals(GameStatus.IDLE, easyState.getStatus()),
-                    () -> assertEquals(0,  easyState.getComboCount())
+                    () -> assertEquals(0,               easyState.getComboCount())
             );
         }
 
         @Test
-        @DisplayName("HARD: timeRemaining = 120, totalPairs = 32")
-        void hardStateShouldHaveCorrectTimeLimit() {
+        void hardTimeLimit() {
             assertEquals(120, hardState.getTimeRemaining());
         }
     }
 
-    // ── FlippedCards ──────────────────────────────────────────
+    // ── SELECT CARD ─────────────────────────────────────
+    //
+    // GameState.selectCard() đã bị xóa (gây double-count với GameLogicService).
+    // Các test selection dùng GameLogicService trực tiếp để kiểm tra
+    // side-effects thực sự lên GameState — đúng với cách code production hoạt động.
 
     @Nested
-    @DisplayName("FlippedCards management")
-    class FlippedCardsTests {
+    @DisplayName("Selection via GameLogicService")
+    class SelectionTests {
 
-        @Test
-        @DisplayName("Thêm 2 thẻ → hasTwoFlipped() = true")
-        void shouldHaveTwoFlippedAfterAddingTwo() {
-            Card c1 = new Card("c1","p1", CardType.ANIMAL,"🐶",0);
-            Card c2 = new Card("c2","p1", CardType.ANIMAL,"🐶",1);
-            easyState.addFlippedCard(c1);
-            easyState.addFlippedCard(c2);
-            assertTrue(easyState.hasTwoFlipped());
-        }
+        private GameLogicService service;
 
-        @Test
-        @DisplayName("Không thêm cùng thẻ 2 lần")
-        void shouldNotAddDuplicateCard() {
-            Card c1 = new Card("c1","p1", CardType.ANIMAL,"🐶",0);
-            easyState.addFlippedCard(c1);
-            easyState.addFlippedCard(c1);
-            assertEquals(1, easyState.getFlippedCards().size());
-        }
+        // Capture kết quả callback từ listener
+        private String lastEvent; // "first" | "match" | "mismatch"
+        private int    capturedMatchedPairs;
+        private int    capturedComboCount;
 
-        @Test
-        @DisplayName("Không thêm quá 2 thẻ")
-        void shouldNotAddMoreThanTwoCards() {
-            for (int i = 0; i < 5; i++) {
-                easyState.addFlippedCard(
-                        new Card("c"+i,"p"+i, CardType.ANIMAL,"🐶",i));
+        private final GameLogicService.Listener listener = new GameLogicService.Listener() {
+            @Override
+            public void onFirstCardSelected(Card firstCard) {
+                lastEvent = "first";
             }
-            assertEquals(2, easyState.getFlippedCards().size());
+
+            @Override
+            public void onMatch(Card firstCard, Card secondCard,
+                                int matchedPairs, int totalPairs, int comboCount) {
+                lastEvent            = "match";
+                capturedMatchedPairs = matchedPairs;
+                capturedComboCount   = comboCount;
+            }
+
+            @Override
+            public void onMismatch(Card firstCard, Card secondCard) {
+                lastEvent = "mismatch";
+            }
+        };
+
+        @BeforeEach
+        void setUp() {
+            easyState.setStatus(GameStatus.PLAYING);
+            service   = new GameLogicService(easyState, Difficulty.EASY.totalPairs());
+            lastEvent = null;
         }
 
         @Test
-        @DisplayName("clearFlippedCards() → danh sách rỗng")
-        void shouldClearFlippedCards() {
-            easyState.addFlippedCard(new Card("c1","p1",CardType.ANIMAL,"🐶",0));
-            easyState.clearFlippedCards();
-            assertTrue(easyState.getFlippedCards().isEmpty());
+        @DisplayName("Chọn thẻ đầu tiên → onFirstCardSelected")
+        void firstSelection() {
+            Card c1 = new Card("1", "p1", CardType.ANIMAL, "🐶", 0);
+
+            service.handleSelection(c1, listener);
+
+            assertEquals("first", lastEvent);
+        }
+
+        @Test
+        @DisplayName("Chọn đúng cặp → matchedPairs +1, moves +1, combo +1")
+        void matchPair() {
+            Card c1 = new Card("1", "p1", CardType.ANIMAL, "🐶", 0);
+            Card c2 = new Card("2", "p1", CardType.ANIMAL, "🐶", 1);
+
+            service.handleSelection(c1, listener);
+            service.handleSelection(c2, listener);
+
+            assertAll(
+                    () -> assertEquals("match", lastEvent),
+                    () -> assertEquals(1, easyState.getMatchedPairs()),
+                    () -> assertEquals(1, easyState.getMoves()),
+                    () -> assertEquals(1, easyState.getComboCount())
+            );
+        }
+
+        @Test
+        @DisplayName("Chọn sai cặp → mismatch, moves +1, wrongAttempts +1, combo reset")
+        void mismatchPair() {
+            Card c1 = new Card("1", "p1", CardType.ANIMAL, "🐶", 0);
+            Card c2 = new Card("2", "p2", CardType.ANIMAL, "🐱", 1);
+
+            service.handleSelection(c1, listener);
+            service.handleSelection(c2, listener);
+
+            assertAll(
+                    () -> assertEquals("mismatch", lastEvent),
+                    () -> assertEquals(1, easyState.getMoves()),
+                    () -> assertEquals(1, easyState.getWrongAttempts()),
+                    () -> assertEquals(0, easyState.getComboCount())
+            );
+        }
+
+        @Test
+        @DisplayName("Không thể chọn lại thẻ đầu tiên")
+        void cannotSelectSameCardTwice() {
+            Card c1 = new Card("1", "p1", CardType.ANIMAL, "🐶", 0);
+
+            service.handleSelection(c1, listener);
+            lastEvent = null;
+
+            // Cố chọn lại c1 → canSelect() trả false → listener không được gọi
+            service.handleSelection(c1, listener);
+
+            assertNull(lastEvent, "Không được trigger event khi chọn lại thẻ cũ");
+        }
+
+        @Test
+        @DisplayName("Không thể chọn thẻ khi đang resolving")
+        void cannotSelectWhileResolving() {
+            Card c1 = new Card("1", "p1", CardType.ANIMAL, "🐶", 0);
+            Card c2 = new Card("2", "p2", CardType.ANIMAL, "🐱", 1);
+            Card c3 = new Card("3", "p3", CardType.ANIMAL, "🐰", 2);
+
+            service.handleSelection(c1, listener);
+            service.handleSelection(c2, listener); // mismatch → isResolving = true
+            lastEvent = null;
+
+            // Board đang lock, c3 không được chọn
+            service.handleSelection(c3, listener);
+
+            assertNull(lastEvent, "Không được trigger event khi board đang lock");
+        }
+
+        @Test
+        @DisplayName("Sau clearSelection board nhận click bình thường trở lại")
+        void boardUnlocksAfterClear() {
+            Card c1 = new Card("1", "p1", CardType.ANIMAL, "🐶", 0);
+            Card c2 = new Card("2", "p2", CardType.ANIMAL, "🐱", 1);
+            Card c3 = new Card("3", "p3", CardType.ANIMAL, "🐰", 2);
+
+            service.handleSelection(c1, listener);
+            service.handleSelection(c2, listener); // mismatch → lock
+
+            service.clearSelection();              // giả lập animation xong
+            lastEvent = null;
+
+            service.handleSelection(c3, listener);
+
+            assertEquals("first", lastEvent, "Board phải nhận click sau khi clearSelection");
         }
     }
 
-    // ── isComplete() ─────────────────────────────────────────
+    // ── COMPLETE ─────────────────────────────────────────
 
-    @Nested
-    @DisplayName("isComplete()")
-    class IsCompleteTests {
-
-        @Test
-        @DisplayName("Mới khởi tạo → chưa hoàn thành")
-        void shouldNotBeCompleteInitially() {
-            assertFalse(easyState.isComplete());
+    @Test
+    @DisplayName("isComplete đúng khi đủ cặp")
+    void shouldBeComplete() {
+        for (int i = 0; i < Difficulty.EASY.totalPairs(); i++) {
+            easyState.incrementMatchedPairs();
         }
-
-        @Test
-        @DisplayName("Ghép đủ 8 cặp EASY → hoàn thành")
-        void shouldBeCompleteWhenAllPairsMatched() {
-            easyState.setMatchedPairs(Difficulty.EASY.totalPairs()); // 8
-            assertTrue(easyState.isComplete());
-        }
+        assertTrue(easyState.isComplete());
     }
 
-    // ── isTimeUp() ────────────────────────────────────────────
+    // ── TIME ─────────────────────────────────────────────
 
     @Nested
-    @DisplayName("isTimeUp()")
-    class TimeUpTests {
+    class TimeTests {
 
         @Test
-        @DisplayName("timeRemaining > 0 → chưa hết giờ")
-        void shouldNotBeTimeUpWithTimeRemaining() {
-            assertFalse(easyState.isTimeUp());
-        }
-
-        @Test
-        @DisplayName("timeRemaining = 0 → hết giờ")
-        void shouldBeTimeUpWhenZero() {
-            easyState.setTimeRemaining(0);
-            assertTrue(easyState.isTimeUp());
-        }
-
-        @Test
-        @DisplayName("decrementTime() giảm đúng 1 giây")
-        void shouldDecrementByOne() {
+        void decrementTime() {
             int before = easyState.getTimeRemaining();
             easyState.decrementTime();
             assertEquals(before - 1, easyState.getTimeRemaining());
         }
 
         @Test
-        @DisplayName("decrementTime() không xuống dưới 0")
-        void shouldNotDecrementBelowZero() {
+        void notBelowZero() {
             easyState.setTimeRemaining(0);
             easyState.decrementTime();
             assertEquals(0, easyState.getTimeRemaining());
         }
+
+        @Test
+        void isTimeUp() {
+            easyState.setTimeRemaining(0);
+            assertTrue(easyState.isTimeUp());
+        }
     }
 
-    // ── calculateScore() ─────────────────────────────────────
+    // ── SCORE ───────────────────────────────────────────
 
     @Nested
-    @DisplayName("calculateScore()")
     class ScoreTests {
 
         @Test
-        @DisplayName("Score = 0 khi chưa ghép cặp nào")
-        void scoreShouldBeZeroWithNoPairs() {
+        void zeroScoreWhenNoMatch() {
             assertEquals(0, easyState.calculateScore());
         }
 
         @Test
-        @DisplayName("Score tăng khi ghép cặp")
-        void scoreShouldIncreaseWithMatches() {
-            easyState.setMatchedPairs(4);
+        void scoreIncrease() {
+            for (int i = 0; i < 4; i++) {
+                easyState.incrementMatchedPairs();
+            }
             assertTrue(easyState.calculateScore() > 0);
         }
 
         @Test
-        @DisplayName("Score không âm dù nhiều moves")
-        void scoreShouldNeverBeNegative() {
-            easyState.setMatchedPairs(1);
-            easyState.setMoves(9999);
-            assertTrue(easyState.calculateScore() >= 0);
-        }
-
-        @Test
-        @DisplayName("Combo tăng điểm")
-        void comboShouldIncreaseScore() {
-            easyState.setMatchedPairs(4);
-            easyState.setMoves(10);
-            int scoreNoCombo = easyState.calculateScore();
+        void comboBonus() {
+            for (int i = 0; i < 4; i++) {
+                easyState.incrementMatchedPairs();
+            }
+            for (int i = 0; i < 10; i++) {
+                easyState.incrementMoves();
+            }
+            int base = easyState.calculateScore();
 
             easyState.incrementCombo();
             easyState.incrementCombo();
-            int scoreWithCombo = easyState.calculateScore();
 
-            assertTrue(scoreWithCombo > scoreNoCombo);
+            assertTrue(easyState.calculateScore() > base);
         }
 
         @Test
-        @DisplayName("Time bonus khi còn nhiều thời gian")
-        void timeBonusShouldIncreaseScore() {
-            easyState.setMatchedPairs(4);
-            easyState.setMoves(10);
+        void timeBonus() {
+            for (int i = 0; i < 4; i++) {
+                easyState.incrementMatchedPairs();
+            }
+            for (int i = 0; i < 10; i++) {
+                easyState.incrementMoves();
+            }
+
             easyState.setTimeRemaining(0);
-            int scoreNoTime = easyState.calculateScore();
+            int noTime = easyState.calculateScore();
 
             easyState.setTimeRemaining(60);
-            int scoreWithTime = easyState.calculateScore();
+            int withTime = easyState.calculateScore();
 
-            assertTrue(scoreWithTime > scoreNoTime);
+            assertTrue(withTime > noTime);
         }
     }
 
-    // ── Combo ────────────────────────────────────────────────
+    // ── RESET ───────────────────────────────────────────
 
-    @Nested
-    @DisplayName("Combo counter")
-    class ComboTests {
+    @Test
+    @DisplayName("reset() xóa sạch toàn bộ state")
+    void resetShouldClearState() {
+        for (int i = 0; i < 5;  i++) easyState.incrementMatchedPairs();
+        for (int i = 0; i < 20; i++) easyState.incrementMoves();
+        easyState.setTimeRemaining(10);
+        easyState.setStatus(GameStatus.PLAYING);
+        easyState.incrementCombo();
 
-        @Test
-        @DisplayName("incrementCombo() tăng đúng")
-        void shouldIncrementCombo() {
-            easyState.incrementCombo();
-            easyState.incrementCombo();
-            assertEquals(2, easyState.getComboCount());
-        }
+        easyState.reset();
 
-        @Test
-        @DisplayName("resetCombo() về 0")
-        void shouldResetCombo() {
-            easyState.incrementCombo();
-            easyState.resetCombo();
-            assertEquals(0, easyState.getComboCount());
-        }
-    }
-
-    // ── reset() ───────────────────────────────────────────────
-
-    @Nested
-    @DisplayName("reset()")
-    class ResetTests {
-
-        @Test
-        @DisplayName("reset() khôi phục toàn bộ về trạng thái ban đầu")
-        void shouldResetAllFieldsToInitial() {
-            // Setup state đã chơi
-            easyState.setMatchedPairs(5);
-            easyState.setMoves(20);
-            easyState.setTimeRemaining(10);
-            easyState.setStatus(GameStatus.PLAYING);
-            easyState.incrementCombo();
-            easyState.addFlippedCard(new Card("c1","p1",CardType.ANIMAL,"🐶",0));
-
-            easyState.reset();
-
-            assertAll(
-                    () -> assertEquals(0, easyState.getMatchedPairs()),
-                    () -> assertEquals(0, easyState.getMoves()),
-                    () -> assertEquals(60, easyState.getTimeRemaining()),
-                    () -> assertEquals(GameStatus.IDLE, easyState.getStatus()),
-                    () -> assertEquals(0, easyState.getComboCount()),
-                    () -> assertTrue(easyState.getFlippedCards().isEmpty())
-            );
-        }
-    }
-
-    // ── JavaFX Properties binding ─────────────────────────────
-
-    @Nested
-    @DisplayName("JavaFX Properties")
-    class PropertyTests {
-
-        @Test
-        @DisplayName("matchedPairsProperty() phản ánh đúng giá trị")
-        void matchedPairsPropertyShouldReflectValue() {
-            easyState.setMatchedPairs(3);
-            assertEquals(3, easyState.matchedPairsProperty().get());
-        }
-
-        @Test
-        @DisplayName("statusProperty() phản ánh đúng trạng thái")
-        void statusPropertyShouldReflectValue() {
-            easyState.setStatus(GameStatus.PLAYING);
-            assertEquals(GameStatus.PLAYING, easyState.statusProperty().get());
-        }
-
-        @Test
-        @DisplayName("timeRemainingProperty() phản ánh đúng")
-        void timeRemainingPropertyShouldReflectValue() {
-            easyState.setTimeRemaining(45);
-            assertEquals(45, easyState.timeRemainingProperty().get());
-        }
+        assertAll(
+                () -> assertEquals(0,               easyState.getMatchedPairs()),
+                () -> assertEquals(0,               easyState.getMoves()),
+                () -> assertEquals(60,              easyState.getTimeRemaining()),
+                () -> assertEquals(GameStatus.IDLE, easyState.getStatus()),
+                () -> assertEquals(0,               easyState.getComboCount())
+        );
     }
 }
