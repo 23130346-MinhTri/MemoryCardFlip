@@ -77,7 +77,7 @@ public class Card {
      */
     public void match() {
         isMatched.set(true);
-        isFlipped.set(false);
+        isFlipped.set(true); // ← giữ true, thẻ vẫn đang lật mặt trước
     }
 
     /**
@@ -100,7 +100,7 @@ public class Card {
      * Thẻ có thể click không (chưa matched và chưa lật).
      */
     public boolean isClickable() {
-        return !isMatched.get() && !isFlipped.get();
+        return !isMatched.get(); // ← chỉ chặn khi đã matched
     }
 
     // ── equals / hashCode dựa trên id ─────────────────────────

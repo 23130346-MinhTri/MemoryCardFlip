@@ -18,7 +18,7 @@ public class ComboNotificationController implements Initializable {
     @FXML private Label lblComboIcon;
     @FXML private Label lblComboText;
     @FXML private Label lblSubText;
-
+    private FadeTransition currentFadeOut;
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         if (rootPane != null) {
@@ -28,7 +28,7 @@ public class ComboNotificationController implements Initializable {
     }
 
     public void showCombo(int comboCount) {
-        if (rootPane == null) return;
+        if (currentFadeOut != null) currentFadeOut.stop();
 
         if (comboCount >= 2) {
             lblComboText.setText("x" + comboCount);
@@ -63,6 +63,7 @@ public class ComboNotificationController implements Initializable {
             popIn.play();
 
             FadeTransition fadeOut = new FadeTransition(Duration.millis(300), rootPane);
+            currentFadeOut = fadeOut;
             fadeOut.setDelay(Duration.seconds(1.5));
             fadeOut.setToValue(0);
             fadeOut.setOnFinished(e -> rootPane.setVisible(false));

@@ -1,10 +1,6 @@
 package com.example.memorycardflip.controller;
 
-import com.example.memorycardflip.model.Difficulty;
-import com.example.memorycardflip.model.GameState;
-import com.example.memorycardflip.model.ScoreRecord;
-import com.example.memorycardflip.model.ScoreStorage;
-import com.example.memorycardflip.model.JsonScoreStorage;
+import com.example.memorycardflip.model.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +23,7 @@ public class ScoreManager {
         loadScores();
     }
 
-    public static ScoreManager getInstance() {
+    public static synchronized ScoreManager getInstance() {
         if (instance == null) {
             instance = new ScoreManager();
         }
@@ -56,8 +52,8 @@ public class ScoreManager {
      * Lưu điểm hiện tại
      */
     public void saveScore(GameState gameState, String playerName) {
-        if (gameState == null ) {
-            return; // Chỉ lưu khi thắng
+        if (gameState == null || gameState.getStatus() != GameStatus.WON) {
+            return;
         }
 
         ScoreRecord record = ScoreRecord.fromGameState(playerName, gameState);

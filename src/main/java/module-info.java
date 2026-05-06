@@ -9,4 +9,5 @@ module com.example.memorycardflip {
     opens com.example.memorycardflip.ui to javafx.fxml;
 
     exports com.example.memorycardflip;
+    opens com.example.memorycardflip.service to javafx.fxml;
 }
