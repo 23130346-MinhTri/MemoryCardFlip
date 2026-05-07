@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @DisplayName("ScoreRecord Tests")
 class ScoreRecordTest {
-
+    
     // ── Constructor / Compact constructor ─────────────────────
 
     @Nested

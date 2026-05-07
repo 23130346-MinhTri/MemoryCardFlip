@@ -76,4 +76,20 @@ public class ScoreRecord {
                 playerName, difficulty.getDisplayName(), score, moves,
                 formattedTimeUsed(), formattedTimestamp());
     }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ScoreRecord other)) return false;
+        return score     == other.score
+                && moves     == other.moves
+                && timeUsed  == other.timeUsed
+                && java.util.Objects.equals(playerName, other.playerName)
+                && difficulty == other.difficulty
+                && java.util.Objects.equals(timestamp,  other.timestamp);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(playerName, difficulty, score, moves, timeUsed, timestamp);
+    }
 }
