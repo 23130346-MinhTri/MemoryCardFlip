@@ -23,6 +23,7 @@ public class ScoreHistoryController implements Initializable {
     @FXML private TableColumn<ScoreRecord, Integer> colScore;
     @FXML private TableColumn<ScoreRecord, Integer> colMoves;
     @FXML private TableColumn<ScoreRecord, String> colTimeUsed;
+    @FXML private ComboBox<Difficulty> comboDifficulty;
     @FXML private ComboBox<String> comboFilter;
     @FXML private Label lblTotalGames;
 
@@ -40,16 +41,16 @@ public class ScoreHistoryController implements Initializable {
                 new javafx.beans.property.SimpleStringProperty(cellData.getValue().formattedTimestamp()));
 
         colDifficulty.setCellValueFactory(cellData ->
-                new javafx.beans.property.SimpleStringProperty(cellData.getValue().difficulty().getDisplayName()));
+                new javafx.beans.property.SimpleStringProperty(cellData.getValue().getDifficulty().getDisplayName()));
 
         colScore.setCellValueFactory(cellData ->
                 javafx.beans.binding.Bindings.createObjectBinding(
-                        () -> cellData.getValue().score()
+                        () -> cellData.getValue().getScore()
                 ));
 
         colMoves.setCellValueFactory(cellData ->
                 javafx.beans.binding.Bindings.createObjectBinding(
-                        () -> cellData.getValue().moves()
+                        () -> cellData.getValue().getMoves()
                 ));
 
         colTimeUsed.setCellValueFactory(cellData ->
@@ -77,13 +78,26 @@ public class ScoreHistoryController implements Initializable {
         } else {
             Difficulty diff = Difficulty.valueOf(filter);
             List<ScoreRecord> filtered = allScores.stream()
-                    .filter(r -> r.difficulty() == diff)
+                    .filter(r -> r.getDifficulty() == diff)
                     .toList();
             tableView.getItems().setAll(filtered);
         }
         lblTotalGames.setText("Tổng số ván: " + tableView.getItems().size());
     }
+    @FXML
+    public void onClearAll() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Xóa điểm");
+        alert.setHeaderText("Xóa tất cả điểm số?");
+        alert.setContentText("Hành động này không thể hoàn tác!");
 
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                scoreManager.clearAllScores();
+                loadAllHistory();
+            }
+        });
+    }
     @FXML
     public void onBackToMenu() {
         SceneManager.getInstance().showMenu();

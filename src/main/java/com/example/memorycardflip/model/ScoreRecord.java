@@ -5,37 +5,42 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Bản ghi điểm số bất biến (Java 17 Record).
- * Lưu vào ScoreStorage sau mỗi ván thắng.
+ * Bản ghi điểm số — lưu vào ScoreStorage sau mỗi ván thắng.
+ * Dùng class thường thay vì record để Gson serialize/deserialize được.
  */
-public record ScoreRecord(
-        String playerName,
-        Difficulty difficulty,
-        int score,
-        int moves,
-        long timeUsed,       // Số giây đã dùng (= timeLimit - timeRemaining)
-        Instant timestamp
-) {
+public class ScoreRecord {
+
+    private String     playerName;
+    private Difficulty difficulty;
+    private int        score;
+    private int        moves;
+    private long       timeUsed;   // giây đã dùng = timeLimit - timeRemaining
+    private Instant    timestamp;
+
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
                     .withZone(ZoneId.systemDefault());
 
-    // ── Compact constructor — validation ──────────────────────
-    public ScoreRecord {
-        if (playerName == null || playerName.isBlank()) playerName = "Anonymous";
+    // ── Constructor ───────────────────────────────────────────
+    public ScoreRecord(String playerName, Difficulty difficulty,
+                       int score, int moves, long timeUsed, Instant timestamp) {
+        this.playerName = (playerName == null || playerName.isBlank()) ? "Anonymous" : playerName;
         if (score    < 0) throw new IllegalArgumentException("Score cannot be negative");
         if (moves    < 0) throw new IllegalArgumentException("Moves cannot be negative");
         if (timeUsed < 0) throw new IllegalArgumentException("Time cannot be negative");
-        if (timestamp == null) timestamp = Instant.now();
+        this.difficulty = difficulty;
+        this.score      = score;
+        this.moves      = moves;
+        this.timeUsed   = timeUsed;
+        this.timestamp  = (timestamp == null) ? Instant.now() : timestamp;
     }
 
-    // ── Factory method tiện dùng ──────────────────────────────
+    // ── Factory methods ───────────────────────────────────────
     public static ScoreRecord of(String playerName, Difficulty difficulty,
                                  int score, int moves, long timeUsed) {
         return new ScoreRecord(playerName, difficulty, score, moves, timeUsed, Instant.now());
     }
 
-    /** Tạo từ GameState sau khi game kết thúc */
     public static ScoreRecord fromGameState(String playerName, GameState state) {
         long used = state.getDifficulty().getTimeLimit() - state.getTimeRemaining();
         return ScoreRecord.of(
@@ -46,6 +51,14 @@ public record ScoreRecord(
                 used
         );
     }
+
+    // ── Getters ───────────────────────────────────────────────
+    public String     getPlayerName() { return playerName; }
+    public Difficulty getDifficulty() { return difficulty; }
+    public int        getScore()      { return score;      }
+    public int        getMoves()      { return moves;      }
+    public long       getTimeUsed()   { return timeUsed;   }
+    public Instant    getTimestamp()  { return timestamp;  }
 
     // ── Display helpers ───────────────────────────────────────
     public String formattedTimestamp() {
@@ -58,7 +71,8 @@ public record ScoreRecord(
 
     @Override
     public String toString() {
-        return String.format("ScoreRecord{player='%s', difficulty=%s, score=%d, moves=%d, time=%s, at=%s}",
+        return String.format(
+                "ScoreRecord{player='%s', difficulty=%s, score=%d, moves=%d, time=%s, at=%s}",
                 playerName, difficulty.getDisplayName(), score, moves,
                 formattedTimeUsed(), formattedTimestamp());
     }

@@ -24,12 +24,12 @@ class ScoreRecordTest {
         void shouldCreateValidRecord() {
             ScoreRecord r = ScoreRecord.of("Minh", Difficulty.EASY, 500, 10, 25L);
             assertAll(
-                    () -> assertEquals("Minh",         r.playerName()),
-                    () -> assertEquals(Difficulty.EASY, r.difficulty()),
-                    () -> assertEquals(500,             r.score()),
-                    () -> assertEquals(10,              r.moves()),
-                    () -> assertEquals(25L,             r.timeUsed()),
-                    () -> assertNotNull(r.timestamp())
+                    () -> assertEquals("Minh",         r.getPlayerName()),
+                    () -> assertEquals(Difficulty.EASY, r.getDifficulty()),
+                    () -> assertEquals(500,             r.getScore()),
+                    () -> assertEquals(10,              r.getMoves()),
+                    () -> assertEquals(25L,             r.getTimeUsed()),
+                    () -> assertNotNull(r.getTimestamp())
             );
         }
 
@@ -37,14 +37,14 @@ class ScoreRecordTest {
         @DisplayName("playerName null → mặc định 'Anonymous'")
         void nullPlayerNameShouldDefaultToAnonymous() {
             ScoreRecord r = ScoreRecord.of(null, Difficulty.EASY, 100, 5, 10L);
-            assertEquals("Anonymous", r.playerName());
+            assertEquals("Anonymous", r.getPlayerName());
         }
 
         @Test
         @DisplayName("playerName blank → mặc định 'Anonymous'")
         void blankPlayerNameShouldDefaultToAnonymous() {
             ScoreRecord r = ScoreRecord.of("   ", Difficulty.EASY, 100, 5, 10L);
-            assertEquals("Anonymous", r.playerName());
+            assertEquals("Anonymous", r.getPlayerName());
         }
 
         @Test
@@ -72,7 +72,7 @@ class ScoreRecordTest {
         @DisplayName("timestamp null → tự set Instant.now()")
         void nullTimestampShouldDefaultToNow() {
             ScoreRecord r = new ScoreRecord("A", Difficulty.EASY, 100, 5, 10L, null);
-            assertNotNull(r.timestamp());
+            assertNotNull(r.getTimestamp());
         }
     }
 
@@ -98,11 +98,11 @@ class ScoreRecordTest {
             ScoreRecord r = ScoreRecord.fromGameState("Nam", state);
 
             assertAll(
-                    () -> assertEquals("Nam",          r.playerName()),
-                    () -> assertEquals(Difficulty.EASY, r.difficulty()),
-                    () -> assertEquals(40L,             r.timeUsed()),
-                    () -> assertEquals(15,              r.moves()),
-                    () -> assertTrue(r.score() > 0)
+                    () -> assertEquals("Nam",          r.getPlayerName()),
+                    () -> assertEquals(Difficulty.EASY, r.getDifficulty()),
+                    () -> assertEquals(40L,             r.getTimeUsed()),
+                    () -> assertEquals(15,              r.getMoves()),
+                    () -> assertTrue(r.getScore() > 0)
             );
         }
     }

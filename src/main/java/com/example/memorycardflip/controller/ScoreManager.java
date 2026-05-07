@@ -60,7 +60,7 @@ public class ScoreManager {
         cache.add(record);
 
         // Sắp xếp theo điểm giảm dần
-        cache.sort((a, b) -> Integer.compare(b.score(), a.score()));
+        cache.sort((a, b) -> Integer.compare(b.getScore(), a.getScore()));
 
         try {
             storage.save(cache);
@@ -87,7 +87,7 @@ public class ScoreManager {
      */
     public List<ScoreRecord> getTopScores(Difficulty difficulty, int limit) {
         return cache.stream()
-                .filter(r -> r.difficulty() == difficulty)
+                .filter(r -> r.getDifficulty() == difficulty)
                 .limit(limit)
                 .toList();
     }
@@ -97,7 +97,7 @@ public class ScoreManager {
      */
     public Optional<ScoreRecord> getHighScore(Difficulty difficulty) {
         return cache.stream()
-                .filter(r -> r.difficulty() == difficulty)
+                .filter(r -> r.getDifficulty() == difficulty)
                 .findFirst();
     }
 
@@ -106,7 +106,7 @@ public class ScoreManager {
      */
     public List<ScoreRecord> getScoresByDifficulty(Difficulty difficulty) {
         return cache.stream()
-                .filter(r -> r.difficulty() == difficulty)
+                .filter(r -> r.getDifficulty() == difficulty)
                 .toList();
     }
 
@@ -115,7 +115,7 @@ public class ScoreManager {
      */
     public boolean isNewHighScore(Difficulty difficulty, int score) {
         Optional<ScoreRecord> highScore = getHighScore(difficulty);
-        return highScore.isEmpty() || score > highScore.get().score();
+        return highScore.isEmpty() || score > highScore.get().getScore();
     }
 
     /**

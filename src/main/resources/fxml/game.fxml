@@ -50,7 +50,7 @@
                 <!-- Còn lại (Remaining Pairs) -->
                 <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
                     <Label text="CÒN LẠI" styleClass="hud-label"/>
-                    <Label fx:id="lblRemaining" text="8" styleClass="hud-value hud-value-remain"/>
+                    <Label fx:id="lblRemaining" text="8" styleClass="hud-value, hud-value-remain"/>
                 </VBox>
 
                 <Separator orientation="VERTICAL" styleClass="hud-divider"/>
@@ -58,7 +58,7 @@
                 <!-- ĐIỂM SỐ (Score) - Dữ liệu từ GameState -->
                 <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
                     <Label text="ĐIỂM" styleClass="hud-label"/>
-                    <Label fx:id="lblScore" text="0" styleClass="hud-value hud-value-accent"/>
+                    <Label fx:id="lblScore" text="0" styleClass="hud-value, hud-value-accent"/>
                 </VBox>
 
                 <Separator orientation="VERTICAL" styleClass="hud-divider"/>

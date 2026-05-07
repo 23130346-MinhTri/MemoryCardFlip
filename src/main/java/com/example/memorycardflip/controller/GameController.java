@@ -65,7 +65,7 @@ public class GameController implements Initializable {
     @FXML private Label lblRemaining;  // Hiển thị số cặp còn lại
     @FXML private Label lblCombo;      // Hiển thị combo (giữ đà ghép đúng)
     // ── Layout constants ──────────────────────────────────────
-
+    private boolean isRendering = false;
     private static final double CARD_RATIO = 1.18; // height / width
 
     private static final double[] GAP     = { 10, 8, 6 };   // EASY, MEDIUM, HARD
@@ -110,8 +110,16 @@ public class GameController implements Initializable {
             javafx.application.Platform.runLater(this::startBoard);
         }
         loadComboNotification();
-        gridWrapper.widthProperty().addListener((obs, oldVal, newVal) -> rerender());
-        gridWrapper.heightProperty().addListener((obs, oldVal, newVal) -> rerender());
+        gridWrapper.widthProperty().addListener((obs, oldVal, newVal) -> {
+            if (Math.abs(newVal.doubleValue() - oldVal.doubleValue()) > 1.0) {
+                rerender();
+            }
+        });
+        gridWrapper.heightProperty().addListener((obs, oldVal, newVal) -> {
+            if (Math.abs(newVal.doubleValue() - oldVal.doubleValue()) > 1.0) {
+                rerender();
+            }
+        });
     }
     private void loadComboNotification() {
         try {
@@ -275,42 +283,32 @@ public class GameController implements Initializable {
         cardGrid.getRowConstraints().clear();
 
         int    gs  = difficulty.getGridSize();
-        int    idx = idx();
-        double gap = cardGrid.getHgap() > 0 ? cardGrid.getHgap() : 8;
+        double gap = GAP[idx()];
 
         // ── Tính available space ──────────────────────────────
-        // Chiều rộng: lấy từ gridWrapper (đã layout xong nhờ Platform.runLater)
         double availW = gridWrapper.getWidth();
-        if (availW <= 0) {
-            // Backup: lấy từ scene nếu gridWrapper chưa có width
-            availW = gridWrapper.getScene() != null
-                    ? gridWrapper.getScene().getWidth()
-                    : 540;
-        }
+        double availH = gridWrapper.getHeight();   // gridWrapper đã là CENTER, KHÔNG trừ topBox/bottomBox
 
-        // Chiều cao: scene height trừ HUD và status bar (luôn chính xác)
-        double height = gridWrapper.getHeight();
-        // Trừ UI thật thay vì hardcode
-        if (topBox != null) {
-            height -= topBox.getHeight();
-        }
-        if (bottomBox != null) {
-            height -= bottomBox.getHeight();
-        }
-        // Lấy padding thật
+        if (availW <= 0) availW = 480;
+        if (availH <= 0) availH = 480;
+
         Insets padding = cardGrid.getPadding();
-
         double usableW = availW - padding.getLeft() - padding.getRight();
-        double usableH = height - padding.getTop() - padding.getBottom();
+        double usableH = availH - padding.getTop()  - padding.getBottom();
 
         // ── Tính kích thước thẻ ──────────────────────────────
         double cardByW = (usableW - gap * (gs - 1)) / gs;
         double cardByH = (usableH - gap * (gs - 1)) / gs;
 
-        // Chọn chiều nhỏ hơn → thẻ không tràn theo cả ngang lẫn dọc
         double cardW = Math.min(cardByW, cardByH / CARD_RATIO);
+        cardW = Math.min(cardW, MAX_W[idx()]);      // giới hạn max width
         double cardH = cardW * CARD_RATIO;
-
+// Sau khi tính xong cardW, cardH — khóa kích thước grid lại
+        double totalGridW = gs * cardW + (gs - 1) * gap + padding.getLeft() + padding.getRight();
+        double totalGridH = gs * cardH + (gs - 1) * gap + padding.getTop()  + padding.getBottom();
+        cardGrid.setMaxSize(totalGridW, totalGridH);
+        cardGrid.setMinSize(totalGridW, totalGridH);
+        cardGrid.setPrefSize(totalGridW, totalGridH);
         cardGrid.setHgap(gap);
         cardGrid.setVgap(gap);
 
@@ -676,8 +674,13 @@ public class GameController implements Initializable {
         SceneManager.getInstance().showMenu();
     }
     private void rerender() {
-        if (gameState != null && gameState.getCards() != null) {
-            renderGrid(List.of(gameState.getCards()));
-        }
+        if (isRendering) return;
+        isRendering = true;
+        javafx.application.Platform.runLater(() -> {
+            if (gameState != null && gameState.getCards() != null) {
+                renderGrid(List.of(gameState.getCards()));
+            }
+            isRendering = false;
+        });
     }
 }
