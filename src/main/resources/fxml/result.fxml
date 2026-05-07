@@ -44,7 +44,7 @@
             <!-- Điểm số -->
             <HBox alignment="CENTER_LEFT" spacing="20">
                 <Label text="ĐIỂM SỐ" styleClass="stats-label" minWidth="100"/>
-                <Label fx:id="lblScoreValue" text="0" styleClass="stats-value stats-score"/>
+                <Label fx:id="lblScoreValue" text="0" styleClass="stats-value, stats-score"/>
             </HBox>
 
             <!-- Số lượt di chuyển -->
@@ -56,7 +56,7 @@
             <!-- Thời gian còn lại -->
             <HBox alignment="CENTER_LEFT" spacing="20">
                 <Label text="THỜI GIAN CÒN" styleClass="stats-label" minWidth="100"/>
-                <Label fx:id="lblTimeRemainingValue" text="00:00" styleClass="stats-value stats-time"/>
+                <Label fx:id="lblTimeRemainingValue" text="00:00" styleClass="stats-value, stats-time"/>
             </HBox>
 
             <!-- Số cặp đã ghép -->
@@ -68,7 +68,7 @@
             <!-- High Score / Kỷ lục (sẽ được cập nhật sau khi lưu) -->
             <HBox alignment="CENTER_LEFT" spacing="20">
                 <Label text="KỶ LỤC MỚI" styleClass="stats-label" minWidth="100"/>
-                <Label fx:id="lblNewHighScore" text="---" styleClass="stats-value stats-highscore"/>
+                <Label fx:id="lblNewHighScore" text="---" styleClass="stats-value, stats-highscore"/>
             </HBox>
         </VBox>
 

@@ -30,10 +30,11 @@ public class ResultController implements Initializable {
     }
 
     /**
-     * [UC-RS-01] Hiển thị kết quả của ván vừa kết thúc.
+     * [UC-03] Hiển thị kết quả của ván vừa kết thúc.
      *
+     * <p>Use Case này trình bày kết quả cho người chơi khi ván đã WIN hoặc LOSE.</p>
      * <p>Precondition: SceneManager đang giữ currentGameState của ván vừa xong.</p>
-     * <p>Postcondition: UI kết quả hiển thị trạng thái WIN/LOSE và các thống kê chính.</p>
+     * <p>Postcondition: UI kết quả hiển thị trạng thái WIN/LOSE, điểm số, thời gian và số lượt.</p>
      */
     private void loadUCRS01DisplayResult() {
         if (gameState == null) {
@@ -73,20 +74,23 @@ public class ResultController implements Initializable {
         System.out.println("Matched pairs: " + gameState.getMatchedPairs());
         System.out.println("Total pairs: " + gameState.getDifficulty().totalPairs());
         String playerName = "Player";
+        // [UC-10] Lưu điểm cao vào bộ nhớ khi người chơi thắng.
         scoreManager.saveScore(gameState, playerName);  // ← BỎ if(won), gọi trực tiếp
 
-// Kiểm tra high score (chỉ hiển thị khi thắng)
+        // Kiểm tra high score (chỉ hiển thị khi thắng)
+        // Trong loadUCRS01DisplayResult(), sửa phần hiển thị high score
         if (won) {
+            int bestScore = scoreManager.getBestScore(gameState.getDifficulty());
             boolean isNewHighScore = scoreManager.isNewHighScore(
                     gameState.getDifficulty(),
                     gameState.calculateScore()
             );
-
             if (isNewHighScore) {
-                lblNewHighScore.setText("🏆 NEW HIGH SCORE! 🏆");
+                lblNewHighScore.setText("🏆 " + gameState.calculateScore() + " (Kỷ lục mới!)");
                 lblNewHighScore.setStyle("-fx-text-fill: #ffd700;");
             } else {
-                lblNewHighScore.setText("---");
+                lblNewHighScore.setText( ""+ bestScore);
+                lblNewHighScore.setStyle("-fx-text-fill: #7ec8e3;");
             }
         } else {
             lblNewHighScore.setText("---");

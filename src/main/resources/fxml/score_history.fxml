@@ -22,7 +22,7 @@
         <Label text="Lọc theo độ khó:" styleClass="stats-label"/>
         <ComboBox fx:id="comboFilter" prefWidth="120"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label fx:id="lblTotalGames" styleClass="stats-value"/>
+        <Label fx:id="lblTotalGames" styleClass="stats-badge"/>
     </HBox>
 
     <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
@@ -36,6 +36,8 @@
     </TableView>
 
     <HBox alignment="CENTER">
+        <Button text="🗑️ Xóa tất cả" onAction="#onClearAll" styleClass="danger-btn"/>
+        <Region HBox.hgrow="ALWAYS"/>
         <Button text="← Quay lại" onAction="#onBackToMenu" styleClass="primary-btn"/>
     </HBox>
 

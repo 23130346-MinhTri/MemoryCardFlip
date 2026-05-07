@@ -19,6 +19,8 @@ import java.util.ResourceBundle;
 /**
  * Controller cho màn hình Leaderboard.
  * File FXML tương ứng: leaderboard.fxml
+ *
+ * <p>Use Case phụ trách: [UC-05] Xem bảng xếp hạng.</p>
  */
 public class LeaderboardController implements Initializable {
 
@@ -42,7 +44,7 @@ public class LeaderboardController implements Initializable {
         setupTableColumns();
         setupDifficultyCombo();
         loadLeaderboard(Difficulty.EASY);
-
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         // Lắng nghe thay đổi điểm để cập nhật UI
         scoreManager.setOnScoreChanged(scores -> {
             javafx.application.Platform.runLater(() -> loadLeaderboard(comboDifficulty.getValue()));
@@ -56,20 +58,20 @@ public class LeaderboardController implements Initializable {
         });
 
         colPlayerName.setCellValueFactory(cellData ->
-                new javafx.beans.property.SimpleStringProperty(cellData.getValue().playerName()));
+                new javafx.beans.property.SimpleStringProperty(cellData.getValue().getPlayerName()));
 
         colDifficulty.setCellValueFactory(cellData ->
-                new javafx.beans.property.SimpleStringProperty(cellData.getValue().difficulty().getDisplayName()));
+                new javafx.beans.property.SimpleStringProperty(cellData.getValue().getDifficulty().getDisplayName()));
 
         // Cách đúng: dùng createObjectBinding
         colScore.setCellValueFactory(cellData ->
                 javafx.beans.binding.Bindings.createObjectBinding(
-                        () -> cellData.getValue().score()
+                        () -> cellData.getValue().getScore()
                 ));
 
         colMoves.setCellValueFactory(cellData ->
                 javafx.beans.binding.Bindings.createObjectBinding(
-                        () -> cellData.getValue().moves()
+                        () -> cellData.getValue().getMoves()
                 ));
 
         colTime.setCellValueFactory(cellData ->
@@ -84,6 +86,11 @@ public class LeaderboardController implements Initializable {
         comboDifficulty.setOnAction(e -> loadLeaderboard(comboDifficulty.getValue()));
     }
 
+    /**
+     * [UC-05] Tải dữ liệu bảng xếp hạng theo độ khó.
+     *
+     * <p>Postcondition: bảng xếp hạng được cập nhật và điểm cao nhất hiển thị.</p>
+     */
     private void loadLeaderboard(Difficulty difficulty) {
         List<ScoreRecord> scores = scoreManager.getTopScores(difficulty, 50);
         data.setAll(scores);
@@ -92,30 +99,19 @@ public class LeaderboardController implements Initializable {
         lblTotalScores.setText("Tổng số: " + scores.size() + " lượt chơi");
 
         scoreManager.getHighScore(difficulty).ifPresentOrElse(
-                best -> lblBestScore.setText("🏆 Cao nhất: " + best.score()),
+                best -> lblBestScore.setText("🏆 Cao nhất: " + best.getScore()),
                 () -> lblBestScore.setText("🏆 Chưa có điểm nào")
         );
     }
 
+    /**
+     * [UC-05] Làm mới dữ liệu bảng xếp hạng hiện tại.
+     */
     @FXML
     public void onRefresh() {
         loadLeaderboard(comboDifficulty.getValue());
     }
 
-    @FXML
-    public void onClearAll() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Xóa điểm");
-        alert.setHeaderText("Xóa tất cả điểm số?");
-        alert.setContentText("Hành động này không thể hoàn tác!");
-
-        alert.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                scoreManager.clearAllScores();
-                loadLeaderboard(comboDifficulty.getValue());
-            }
-        });
-    }
 
     @FXML
     public void onBackToMenu() {

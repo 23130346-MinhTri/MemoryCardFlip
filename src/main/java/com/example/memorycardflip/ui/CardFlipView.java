@@ -27,14 +27,22 @@ public class CardFlipView extends StackPane {
 
     public CardFlipView() {
         loadLayout();
-
         Image backImage = loadResourceImage(CARD_BACK_IMAGE);
         if (backImage != null) {
             backImageView.setImage(backImage);
         }
+        faceUp = false;
+        frontImageView.setVisible(false);
+        backImageView.setVisible(true);
+        contentLabel.setText(BACK_TEXT);
+        setBackTextStyle();
+        getStyleClass().add("card-back");
 
+        // FIX 1: Gắn mouse handler vào chính StackPane này.
+        // Trước đây setOnFlipRequested chỉ lưu Runnable nhưng không bao giờ
+        // gọi setOnMouseClicked → click hoàn toàn bị bỏ qua.
         setOnMouseClicked(event -> {
-            if (!isDisabled() && flipRequestedHandler != null) {
+            if (flipRequestedHandler != null && !matched && !isDisabled()) {
                 flipRequestedHandler.run();
             }
         });
@@ -51,9 +59,8 @@ public class CardFlipView extends StackPane {
     }
 
     public void showFront(String symbol, String imageUrl) {
-        if (faceUp) {
-            return;
-        }
+        if (matched) return;
+        if (faceUp) return;
         animateFlip(() -> {
             faceUp = true;
             if (imageUrl != null && !imageUrl.isBlank()) {
@@ -78,9 +85,8 @@ public class CardFlipView extends StackPane {
     }
 
     public void showBack() {
-        if (!faceUp || matched) {
-            return;
-        }
+        if (matched) return;
+        if (!faceUp) return;
         animateFlip(() -> {
             faceUp = false;
             frontImageView.setVisible(false);

@@ -125,16 +125,17 @@
     -fx-background-color: #111f35;
     -fx-border-color: rgba(255,255,255,0.07); -fx-border-width: 0 0 1 0;
     -fx-padding: 0 10 0 10;
-    -fx-pref-height: 54px; -fx-min-height: 54px;
+    -fx-pref-height: 64px; -fx-min-height: 64px;
 }
-.hud-group         { -fx-alignment: CENTER; -fx-spacing: 2; -fx-padding: 4 10 4 10; }
-.hud-progress-group, .hud-time-group { -fx-alignment: CENTER; -fx-spacing: 3; -fx-padding: 4 10 4 10; -fx-min-width: 120px; }
-.hud-divider       { -fx-background-color: rgba(255,255,255,0.07); -fx-pref-width: 1px; -fx-pref-height: 28px; -fx-max-height: 28px; }
-.hud-label         { -fx-font-size: 8px; -fx-text-fill: #5a8bb0; -fx-font-weight: bold; }
-.hud-value         { -fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #e0ecff; }
-.hud-value-accent  { -fx-text-fill: #f5c842; }
+.hud-group         { -fx-alignment: CENTER; -fx-spacing: 4; -fx-padding: 6 12 6 12; }
+.hud-progress-group, .hud-time-group { -fx-alignment: CENTER; -fx-spacing: 4; -fx-padding: 6 12 6 12; -fx-min-width: 140px; }
+.hud-divider       { -fx-background-color: rgba(255,255,255,0.07); -fx-pref-width: 1px; -fx-pref-height: 32px; -fx-max-height: 32px; }
+.hud-label         { -fx-font-size: 11px; -fx-text-fill: #f8fcff; -fx-font-weight: bold; }
+.hud-value         { -fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #ffffff; }
+.hud-value-accent  { -fx-text-fill: #f5c842; -fx-effect: dropshadow(gaussian, rgba(245,200,66,0.8), 8, 0, 0, 0); }
 .hud-value-remain {
-    -fx-text-fill: #f59e0b;
+    -fx-text-fill: #fadb6b;
+    -fx-effect: dropshadow(gaussian, rgba(245,189,27,0.75), 8, 0, 0, 0);
 }
 .restart-btn {
     -fx-background-color: rgba(74,144,217,0.15);
@@ -188,8 +189,9 @@
 .card-grid {
     -fx-alignment: CENTER;
     -fx-padding: 14;
+    -fx-hgap: 10;
+    -fx-vgap: 10;
 }
-
 /* ── Thẻ bài: mặt sau ────────────────────────────────────── */
 .card-back {
     -fx-background-color: linear-gradient(to bottom right, #1b3558, #0e2040);
@@ -228,21 +230,37 @@
 
 /* ── Status bar ──────────────────────────────────────────── */
 .status-bar {
-    -fx-background-color: #111f35;
-    -fx-border-color: rgba(255,255,255,0.06); -fx-border-width: 1 0 0 0;
+    -fx-background-color: rgba(17,31,53,0.98);
+    -fx-border-color: rgba(255,255,255,0.18); -fx-border-width: 1 0 0 0;
     -fx-padding: 6 14 6 14; -fx-spacing: 10;
     -fx-pref-height: 40px; -fx-min-height: 40px;
 }
-.status-text { -fx-font-size: 12px; -fx-text-fill: #7fb3d3; }
+.status-text { -fx-font-size: 12px; -fx-text-fill: #eff8ff; -fx-effect: dropshadow(gaussian, rgba(255,255,255,0.15), 10, 0, 0, 0); }
 
 .back-btn {
     -fx-background-color: transparent;
-    -fx-border-color: rgba(255,255,255,0.10); -fx-border-width: 1;
+    -fx-border-color: rgba(255,255,255,0.24); -fx-border-width: 1;
     -fx-border-radius: 7; -fx-background-radius: 7;
-    -fx-text-fill: #7fb3d3; -fx-font-size: 11px;
+    -fx-text-fill: #eff8ff; -fx-font-size: 11px;
     -fx-padding: 4 10 4 10; -fx-cursor: hand;
 }
-.back-btn:hover { -fx-text-fill: #e8f4fd; -fx-border-color: rgba(255,255,255,0.25); }
+.back-btn:hover { -fx-text-fill: #ffffff; -fx-border-color: rgba(255,255,255,0.35); }
+
+.footer-control-bar {
+    -fx-background-color: transparent;
+}
+
+.pause-btn {
+    -fx-background-color: rgba(74,144,217,0.16);
+    -fx-border-color: rgba(74,144,217,0.35); -fx-border-width: 1;
+    -fx-border-radius: 7; -fx-background-radius: 7;
+    -fx-text-fill: #eaf6ff; -fx-font-size: 11px;
+    -fx-padding: 5 12 5 12; -fx-cursor: hand;
+}
+.pause-btn:hover {
+    -fx-background-color: rgba(74,144,217,0.28);
+    -fx-text-fill: #ffffff;
+}
 
 /* ── Card content labels ─────────────────────────────────── */
 .card-content-label-back {
@@ -425,6 +443,7 @@
     -fx-font-size: 36px;
     -fx-font-weight: bold;
     -fx-padding: 20 0 20 0;
+    -fx-text-fill: #ffffff;
 }
 
 .result-win {
@@ -473,4 +492,216 @@
     -fx-background-color: rgba(255,255,255,0.08);
     -fx-text-fill: white;
     -fx-border-color: rgba(255,255,255,0.45);
+}
+/* ════════════════════════════════════════════════════════════
+   LEADERBOARD & SCORE HISTORY — TABLE SCENES
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Page title chung (dùng lại result-title) ────────────── */
+/* .result-title đã có — không cần thêm */
+
+/* ── Filter bar ──────────────────────────────────────────── */
+.filter-bar {
+    -fx-padding: 0 0 8 0;
+}
+
+.filter-bar .stats-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #7fb3d3;
+}
+
+/* ── ComboBox ────────────────────────────────────────────── */
+.combo-box {
+    -fx-background-color: #162032;
+    -fx-border-color: rgba(255,255,255,0.12);
+    -fx-border-width: 1;
+    -fx-border-radius: 7;
+    -fx-background-radius: 7;
+    -fx-text-fill: #e8f4fd;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+}
+.combo-box .list-cell {
+    -fx-background-color: #162032;
+    -fx-text-fill: #e8f4fd;
+    -fx-font-size: 12px;
+    -fx-padding: 4 10 4 10;
+}
+.combo-box-popup .list-view {
+    -fx-background-color: #162032;
+    -fx-border-color: rgba(255,255,255,0.12);
+    -fx-border-width: 1;
+}
+.combo-box-popup .list-view .list-cell:hover {
+    -fx-background-color: #1e3a5f;
+}
+.combo-box .arrow-button {
+    -fx-background-color: transparent;
+}
+.combo-box .arrow {
+    -fx-background-color: #7fb3d3;
+}
+
+/* ── TableView ───────────────────────────────────────────── */
+.table-view {
+    -fx-background-color: #0f1b2d;
+    -fx-border-color: rgba(255,255,255,0.08);
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-table-cell-border-color: transparent;
+}
+
+/* Header */
+.table-view .column-header-background {
+    -fx-background-color: #111f35;
+    -fx-background-radius: 10 10 0 0;
+}
+.table-view .column-header,
+.table-view .filler {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(255,255,255,0.06);
+    -fx-border-width: 0 1 1 0;
+    -fx-size: 36px;
+}
+.table-view .column-header .label {
+    -fx-text-fill: #7fb3d3;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 8 0 8;
+}
+
+/* Rows */
+.table-row-cell {
+    -fx-background-color: #0f1b2d;
+    -fx-border-color: rgba(255,255,255,0.04);
+    -fx-border-width: 0 0 1 0;
+    -fx-table-cell-border-color: transparent;
+    -fx-padding: 0;
+}
+.table-row-cell:odd {
+    -fx-background-color: #111f35;
+}
+.table-row-cell:hover {
+    -fx-background-color: #1a3050;
+}
+.table-row-cell:selected {
+    -fx-background-color: #1e3a5f;
+    -fx-border-color: rgba(74,144,217,0.3);
+    -fx-border-width: 0 0 1 0;
+}
+
+/* Cells */
+.table-cell {
+    -fx-text-fill: #e8f4fd;
+    -fx-font-size: 12px;
+    -fx-padding: 8 10 8 10;
+    -fx-alignment: CENTER_LEFT;
+    -fx-border-color: transparent;
+}
+
+/* Rank column — căn giữa và nổi bật */
+.table-view #colRank .table-cell {
+    -fx-alignment: CENTER;
+    -fx-font-weight: bold;
+    -fx-text-fill: #f5c842;
+}
+
+/* Score column — màu vàng */
+.table-view #colScore .table-cell {
+    -fx-text-fill: #f5c842;
+    -fx-font-weight: bold;
+}
+
+/* Scrollbar trong table */
+.table-view .scroll-bar:vertical {
+    -fx-background-color: #0f1b2d;
+    -fx-pref-width: 8px;
+}
+.table-view .scroll-bar:vertical .thumb {
+    -fx-background-color: rgba(255,255,255,0.15);
+    -fx-background-radius: 4;
+}
+.table-view .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: rgba(255,255,255,0.28);
+}
+.table-view .scroll-bar .increment-button,
+.table-view .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+/* Placeholder khi rỗng */
+.table-view .placeholder {
+    -fx-background-color: #0f1b2d;
+}
+.table-view .placeholder .label {
+    -fx-text-fill: #4a6a8a;
+    -fx-font-size: 13px;
+}
+
+/* ── Danger button (Xóa tất cả) ──────────────────────────── */
+.danger-btn {
+    -fx-background-color: rgba(239,68,68,0.12);
+    -fx-border-color: rgba(239,68,68,0.4);
+    -fx-border-width: 1.5;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-text-fill: #ef4444;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 24 10 24;
+    -fx-cursor: hand;
+}
+.danger-btn:hover {
+    -fx-background-color: rgba(239,68,68,0.22);
+    -fx-border-color: rgba(239,68,68,0.7);
+    -fx-text-fill: #ff6b6b;
+    -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.3), 8, 0, 0, 0);
+}
+.danger-btn:pressed {
+    -fx-scale-x: 0.97;
+    -fx-scale-y: 0.97;
+}
+
+/* ── Stats badge (lblTotalScores, lblTotalGames, lblBestScore) */
+.stats-badge {
+    -fx-background-color: #162032;
+    -fx-border-color: rgba(255,255,255,0.08);
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 4 12 4 12;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #b8d4f0;
+}
+
+/* ── Action button row ───────────────────────────────────── */
+.action-bar {
+    -fx-padding: 8 0 0 0;
+    -fx-spacing: 16;
+}
+
+/* ════════════════════════════════════════════════════════════
+   RESULT SCENE — bổ sung
+   ════════════════════════════════════════════════════════════ */
+
+/* Divider mảnh giữa các dòng stats */
+.stats-card .hud-divider {
+    -fx-background-color: rgba(255,255,255,0.05);
+    -fx-pref-height: 1px;
+    -fx-max-height: 1px;
+    -fx-pref-width: Infinity;
+}
+
+/* Win/Lose title glow */
+.result-title.result-win {
+    -fx-text-fill: #22c55e;
+    -fx-effect: dropshadow(gaussian, rgba(34,197,94,0.45), 16, 0, 0, 0);
+}
+.result-title.result-lose {
+    -fx-text-fill: #ef4444;
+    -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.45), 16, 0, 0, 0);
 }

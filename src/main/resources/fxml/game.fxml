@@ -28,7 +28,7 @@
          TOP — HUD bar (Thanh thông tin chính)
          ══════════════════════════════════════ -->
     <top>
-        <VBox>
+        <VBox fx:id="topBox">
             <HBox styleClass="hud-bar" alignment="CENTER" spacing="0">
 
                 <!-- Độ khó -->
@@ -50,7 +50,7 @@
                 <!-- Còn lại (Remaining Pairs) -->
                 <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
                     <Label text="CÒN LẠI" styleClass="hud-label"/>
-                    <Label fx:id="lblRemaining" text="8" styleClass="hud-value hud-value-remain"/>
+                    <Label fx:id="lblRemaining" text="8" styleClass="hud-value, hud-value-remain"/>
                 </VBox>
 
                 <Separator orientation="VERTICAL" styleClass="hud-divider"/>
@@ -58,7 +58,7 @@
                 <!-- ĐIỂM SỐ (Score) - Dữ liệu từ GameState -->
                 <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
                     <Label text="ĐIỂM" styleClass="hud-label"/>
-                    <Label fx:id="lblScore" text="0" styleClass="hud-value hud-value-accent"/>
+                    <Label fx:id="lblScore" text="0" styleClass="hud-value, hud-value-accent"/>
                 </VBox>
 
                 <Separator orientation="VERTICAL" styleClass="hud-divider"/>
@@ -67,18 +67,6 @@
                 <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
                     <Label text="LƯỢT" styleClass="hud-label"/>
                     <Label fx:id="lblMoves" text="0" styleClass="hud-value"/>
-                </VBox>
-
-                <Separator orientation="VERTICAL" styleClass="hud-divider"/>
-
-                <!-- Tiến độ (Progress Bar) -->
-                <VBox styleClass="hud-group" alignment="CENTER" HBox.hgrow="ALWAYS">
-                    <Label text="TIẾN ĐỘ" styleClass="hud-label"/>
-                    <ProgressBar fx:id="progressBar"
-                                 progress="0.0"
-                                 prefWidth="100"
-                                 prefHeight="8"
-                                 styleClass="match-progress"/>
                 </VBox>
 
                 <Separator orientation="VERTICAL" styleClass="hud-divider"/>
@@ -131,22 +119,34 @@
          BOTTOM — Thanh trạng thái (Status Bar)
          ══════════════════════════════════════ -->
     <bottom>
-        <HBox styleClass="status-bar" alignment="CENTER_LEFT" spacing="12">
-            <padding>
-                <Insets top="8" bottom="8" left="16" right="16"/>
-            </padding>
+        <VBox fx:id="bottomBox" spacing="8">
+            <HBox styleClass="status-bar" alignment="CENTER_LEFT" spacing="12">
+                <padding>
+                    <Insets top="8" bottom="8" left="16" right="16"/>
+                </padding>
 
-            <!-- Combo hiển thị (nếu có) và thông báo -->
-            <Label fx:id="lblCombo" text="" styleClass="combo-text"/>
-            <Label fx:id="lblStatus"
-                   text="Lật thẻ để bắt đầu!"
-                   styleClass="status-text"
-                   HBox.hgrow="ALWAYS"/>
+                <!-- Combo hiển thị (nếu có) và thông báo -->
+                <Label fx:id="lblCombo" text="" styleClass="combo-text"/>
+                <Label fx:id="lblStatus"
+                       text="Lật thẻ để bắt đầu!"
+                       styleClass="status-text"
+                       HBox.hgrow="ALWAYS"/>
 
-            <Button text="← Menu"
-                    onAction="#onBackToMenu"
-                    styleClass="back-btn"/>
-        </HBox>
+                <Button text="← Menu"
+                        onAction="#onBackToMenu"
+                        styleClass="back-btn"/>
+            </HBox>
+
+            <HBox styleClass="footer-control-bar" alignment="CENTER_RIGHT" spacing="10">
+                <padding>
+                    <Insets top="6" bottom="10" left="16" right="16"/>
+                </padding>
+                <Button fx:id="btnPause"
+                        text="⏸ Tạm dừng"
+                        onAction="#onTogglePause"
+                        styleClass="pause-btn"/>
+            </HBox>
+        </VBox>
     </bottom>
 
 </BorderPane>

@@ -1,6 +1,7 @@
 package com.example.memorycardflip.controller;
 
 import com.example.memorycardflip.model.Difficulty;
+import com.example.memorycardflip.service.AudioService;
 import com.example.memorycardflip.ui.SceneManager;
 import javafx.animation.ScaleTransition;
 import javafx.css.PseudoClass;
@@ -26,6 +27,8 @@ import java.util.ResourceBundle;
  * <p>UseCase phụ trách:</p>
  * <ul>
  *   <li>[UC-01] Chọn cấp độ & Bắt đầu game</li>
+ *   <li>[UC-05] Xem Bảng xếp hạng</li>
+ *   <li>[UC-06] Xem Lịch sử điểm</li>
  *   <li>[UC-09] Xem Leaderboard (high score bar)</li>
  * </ul>
  */
@@ -54,6 +57,19 @@ public class MainMenuController implements Initializable {
         diffButtonMap.put(Difficulty.HARD,   btnHard);
 
         setupUC01DifficultyButtons();
+        AudioService.getInstance().playBGM("/assets/sounds/game.mp3");
+        loadHighScores(); // ← thêm dòng này
+    }
+
+    private void loadHighScores() {
+        try {
+            ScoreManager sm = ScoreManager.getInstance();
+            if (scoreEasy != null) scoreEasy.setText(String.valueOf(sm.getBestScore(Difficulty.EASY)));
+            if (scoreMedium != null) scoreMedium.setText(String.valueOf(sm.getBestScore(Difficulty.MEDIUM)));
+            if (scoreHard != null) scoreHard.setText(String.valueOf(sm.getBestScore(Difficulty.HARD)));
+        } catch (Exception e) {
+            System.err.println("Không thể load high score: " + e.getMessage());
+        }
     }
     // UC-01 — Chọn cấp độ & Bắt đầu game
     /**
@@ -152,6 +168,7 @@ public class MainMenuController implements Initializable {
     @FXML
     public void onSoundToggle() {
         soundEnabled = !soundEnabled;
+        AudioService.getInstance().setEnabled(soundEnabled);
         btnSound.setText(soundEnabled ? "🔊  Âm thanh" : "🔇  Tắt tiếng");
         // TODO: AudioService.getInstance().setEnabled(soundEnabled);
     }
@@ -161,10 +178,23 @@ public class MainMenuController implements Initializable {
         // TODO: SceneManager.getInstance().showAboutDialog();
     }
     /** Nút Lịch sử — hiển thị bảng điểm */
+    /**
+     * [UC-06] Mở màn hình Lịch sử điểm.
+     *
+     * <p>Use Case này cho phép người chơi xem lại toàn bộ lịch sử điểm đã lưu.</p>
+     * <p>Postcondition: ScoreHistoryScene được hiển thị.</p>
+     */
     @FXML
     public void onHistory() {
         SceneManager.getInstance().showScoreHistory();   // ← Đổi thành showScoreHistory()
     }
+
+    /**
+     * [UC-05] Mở màn hình Bảng xếp hạng.
+     *
+     * <p>Use Case này cho phép người chơi xem danh sách điểm cao nhất theo độ khó.</p>
+     * <p>Postcondition: LeaderboardScene được hiển thị.</p>
+     */
     @FXML
     public void onLeaderboard() {
         SceneManager.getInstance().showLeaderboard();   // Mở BẢNG XẾP HẠNG

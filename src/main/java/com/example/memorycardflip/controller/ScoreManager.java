@@ -1,10 +1,6 @@
 package com.example.memorycardflip.controller;
 
-import com.example.memorycardflip.model.Difficulty;
-import com.example.memorycardflip.model.GameState;
-import com.example.memorycardflip.model.ScoreRecord;
-import com.example.memorycardflip.model.ScoreStorage;
-import com.example.memorycardflip.model.JsonScoreStorage;
+import com.example.memorycardflip.model.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +23,7 @@ public class ScoreManager {
         loadScores();
     }
 
-    public static ScoreManager getInstance() {
+    public static synchronized ScoreManager getInstance() {
         if (instance == null) {
             instance = new ScoreManager();
         }
@@ -47,38 +43,39 @@ public class ScoreManager {
     }
 
     /**
-     * Lưu điểm hiện tại
-     */
-    /**
-     * Lưu điểm cho tất cả các ván (cả thắng và thua)
-     */
-    /**
-     * Lưu điểm hiện tại
+     * [UC-10] Lưu điểm ván chơi khi người chơi thắng.
+     *
+     * <p>Use Case này lưu trữ điểm cao nhất vào storage để hiển thị leaderboard và lịch sử.</p>
      */
     public void saveScore(GameState gameState, String playerName) {
-        if (gameState == null ) {
-            return; // Chỉ lưu khi thắng
+        if (gameState == null) return;
+
+        // Chỉ lưu khi thắng
+        if (gameState.getStatus() != GameStatus.WON) {
+            System.out.println("Không lưu — trạng thái: " + gameState.getStatus());
+            return;
         }
 
-        ScoreRecord record = ScoreRecord.fromGameState(playerName, gameState);
-        cache.add(record);
-
-        // Sắp xếp theo điểm giảm dần
-        cache.sort((a, b) -> Integer.compare(b.score(), a.score()));
-
         try {
-            storage.save(cache);
-            if (onScoreChanged != null) {
-                onScoreChanged.accept(cache);
-            }
+            ScoreRecord record = ScoreRecord.fromGameState(playerName, gameState);
+            cache.add(record);
+            cache.sort((a, b) -> Integer.compare(b.getScore(), a.getScore()));
+            storage.save(cache); // ← lưu xuống file
+            System.out.println("Đã lưu: " + record);
+
+            if (onScoreChanged != null) onScoreChanged.accept(cache);
+
         } catch (Exception e) {
             System.err.println("Không thể lưu điểm: " + e.getMessage());
+            e.printStackTrace(); // ← xem stack trace đầy đủ
         }
     }
 
 
     /**
-     * Lấy top N điểm cao nhất (tất cả độ khó)
+     * [UC-05] Lấy top N điểm cao nhất.
+     *
+     * <p>Use Case này dùng để hiển thị bảng xếp hạng toàn cục hoặc theo độ khó.</p>
      */
     public List<ScoreRecord> getTopScores(int limit) {
         return cache.stream()
@@ -91,7 +88,7 @@ public class ScoreManager {
      */
     public List<ScoreRecord> getTopScores(Difficulty difficulty, int limit) {
         return cache.stream()
-                .filter(r -> r.difficulty() == difficulty)
+                .filter(r -> r.getDifficulty() == difficulty)
                 .limit(limit)
                 .toList();
     }
@@ -101,7 +98,7 @@ public class ScoreManager {
      */
     public Optional<ScoreRecord> getHighScore(Difficulty difficulty) {
         return cache.stream()
-                .filter(r -> r.difficulty() == difficulty)
+                .filter(r -> r.getDifficulty() == difficulty)
                 .findFirst();
     }
 
@@ -110,7 +107,7 @@ public class ScoreManager {
      */
     public List<ScoreRecord> getScoresByDifficulty(Difficulty difficulty) {
         return cache.stream()
-                .filter(r -> r.difficulty() == difficulty)
+                .filter(r -> r.getDifficulty() == difficulty)
                 .toList();
     }
 
@@ -119,11 +116,13 @@ public class ScoreManager {
      */
     public boolean isNewHighScore(Difficulty difficulty, int score) {
         Optional<ScoreRecord> highScore = getHighScore(difficulty);
-        return highScore.isEmpty() || score > highScore.get().score();
+        return highScore.isEmpty() || score > highScore.get().getScore();
     }
 
     /**
-     * Xóa tất cả điểm
+     * [UC-06] Xóa toàn bộ lịch sử điểm.
+     *
+     * <p>Use Case này cho phép người chơi xoá dữ liệu lịch sử đã lưu trên thiết bị.</p>
      */
     public void clearAllScores() {
         cache.clear();
@@ -151,9 +150,15 @@ public class ScoreManager {
         return storage;
     }
     /**
-     * Lấy TẤT CẢ các bản ghi điểm (không giới hạn, không lọc theo điểm cao)
-     * Dùng cho màn hình Lịch sử
+     * [UC-05] Lấy tất cả các bản ghi điểm để hiển thị trên lịch sử hoặc leaderboard.
      */
+    public int getBestScore(Difficulty difficulty) {
+        return cache.stream()
+                .filter(r -> r.getDifficulty() == difficulty)
+                .mapToInt(ScoreRecord::getScore)
+                .max()
+                .orElse(0);
+    }
     public List<ScoreRecord> getAllScores() {
         return new java.util.ArrayList<>(cache);
     }

@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  * <p>UseCase phụ trách:</p>
  * <ul>
  *   <li>[UC-01] Chuyển sang GameScene sau khi chọn độ khó</li>
- *   <li>[UC-07] Kết thúc game → chuyển sang ResultScene</li>
+ *   <li>[UC-03] Kết thúc game → chuyển sang ResultScene</li>
  *   <li>[UC-10] Replay → reset GameScene</li>
  *   <li>[UC-09] Quay về MainMenu</li>
  * </ul>
@@ -101,11 +101,11 @@ public void init(Stage stage) {
     }
 
     // ══════════════════════════════════════════════════════════
-    // UC-07 — Kết thúc game → ResultScene
+    // UC-03 — Kết thúc game → ResultScene
     // ══════════════════════════════════════════════════════════
 
     /**
-     * [UC-07] Chuyển sang màn hình kết quả (WIN hoặc LOSE).
+     * [UC-03] Chuyển sang màn hình kết quả (WIN hoặc LOSE).
      * GameState giữ nguyên để ResultController đọc thống kê.
      *
      * <p>Precondition:  currentGameState != null, game đã kết thúc.</p>
@@ -182,7 +182,9 @@ public void init(Stage stage) {
         }
     }
     /**
-     * Hiển thị màn hình Lịch sử điểm (tất cả các ván đã chơi)
+     * [UC-06] Hiển thị màn hình Lịch sử điểm (tất cả các ván đã chơi).
+     *
+     * <p>Postcondition: màn hình score_history được load lên primaryStage.</p>
      */
     public void showScoreHistory() {
         try {
@@ -198,7 +200,9 @@ public void init(Stage stage) {
     }
 
     /**
-     * Hiển thị màn hình Bảng xếp hạng (top điểm cao)
+     * [UC-05] Hiển thị màn hình Bảng xếp hạng (top điểm cao).
+     *
+     * <p>Postcondition: màn hình leaderboard được load lên primaryStage.</p>
      */
     public void showLeaderboard() {
         try {

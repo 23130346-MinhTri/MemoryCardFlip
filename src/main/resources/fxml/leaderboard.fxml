@@ -7,40 +7,45 @@
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.example.memorycardflip.controller.LeaderboardController"
-      spacing="15"
+      spacing="12"
       alignment="CENTER"
       styleClass="game-scene"
       stylesheets="@../styles/game.css">
 
     <padding>
-        <Insets top="20" right="20" bottom="20" left="20"/>
+        <Insets top="16" right="16" bottom="16" left="16"/>
     </padding>
 
-    <Label text="🏆 BẢNG XẾP HẠNG 🏆" styleClass="result-title"/>
+    <!-- Tiêu đề -->
+    <Label text="🏆 BẢNG XẾP HẠNG 🏆" styleClass="result-title"
+           maxWidth="Infinity" alignment="CENTER"/>
 
-    <HBox alignment="CENTER_LEFT" spacing="20">
+    <!-- Filter bar -->
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="filter-bar">
         <Label text="Chọn độ khó:" styleClass="stats-label"/>
-        <ComboBox fx:id="comboDifficulty" prefWidth="120"/>
+        <ComboBox fx:id="comboDifficulty" prefWidth="110"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label fx:id="lblTotalScores" styleClass="stats-value"/>
-        <Label fx:id="lblBestScore" styleClass="stats-value stats-score"/>
+        <Label fx:id="lblTotalScores" styleClass="stats-badge"/>
+        <Label fx:id="lblBestScore"   styleClass="stats-badge,stats-score"/>
     </HBox>
 
+    <!-- Table — cột tự co giãn theo chiều rộng -->
     <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="colRank" text="#" prefWidth="50"/>
-            <TableColumn fx:id="colPlayerName" text="Người chơi" prefWidth="150"/>
-            <TableColumn fx:id="colDifficulty" text="Độ khó" prefWidth="100"/>
-            <TableColumn fx:id="colScore" text="Điểm" prefWidth="80"/>
-            <TableColumn fx:id="colMoves" text="Số lượt" prefWidth="80"/>
-            <TableColumn fx:id="colTime" text="Thời gian dùng" prefWidth="100"/>
-            <TableColumn fx:id="colDate" text="Ngày chơi" prefWidth="150"/>
+            <TableColumn fx:id="colRank"       text="#"              minWidth="36"  maxWidth="48"/>
+            <TableColumn fx:id="colPlayerName" text="Người chơi"     minWidth="100" prefWidth="140"/>
+            <TableColumn fx:id="colDifficulty" text="Độ khó"         minWidth="70"  prefWidth="90"/>
+            <TableColumn fx:id="colScore"      text="Điểm"           minWidth="60"  prefWidth="80"/>
+            <TableColumn fx:id="colMoves"      text="Số lượt"        minWidth="60"  prefWidth="75"/>
+            <TableColumn fx:id="colTime"       text="TG dùng"        minWidth="70"  prefWidth="80"/>
+            <TableColumn fx:id="colDate"       text="Ngày chơi"      minWidth="100" prefWidth="120"/>
         </columns>
     </TableView>
 
-    <HBox alignment="CENTER" spacing="20">
-        <Button text="🔄 Làm mới" onAction="#onRefresh" styleClass="secondary-btn"/>
-        <Button text="🗑️ Xóa tất cả" onAction="#onClearAll" styleClass="danger-btn"/>
+    <!-- Action bar -->
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="action-bar">
+        <Button text="🔄 Làm mới" onAction="#onRefresh"    styleClass="secondary-btn"/>
+        <Region HBox.hgrow="ALWAYS"/>
         <Button text="← Quay lại" onAction="#onBackToMenu" styleClass="primary-btn"/>
     </HBox>
 
