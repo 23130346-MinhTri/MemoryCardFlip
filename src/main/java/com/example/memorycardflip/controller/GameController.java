@@ -6,6 +6,7 @@ import com.example.memorycardflip.model.Difficulty;
 import com.example.memorycardflip.model.GameState;
 import com.example.memorycardflip.model.GameStatus;
 import com.example.memorycardflip.service.AnimationService;
+import com.example.memorycardflip.service.AudioService;
 import com.example.memorycardflip.service.GameLogicService;
 import com.example.memorycardflip.service.GameTimerService;
 import com.example.memorycardflip.ui.CardFlipView;
@@ -172,6 +173,7 @@ public class GameController implements Initializable {
     // ══════════════════════════════════════════════════════════
 
     private void startBoard() {
+        AudioService.getInstance().playBGM("/assets/sounds/game.mp3");
         stopTimer();
         viewMap.clear();
         totalPairs   = difficulty.totalPairs();
@@ -392,7 +394,7 @@ public class GameController implements Initializable {
                     gameLogicService.clearSelection();
                     return;
                 }
-
+                updateHUD();
                 AnimationService.playShakeAnimation(v1);
                 AnimationService.playShakeAnimation(v2);
 
@@ -648,6 +650,7 @@ public class GameController implements Initializable {
         if (btnPause != null) {
             btnPause.setText(tr("button.resume"));
         }
+        AudioService.getInstance().pauseBGM();
     }
 
     private void resumeGame() {
@@ -660,6 +663,7 @@ public class GameController implements Initializable {
         if (btnPause != null) {
             btnPause.setText(tr("button.pause"));
         }
+        AudioService.getInstance().resumeBGM();
     }
 
     @FXML

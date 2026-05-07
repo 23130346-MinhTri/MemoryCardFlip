@@ -1,6 +1,7 @@
 package com.example.memorycardflip.controller;
 
 import com.example.memorycardflip.model.Difficulty;
+import com.example.memorycardflip.service.AudioService;
 import com.example.memorycardflip.ui.SceneManager;
 import javafx.animation.ScaleTransition;
 import javafx.css.PseudoClass;
@@ -54,6 +55,7 @@ public class MainMenuController implements Initializable {
         diffButtonMap.put(Difficulty.HARD,   btnHard);
 
         setupUC01DifficultyButtons();
+        AudioService.getInstance().playBGM("/assets/sounds/game.mp3");
         loadHighScores(); // ← thêm dòng này
     }
 
@@ -164,6 +166,7 @@ public class MainMenuController implements Initializable {
     @FXML
     public void onSoundToggle() {
         soundEnabled = !soundEnabled;
+        AudioService.getInstance().setEnabled(soundEnabled);
         btnSound.setText(soundEnabled ? "🔊  Âm thanh" : "🔇  Tắt tiếng");
         // TODO: AudioService.getInstance().setEnabled(soundEnabled);
     }
