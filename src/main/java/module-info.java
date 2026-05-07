@@ -10,4 +10,5 @@ module com.example.memorycardflip {
 
     exports com.example.memorycardflip;
     opens com.example.memorycardflip.service to javafx.fxml;
+    opens com.example.memorycardflip.model to com.google.gson;
 }

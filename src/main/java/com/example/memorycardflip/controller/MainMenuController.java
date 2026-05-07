@@ -54,6 +54,18 @@ public class MainMenuController implements Initializable {
         diffButtonMap.put(Difficulty.HARD,   btnHard);
 
         setupUC01DifficultyButtons();
+        loadHighScores(); // ← thêm dòng này
+    }
+
+    private void loadHighScores() {
+        try {
+            ScoreManager sm = ScoreManager.getInstance();
+            if (scoreEasy != null) scoreEasy.setText(String.valueOf(sm.getBestScore(Difficulty.EASY)));
+            if (scoreMedium != null) scoreMedium.setText(String.valueOf(sm.getBestScore(Difficulty.MEDIUM)));
+            if (scoreHard != null) scoreHard.setText(String.valueOf(sm.getBestScore(Difficulty.HARD)));
+        } catch (Exception e) {
+            System.err.println("Không thể load high score: " + e.getMessage());
+        }
     }
     // UC-01 — Chọn cấp độ & Bắt đầu game
     /**

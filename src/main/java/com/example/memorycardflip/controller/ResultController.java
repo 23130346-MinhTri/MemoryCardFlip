@@ -76,17 +76,19 @@ public class ResultController implements Initializable {
         scoreManager.saveScore(gameState, playerName);  // ← BỎ if(won), gọi trực tiếp
 
 // Kiểm tra high score (chỉ hiển thị khi thắng)
+        // Trong loadUCRS01DisplayResult(), sửa phần hiển thị high score
         if (won) {
+            int bestScore = scoreManager.getBestScore(gameState.getDifficulty());
             boolean isNewHighScore = scoreManager.isNewHighScore(
                     gameState.getDifficulty(),
                     gameState.calculateScore()
             );
-
             if (isNewHighScore) {
-                lblNewHighScore.setText("🏆 NEW HIGH SCORE! 🏆");
+                lblNewHighScore.setText("🏆 " + gameState.calculateScore() + " (Kỷ lục mới!)");
                 lblNewHighScore.setStyle("-fx-text-fill: #ffd700;");
             } else {
-                lblNewHighScore.setText("---");
+                lblNewHighScore.setText( ""+ bestScore);
+                lblNewHighScore.setStyle("-fx-text-fill: #7ec8e3;");
             }
         } else {
             lblNewHighScore.setText("---");

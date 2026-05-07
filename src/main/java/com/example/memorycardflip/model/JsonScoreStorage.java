@@ -6,63 +6,42 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Implementation lưu điểm dưới dạng file JSON.
- */
 public class JsonScoreStorage implements ScoreStorage {
 
-    private static final String DATA_DIR = ".memorycardflip";
-    private static final String FILE_NAME = "scores.json";
+    private static final Path SAVE_FILE = Path.of(
+            System.getProperty("user.home"), ".memorycardflip", "scores.json"
+    );
 
-    private final Path filePath;
-    private final Gson gson;
-
-    public JsonScoreStorage() {
-        this.gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .create();
-
-        String userHome = System.getProperty("user.home");
-        Path dataDir = Paths.get(userHome, DATA_DIR);
-
-        try {
-            if (!Files.exists(dataDir)) {
-                Files.createDirectories(dataDir);
-            }
-            this.filePath = dataDir.resolve(FILE_NAME);
-        } catch (IOException e) {
-            throw new RuntimeException("Không thể tạo thư mục dữ liệu: " + dataDir, e);
-        }
-    }
+    // Gson với TypeAdapter cho Instant
+    private static final Gson GSON = new GsonBuilder()
+            .registerTypeAdapter(Instant.class,
+                    (com.google.gson.JsonSerializer<Instant>)
+                            (src, type, ctx) -> new com.google.gson.JsonPrimitive(src.toEpochMilli()))
+            .registerTypeAdapter(Instant.class,
+                    (com.google.gson.JsonDeserializer<Instant>)
+                            (json, type, ctx) -> Instant.ofEpochMilli(json.getAsLong()))
+            .create();
 
     @Override
     public void save(List<ScoreRecord> records) throws Exception {
-        try (Writer writer = new FileWriter(filePath.toFile())) {
-            gson.toJson(records, writer);
+        Files.createDirectories(SAVE_FILE.getParent());
+        try (Writer w = Files.newBufferedWriter(SAVE_FILE)) {
+            GSON.toJson(records, w);
         }
     }
 
     @Override
     public List<ScoreRecord> load() throws Exception {
-        if (!Files.exists(filePath)) {
-            return new ArrayList<>();
+        if (!Files.exists(SAVE_FILE)) return new ArrayList<>();
+        try (Reader r = Files.newBufferedReader(SAVE_FILE)) {
+            Type listType = new TypeToken<List<ScoreRecord>>(){}.getType();
+            List<ScoreRecord> result = GSON.fromJson(r, listType);
+            return result != null ? result : new ArrayList<>();
         }
-
-        try (Reader reader = new FileReader(filePath.toFile())) {
-            Type listType = new TypeToken<List<ScoreRecord>>() {}.getType();
-            List<ScoreRecord> records = gson.fromJson(reader, listType);
-            return records != null ? records : new ArrayList<>();
-        }
-    }
-
-    public Path getFilePath() {
-        return filePath;
     }
 }

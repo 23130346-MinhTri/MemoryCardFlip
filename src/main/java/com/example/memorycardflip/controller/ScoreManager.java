@@ -52,23 +52,26 @@ public class ScoreManager {
      * Lưu điểm hiện tại
      */
     public void saveScore(GameState gameState, String playerName) {
-        if (gameState == null || gameState.getStatus() != GameStatus.WON) {
+        if (gameState == null) return;
+
+        // Chỉ lưu khi thắng
+        if (gameState.getStatus() != GameStatus.WON) {
+            System.out.println("Không lưu — trạng thái: " + gameState.getStatus());
             return;
         }
 
-        ScoreRecord record = ScoreRecord.fromGameState(playerName, gameState);
-        cache.add(record);
-
-        // Sắp xếp theo điểm giảm dần
-        cache.sort((a, b) -> Integer.compare(b.getScore(), a.getScore()));
-
         try {
-            storage.save(cache);
-            if (onScoreChanged != null) {
-                onScoreChanged.accept(cache);
-            }
+            ScoreRecord record = ScoreRecord.fromGameState(playerName, gameState);
+            cache.add(record);
+            cache.sort((a, b) -> Integer.compare(b.getScore(), a.getScore()));
+            storage.save(cache); // ← lưu xuống file
+            System.out.println("Đã lưu: " + record);
+
+            if (onScoreChanged != null) onScoreChanged.accept(cache);
+
         } catch (Exception e) {
             System.err.println("Không thể lưu điểm: " + e.getMessage());
+            e.printStackTrace(); // ← xem stack trace đầy đủ
         }
     }
 
@@ -150,6 +153,13 @@ public class ScoreManager {
      * Lấy TẤT CẢ các bản ghi điểm (không giới hạn, không lọc theo điểm cao)
      * Dùng cho màn hình Lịch sử
      */
+    public int getBestScore(Difficulty difficulty) {
+        return cache.stream()
+                .filter(r -> r.getDifficulty() == difficulty)
+                .mapToInt(ScoreRecord::getScore)
+                .max()
+                .orElse(0);
+    }
     public List<ScoreRecord> getAllScores() {
         return new java.util.ArrayList<>(cache);
     }
