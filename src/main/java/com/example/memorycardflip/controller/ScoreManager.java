@@ -43,13 +43,9 @@ public class ScoreManager {
     }
 
     /**
-     * Lưu điểm hiện tại
-     */
-    /**
-     * Lưu điểm cho tất cả các ván (cả thắng và thua)
-     */
-    /**
-     * Lưu điểm hiện tại
+     * [UC-10] Lưu điểm ván chơi khi người chơi thắng.
+     *
+     * <p>Use Case này lưu trữ điểm cao nhất vào storage để hiển thị leaderboard và lịch sử.</p>
      */
     public void saveScore(GameState gameState, String playerName) {
         if (gameState == null) return;
@@ -77,7 +73,9 @@ public class ScoreManager {
 
 
     /**
-     * Lấy top N điểm cao nhất (tất cả độ khó)
+     * [UC-05] Lấy top N điểm cao nhất.
+     *
+     * <p>Use Case này dùng để hiển thị bảng xếp hạng toàn cục hoặc theo độ khó.</p>
      */
     public List<ScoreRecord> getTopScores(int limit) {
         return cache.stream()
@@ -122,7 +120,9 @@ public class ScoreManager {
     }
 
     /**
-     * Xóa tất cả điểm
+     * [UC-06] Xóa toàn bộ lịch sử điểm.
+     *
+     * <p>Use Case này cho phép người chơi xoá dữ liệu lịch sử đã lưu trên thiết bị.</p>
      */
     public void clearAllScores() {
         cache.clear();
@@ -150,8 +150,7 @@ public class ScoreManager {
         return storage;
     }
     /**
-     * Lấy TẤT CẢ các bản ghi điểm (không giới hạn, không lọc theo điểm cao)
-     * Dùng cho màn hình Lịch sử
+     * [UC-05] Lấy tất cả các bản ghi điểm để hiển thị trên lịch sử hoặc leaderboard.
      */
     public int getBestScore(Difficulty difficulty) {
         return cache.stream()

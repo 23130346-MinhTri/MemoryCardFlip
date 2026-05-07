@@ -3,6 +3,14 @@ package com.example.memorycardflip.service;
 import com.example.memorycardflip.model.Card;
 import com.example.memorycardflip.model.GameState;
 
+/**
+ * Service xử lý logic ghép cặp thẻ trong ván chơi.
+ *
+ * <p>Use Case phụ trách:</p>
+ * <ul>
+ *   <li>[UC-07] Kiểm tra cặp thẻ</li>
+ * </ul>
+ */
 public class GameLogicService {
 
     public interface Listener {
@@ -35,6 +43,12 @@ public class GameLogicService {
         return gameState.getStatus() == com.example.memorycardflip.model.GameStatus.PLAYING;
     }
 
+    /**
+     * [UC-07] Xử lý lựa chọn thẻ thứ hai và kiểm tra cặp.
+     *
+     * <p>Use Case này xác định xem hai thẻ được chọn có cùng pairId hay không.</p>
+     * <p>Postcondition: nếu khớp thì gọi onMatch; nếu không khớp thì gọi onMismatch.</p>
+     */
     public void handleSelection(Card card, Listener listener) {
         // FIX 2a: Guard isResolving ngay đầu, trước mọi xử lý.
         // Trước đây guard này bị thiếu ở một số path → board bị lock.

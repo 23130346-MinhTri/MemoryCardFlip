@@ -7,7 +7,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
-
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -26,7 +25,6 @@ public class ComboNotificationController implements Initializable {
             rootPane.setVisible(false);
         }
     }
-
     public void showCombo(int comboCount) {
         if (currentFadeOut != null) currentFadeOut.stop();
 

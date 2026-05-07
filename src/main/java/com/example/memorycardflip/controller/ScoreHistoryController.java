@@ -63,6 +63,11 @@ public class ScoreHistoryController implements Initializable {
         comboFilter.setOnAction(e -> filterHistory());
     }
 
+    /**
+     * [UC-06] Tải toàn bộ lịch sử điểm từ ScoreManager.
+     *
+     * <p>Postcondition: bảng lịch sử được điền đầy đủ dữ liệu và tổng số ván được cập nhật.</p>
+     */
     private void loadAllHistory() {
         List<ScoreRecord> allScores = scoreManager.getAllScores();
         tableView.getItems().setAll(allScores);
@@ -84,6 +89,11 @@ public class ScoreHistoryController implements Initializable {
         }
         lblTotalGames.setText("Tổng số ván: " + tableView.getItems().size());
     }
+    /**
+     * [UC-06] Xác nhận và xóa toàn bộ lịch sử điểm.
+     *
+     * <p>Use Case này yêu cầu người chơi xác nhận trước khi xóa điểm vĩnh viễn.</p>
+     */
     @FXML
     public void onClearAll() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);

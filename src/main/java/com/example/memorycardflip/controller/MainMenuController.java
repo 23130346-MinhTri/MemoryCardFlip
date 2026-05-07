@@ -27,6 +27,8 @@ import java.util.ResourceBundle;
  * <p>UseCase phụ trách:</p>
  * <ul>
  *   <li>[UC-01] Chọn cấp độ & Bắt đầu game</li>
+ *   <li>[UC-05] Xem Bảng xếp hạng</li>
+ *   <li>[UC-06] Xem Lịch sử điểm</li>
  *   <li>[UC-09] Xem Leaderboard (high score bar)</li>
  * </ul>
  */
@@ -176,10 +178,23 @@ public class MainMenuController implements Initializable {
         // TODO: SceneManager.getInstance().showAboutDialog();
     }
     /** Nút Lịch sử — hiển thị bảng điểm */
+    /**
+     * [UC-06] Mở màn hình Lịch sử điểm.
+     *
+     * <p>Use Case này cho phép người chơi xem lại toàn bộ lịch sử điểm đã lưu.</p>
+     * <p>Postcondition: ScoreHistoryScene được hiển thị.</p>
+     */
     @FXML
     public void onHistory() {
         SceneManager.getInstance().showScoreHistory();   // ← Đổi thành showScoreHistory()
     }
+
+    /**
+     * [UC-05] Mở màn hình Bảng xếp hạng.
+     *
+     * <p>Use Case này cho phép người chơi xem danh sách điểm cao nhất theo độ khó.</p>
+     * <p>Postcondition: LeaderboardScene được hiển thị.</p>
+     */
     @FXML
     public void onLeaderboard() {
         SceneManager.getInstance().showLeaderboard();   // Mở BẢNG XẾP HẠNG

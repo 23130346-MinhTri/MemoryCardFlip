@@ -19,6 +19,8 @@ import java.util.ResourceBundle;
 /**
  * Controller cho màn hình Leaderboard.
  * File FXML tương ứng: leaderboard.fxml
+ *
+ * <p>Use Case phụ trách: [UC-05] Xem bảng xếp hạng.</p>
  */
 public class LeaderboardController implements Initializable {
 
@@ -84,6 +86,11 @@ public class LeaderboardController implements Initializable {
         comboDifficulty.setOnAction(e -> loadLeaderboard(comboDifficulty.getValue()));
     }
 
+    /**
+     * [UC-05] Tải dữ liệu bảng xếp hạng theo độ khó.
+     *
+     * <p>Postcondition: bảng xếp hạng được cập nhật và điểm cao nhất hiển thị.</p>
+     */
     private void loadLeaderboard(Difficulty difficulty) {
         List<ScoreRecord> scores = scoreManager.getTopScores(difficulty, 50);
         data.setAll(scores);
@@ -97,6 +104,9 @@ public class LeaderboardController implements Initializable {
         );
     }
 
+    /**
+     * [UC-05] Làm mới dữ liệu bảng xếp hạng hiện tại.
+     */
     @FXML
     public void onRefresh() {
         loadLeaderboard(comboDifficulty.getValue());
