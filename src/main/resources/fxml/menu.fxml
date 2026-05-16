@@ -64,7 +64,7 @@
 
                 <!-- Easy -->
                 <Button fx:id="btnEasy"
-                    onAction="#onStartEasy"
+                    onAction="#onSelectDifficultyEasy"
                         styleClass="diff-btn, btn-easy"
                         maxWidth="320">
                     <graphic>
@@ -81,7 +81,7 @@
 
                 <!-- Medium -->
                 <Button fx:id="btnMedium"
-                    onAction="#onStartMedium"
+                    onAction="#onSelectDifficultyMedium"
                         styleClass="diff-btn, btn-medium"
                         maxWidth="320">
                     <graphic>
@@ -98,7 +98,7 @@
 
                 <!-- Hard -->
                 <Button fx:id="btnHard"
-                    onAction="#onStartHard"
+                    onAction="#onSelectDifficultyHard"
                         styleClass="diff-btn, btn-hard"
                         maxWidth="320">
                     <graphic>

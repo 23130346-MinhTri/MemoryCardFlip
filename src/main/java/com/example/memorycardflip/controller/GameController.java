@@ -39,11 +39,14 @@ import java.util.ResourceBundle;
 
 /**
  * Controller màn hình chơi game — game.fxml
- * UC-01 : Nhận Difficulty → khởi tạo bàn chơi
- * UC-02 : Lật thẻ — dùng CardFlipView + icon từ /assets/icons/
- * UC-09 : Kiểm tra cặp thẻ — khớp thì xóa, không khớp thì lật lại
- * UC-08 : Tính điểm và streak bonus
-
+ *
+ * <p>UseCase phụ trách:</p>
+ * <ul>
+ *   <li>[1. Select Difficulty] Nhận Difficulty → khởi tạo bàn chơi</li>
+ *   <li>[UC-02] Lật thẻ — dùng CardFlipView + icon từ /assets/icons/</li>
+ *   <li>[UC-09] Kiểm tra cặp thẻ — khớp thì xóa, không khớp thì lật lại</li>
+ *   <li>[UC-08] Tính điểm và streak bonus</li>
+ * </ul>
  */
 public class GameController implements Initializable {
     // ── FXML ──────────────────────────────────────────────────
@@ -148,7 +151,10 @@ public class GameController implements Initializable {
             }
         }
     }
-    /** Dùng khi MainMenuController.openGameScene() truyền difficulty trực tiếp */
+    /** 
+     * [1. Select Difficulty] Đặt độ khó và khởi tạo GameState.
+     * Được gọi từ SceneManager.showGame() hoặc khi reload game.
+     */
     public void setDifficulty(Difficulty d) {
         if (d == null) return;
         difficulty = d;
@@ -157,75 +163,134 @@ public class GameController implements Initializable {
         javafx.application.Platform.runLater(this::startBoard);
     }
     // ══════════════════════════════════════════════════════════
-    // [UC-01] Khởi tạo bàn chơi
+    // 1. Select Difficulty — Khởi tạo bàn chơi
     // ══════════════════════════════════════════════════════════
+
+    /**
+     * [1.1.8 - 1.1.10] Khởi tạo bàn chơi game.
+     *
+     * <p>Bước 1.1.8: GameController.startBoard() được gọi:
+     *              tạo GameState với Difficulty đã chọn, khởi tạo card grid,
+     *              reset timer, score, moves, và tất cả các labels HUD.</p>
+     * <p>Bước 1.1.9: GameScene được hiển thị. Timer bắt đầu đếm ngược.
+     *              AudioService phát BGM.</p>
+     * <p>Bước 1.1.10: Người chơi có thể bắt đầu lật thẻ bằng cách click vào bất kỳ thẻ nào.</p>
+     *
+     * <p>Postcondition:</p>
+     * <ul>
+     *   <li>Card grid được render đầy đủ theo độ khó đã chọn</li>
+     *   <li>Timer reset và bắt đầu đếm ngược</li>
+     *   <li>HUD labels được cập nhật (score, moves, pairs, time, combo)</li>
+     *   <li>BGM bắt đầu phát</li>
+     *   <li>Người chơi có thể click vào thẻ để lật</li>
+     * </ul>
+     */
     private void startBoard() {
+        // Phát nhạc nền (BGM)
         AudioService.getInstance().playBGM("/assets/sounds/game.mp3");
+        
+        // Dừng timer cũ (nếu có từ lần chơi trước)
         stopTimer();
+        
+        // Clear view map từ lần chơi trước
         viewMap.clear();
+        
+        // Tính toán số cặp thẻ dựa trên độ khó
         totalPairs   = difficulty.totalPairs();
+        
         // Ẩn combo notification khi restart game
         if (comboNotification != null) {
             comboNotification.hide();
         }
+        
+        // Cập nhật nhãn độ khó (vd: "Easy  4×4")
         int gs = difficulty.getGridSize();
         lblDifficulty.setText(difficulty.getDisplayName() + "  " + gs + "×" + gs);
-        // KHỞI TẠO UI HIỂN THỊ BAN ĐẦU
+        
+        // ── Khởi tạo UI HUD (Heads-Up Display) ──────────────────────
+        // Đặt lại tất cả các labels về trạng thái ban đầu
+        
         if (lblTime != null) {
-            lblTime.setText(tr("default.time"));
-            lblTime.setStyle("");
+            lblTime.setText(tr("default.time"));  // Vd: "01:00"
+            lblTime.setStyle("");  // Clear màu warning nếu có
         }
+        
         if (lblScore != null) {
-            lblScore.setText(tr("default.score"));
+            lblScore.setText(tr("default.score"));  // Vd: "0"
         }
+        
         if (lblMoves != null) {
-            lblMoves.setText(tr("default.moves"));
+            lblMoves.setText(tr("default.moves"));  // Vd: "0"
         }
+        
         if (lblPairs != null) {
-            lblPairs.setText("0 / " + totalPairs);
+            lblPairs.setText("0 / " + totalPairs);  // Vd: "0 / 8" (EASY)
         }
+        
         if (lblRemaining != null) {
-            lblRemaining.setText(String.valueOf(totalPairs));
+            lblRemaining.setText(String.valueOf(totalPairs));  // Số cặp còn lại
         }
+        
         if (timeProgressBar != null) {
-            timeProgressBar.setProgress(1.0);
-            timeProgressBar.getStyleClass().remove("time-progress-warning");
+            timeProgressBar.setProgress(1.0);  // Progress bar đầy 100%
+            timeProgressBar.getStyleClass().remove("time-progress-warning");  // Xóa style warning
         }
+        
         if (btnPause != null) {
-            btnPause.setText(tr("button.pause"));
-            btnPause.setDisable(false);
+            btnPause.setText(tr("button.pause"));  // Nút Pause
+            btnPause.setDisable(false);  // Kích hoạt nút
         }
+        
         if (lblCombo != null) {
-            lblCombo.setText("x0");
+            lblCombo.setText("x0");  // Combo counter bắt đầu từ 0
         }
-        lblStatus.setText(tr("status.start"));
+        
+        lblStatus.setText(tr("status.start"));  // Vd: "Game started!"
+        
+        // ── Xây dựng bộ bài ──────────────────────────────────────────
+        // Tạo các thẻ theo độ khó, shuffle, gắn vào card grid
         List<Card> deck = buildDeck();
         renderGrid(deck);
+        
+        // ── Khởi tạo GameState ────────────────────────────────────────
+        // Lưu deck vào GameState để game logic có thể truy cập
         if (gameState != null) {
-            gameState.reset();
-            gameState.setCards(deck.toArray(new Card[0]));
-            gameState.setStatus(GameStatus.PLAYING);
+            gameState.reset();  // Reset toàn bộ trạng thái (score, moves, combo, v.v.)
+            gameState.setCards(deck.toArray(new Card[0]));  // Gán deck
+            gameState.setStatus(GameStatus.PLAYING);  // Đánh dấu game đang chơi
+            
+            // Khởi tạo hoặc reset GameLogicService
             if (gameLogicService == null) {
                 gameLogicService = new GameLogicService(gameState, totalPairs);
             } else {
                 gameLogicService.reset(totalPairs);
             }
+            
+            // Khởi tạo hoặc reset Timer
             if (timerManager != null) {
-                timerManager.dispose();
+                timerManager.dispose();  // Dispose timer cũ
             }
             timerManager = new GameTimerService(gameState, new GameTimerService.Listener() {
                 @Override
                 public void onTick() {
-                    handleTimerTick();
+                    handleTimerTick();  // Cập nhật UI mỗi tick
                 }
                 @Override
                 public void onTimeUp() {
-                    handleUCGM09LoseGame();
+                    handleUCGM09LoseGame();  // Thua cuộc nếu hết thời gian
                 }
             });
         }
+        
+        // ── Cập nhật hiển thị thời gian ──────────────────────────────
         renderUCGM06Time();
+        
+        // ── Bắt đầu timer đếm ngược ──────────────────────────────────
         startTimer();
+        
+        // ══════════════════════════════════════════════════════════
+        // Bây giờ người chơi có thể bắt đầu lật thẻ!
+        // ══════════════════════════════════════════════════════════
     }
     /**
      * Cập nhật hiển thị điểm số
