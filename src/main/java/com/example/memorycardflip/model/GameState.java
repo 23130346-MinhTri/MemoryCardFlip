@@ -71,6 +71,7 @@ public class GameState {
 
     public int getComboCount()               { return comboCount; }
     public void incrementCombo()             { comboCount++; }
+// 2.3.8
     public void resetCombo()                 { comboCount = 0; }
 
     // ── Selection state (chỉ read, mutate qua GameLogicService) ──
@@ -96,7 +97,7 @@ public class GameState {
         this.isResolving = resolving;
     }
 
-    /**
+    /** 9.5.5
      * Reset trạng thái chọn thẻ sau mỗi lượt (match hoặc mismatch).
      * Phải gọi sau khi animation hoàn tất.
      */

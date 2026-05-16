@@ -35,6 +35,7 @@ public class CardFlipView extends StackPane {
         frontImageView.setVisible(false);
         backImageView.setVisible(true);
         contentLabel.setText(BACK_TEXT);
+
         setBackTextStyle();
         getStyleClass().add("card-back");
 
@@ -47,7 +48,7 @@ public class CardFlipView extends StackPane {
             }
         });
     }
-
+    // 2.3.1
     public void setOnFlipRequested(Runnable flipRequestedHandler) {
         this.flipRequestedHandler = flipRequestedHandler;
     }
@@ -57,7 +58,9 @@ public class CardFlipView extends StackPane {
         setPrefSize(width, height);
         setMaxSize(width, height);
     }
-
+/*
+*2.3.5 Hiển thị mặt trước thẻ kèm hiệu ứng lật khi người chơi chọn thẻ.
+*/
     public void showFront(String symbol, String imageUrl) {
         if (matched) return;
         if (faceUp) return;
@@ -83,7 +86,9 @@ public class CardFlipView extends StackPane {
             refreshStyle();
         });
     }
-
+/*
+*9.5.3 Ẩn mặt trước và quay lại mặt sau khi không ghép được cặp, cũng với hiệu ứng lật.
+*/
     public void showBack() {
         if (matched) return;
         if (!faceUp) return;
@@ -96,7 +101,7 @@ public class CardFlipView extends StackPane {
             refreshStyle();
         });
     }
-
+// 9.4.3 Đánh dấu thẻ đã được ghép cặp thành công, giữ nguyên mặt trước và vô hiệu hóa tương tác.
     public void setMatched(boolean matched) {
         this.matched = matched;
         if (matched) {
