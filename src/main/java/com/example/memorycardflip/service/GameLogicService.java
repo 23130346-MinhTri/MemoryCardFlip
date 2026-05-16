@@ -31,6 +31,7 @@ public class GameLogicService {
         this.totalPairs = totalPairs;
     }
 
+    // Kiểm tra thẻ có thể được chọn.
     public boolean canSelect(Card card) {
         // Không cho chọn thẻ đã matched
         if (card.isMatched()) return false;
@@ -44,35 +45,23 @@ public class GameLogicService {
     }
 
     /**
-     * [UC-07] Xử lý lựa chọn thẻ thứ hai và kiểm tra cặp.
-     *
-     * <p>Use Case này xác định xem hai thẻ được chọn có cùng pairId hay không.</p>
-     * <p>Postcondition: nếu khớp thì gọi onMatch; nếu không khớp thì gọi onMismatch.</p>
+     * Xử lý lựa chọn thẻ thứ hai và kiểm tra cặp.
      */
     public void handleSelection(Card card, Listener listener) {
-        // FIX 2a: Guard isResolving ngay đầu, trước mọi xử lý.
-        // Trước đây guard này bị thiếu ở một số path → board bị lock.
         if (!canSelect(card)) return;
 
         Card first = gameState.getFirstSelectedCard();
 
-        // Lần chọn đầu tiên
         if (first == null) {
             gameState.selectFirstCard(card);
             listener.onFirstCardSelected(card);
             return;
         }
 
-        // Lần chọn thứ hai — khóa input ngay lập tức
-        // FIX 2b: Chỉ gọi setResolving(true) ở ĐÂY, không để GameState.selectCard()
-        // cũng gọi nó → trước đây gây double-call và double increment.
         gameState.setResolving(true);
         gameState.incrementMoves();
 
         if (first.isPairOf(card)) {
-            // FIX 2c: Chỉ increment matchedPairs MỘT lần ở đây.
-            // Trước đây GameState.selectCard() cũng gọi incrementMatchedPairs()
-            // → count bị nhân đôi, win condition không bao giờ trigger đúng.
             gameState.incrementMatchedPairs();
             gameState.incrementCombo();
 

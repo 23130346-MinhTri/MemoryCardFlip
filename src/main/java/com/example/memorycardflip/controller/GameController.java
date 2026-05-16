@@ -41,9 +41,9 @@ import java.util.ResourceBundle;
  * Controller màn hình chơi game — game.fxml
  * UC-01 : Nhận Difficulty → khởi tạo bàn chơi
  * UC-02 : Lật thẻ — dùng CardFlipView + icon từ /assets/icons/
- * UC-07 : Kiểm tra cặp thẻ — khớp thì xóa, không khớp thì lật lại
+ * UC-09 : Kiểm tra cặp thẻ — khớp thì xóa, không khớp thì lật lại
  * UC-08 : Tính điểm và streak bonus
- * UC-09 : Đếm ngược thời gian
+
  */
 public class GameController implements Initializable {
     // ── FXML ──────────────────────────────────────────────────
@@ -284,80 +284,148 @@ public class GameController implements Initializable {
             CardFlipView view = new CardFlipView();
             view.setCardSize(cardW, cardH);
             view.showBack();
+
             view.setOnFlipRequested(() -> onCardClick(card, view));
             cardGrid.add(view, i % gs, i / gs);
             viewMap.put(card.getId(), view);
         }
     }
     // ══════════════════════════════════════════════════════════
-    // [UC-02] Lật thẻ
+    // [2] Lật thẻ
     // ══════════════════════════════════════════════════════════
     /**
-     * [UC-02 / UC-07] Xử lý thao tác lật thẻ và kiểm tra cặp.
+     * [UC-02, UC-09] Xử lý khi người chơi click vào một thẻ.
      *
-     * <p>Use Case này bắt đầu khi người chơi nhấn vào một thẻ trên bảng.</p>
-     * <p>Postcondition: thẻ được lật lên, trạng thái chọn thẻ được cập nhật, và nếu là cặp thứ hai thì tiến hành kiểm tra khớp.</p>
+     * <p>Precondition:</p>
+     * <ul>
+     *   <li>gameLogicService != null</li>
+     *   <li>Thẻ chưa matched và board không đang resolving</li>
+     *   <li>GameState ở trạng thái PLAYING</li>
+     * </ul>
+     *
+     * <p>Flow xử lý:</p>
+     * <ul>
+     *   <li>2.1.1 Người chơi click vào thẻ</li>
+     *   <li>2.1.2 CardFlipView gọi onCardClick(card, view)</li>
+     *   <li>2.1.3 Kiểm tra trạng thái game</li>
+     *   <li>2.1.4 Kiểm tra resolving</li>
+     *   <li>2.1.6 Kiểm tra card.isClickable()</li>
+     *   <li>2.1.7 Gọi card.flip()</li>
+     *   <li>2.1.8 Gọi view.showFront()</li>
+     *   <li>2.1.10 Kiểm tra firstCard == null</li>
+     *   <li>2.1.11 Gán firstCard</li>
+     *   <li>2.1.12 Hiển thị "Chọn thẻ thứ hai..."</li>
+     *   <li>2.1.13 Click thẻ thứ hai</li>
+     *   <li>2.1.14 Gán secondCard</li>
+     *   <li>2.1.15 Reset combo</li>
+     *   <li>2.1.16 Tăng số lượt</li>
+     *   <li>2.1.17 Kiểm tra cặp thẻ</li>
+     *   <li>2.1.18 Chuyển sang nhánh khớp hoặc không khớp</li>
+     * </ul>
      */
     private void onCardClick(Card card, CardFlipView view) {
+        // 2.1.2: CardFlipView gửi yêu cầu onCardClick
+        // 2.1.3: Kiểm tra trạng thái game
         if (gameLogicService == null || !gameLogicService.canSelect(card)) {
-            return;
+            return;  // 2.2.0: Nếu không hợp lệ, bỏ qua
         }
-        // 🛑 HARD BLOCK chống spam click
-        if (gameState.isResolving()) return;
+        // 2.1.4: Kiểm tra biến resolving
+        //   HARD BLOCK chống spam click
+        if (gameState.isResolving()) return;  // 2.2.1: Nếu resolving == true, khóa
+        // 2.1.7: Flip thẻ (đảo trạng thái)
         card.flip();
+        // 2.1.8: Hiển thị mặt trước
         view.showFront(card.getSymbol(), card.getImageURL());
-        // [UC-07] Kiểm tra cặp thẻ sau khi người chơi chọn thẻ thứ hai.
+        // 9.1.1: checkMatch() - core logic của UC09
         gameLogicService.handleSelection(card, new GameLogicService.Listener() {
+            // 2.1.10: Kiểm tra firstCard == null → đây là lựa chọn đầu tiên
+            // 2.1.11: Gán firstCard
+            // 2.1.12: Cập nhật "Chọn thẻ thứ hai..."
             @Override
             public void onFirstCardSelected(Card firstCard) {
                 lblStatus.setText(tr("status.chooseSecond"));
             }
+            // 9.2.0 - 9.2.12: Nhánh hai thẻ khớp nhau
             @Override
             public void onMatch(Card firstCard, Card secondCard,
                                 int matchedPairs, int totalPairs, int comboCount) {
+                // 9.1.2: Lấy CardFlipView từ viewMap
                 CardFlipView v1 = viewMap.get(firstCard.getId());
                 CardFlipView v2 = viewMap.get(secondCard.getId());
+                
+                // 9.2.1: Đánh dấu hai thẻ đã matched
                 firstCard.match();
                 secondCard.match();
+                
+                // 9.2.5: Cập nhật HUD (điểm, combo, moves)
                 updateHUD();
+                
+                // 9.2.6: Cập nhật thông báo "Khớp!"
                 lblStatus.setText(tr("status.match", matchedPairs, totalPairs));
-                // 🎯 HIỆU ỨNG
+                
+                //   HIỆU ỨNG
                 AnimationService.playMatchEffect(v1);
                 AnimationService.playMatchEffect(v2);
-                // 🎉 COMBO EFFECT
                 if (comboNotification != null && comboCount > 1) {
                     comboNotification.showCombo(comboCount);
                 }
+                
+                // 9.2.7: PauseTransition(280ms) để hiển thị hiệu ứng matched
                 PauseTransition pause = new PauseTransition(Duration.millis(280));
                 pause.setOnFinished(e -> {
+                    // 9.2.8: Gọi setMatched(true) để đánh dấu thẻ trên UI
                     v1.setMatched(true);
                     v2.setMatched(true);
-                    gameLogicService.clearSelection(); // ✅ chỉ gọi cái này
+                    
+                    // 9.2.9: Gọi clearSelection() để reset firstCard/secondCard
+                    gameLogicService.clearSelection();
+                    
+                    // 9.2.11: Kiểm tra điều kiện chiến thắng (matchedPairs == totalPairs)
                     if (matchedPairs == totalPairs) {
+                        // 9.2.12: Chuyển sang màn hình kết quả (onWin)
                         onWin();
                     }
                 });
                 pause.play();
             }
+            // 9.3.0 - 9.3.9: Nhánh hai thẻ không khớp
             @Override
             public void onMismatch(Card firstCard, Card secondCard) {
+                // 9.1.2: Lấy CardFlipView từ viewMap
                 CardFlipView v1 = viewMap.get(firstCard.getId());
                 CardFlipView v2 = viewMap.get(secondCard.getId());
+                
+                // 9.3.1: Kiểm tra views hợp lệ
                 if (v1 == null || v2 == null) {
                     gameLogicService.clearSelection();
                     return;
                 }
+                
+                // 9.2.5: Cập nhật HUD
                 updateHUD();
+                
+                // Hiệu ứng shake để báo không khớp
                 AnimationService.playShakeAnimation(v1);
                 AnimationService.playShakeAnimation(v2);
+                
+                // 9.3.2: Cập nhật thông báo "Không khớp!"
                 lblStatus.setText(tr("status.mismatch"));
+                
+                // 9.3.3: PauseTransition(750ms) để người chơi quan sát
                 PauseTransition pause = new PauseTransition(Duration.millis(750));
                 pause.setOnFinished(e -> {
+                    // 9.3.4-9.3.5: Lật úp hai thẻ (faceDown)
                     firstCard.faceDown();
                     secondCard.faceDown();
+                    
+                    // 9.3.6-9.3.7: Hiển thị mặt sau (showBack)
                     v1.showBack();
                     v2.showBack();
-                    gameLogicService.clearSelection(); // ✅ xử lý toàn bộ state
+                    
+                    // 9.3.8: Gọi clearSelection() để reset firstCard/secondCard
+                    gameLogicService.clearSelection();
+                    
+                    // 9.3.9: resolving = false được gọi inside clearSelection()
                     lblStatus.setText(tr("status.continueFlipping"));
                 });
                 pause.play();
@@ -365,19 +433,26 @@ public class GameController implements Initializable {
         });
     }
     /**
-     * [UC-03] Xử lý khi người chơi hoàn thành toàn bộ cặp bài.
+     * [UC-03, UC-09] Xử lý khi người chơi hoàn thành toàn bộ cặp bài.
      *
      * <p>Use Case này kết thúc phiên chơi và chuyển sang màn hình kết quả.</p>
      * <p>Postcondition: gameState chuyển sang trạng thái WON, timer dừng, và ResultScene được mở.</p>
+     * <p>UC-09: 9.2.12 gọi onWin() và 9.3.6 ghi log nếu phát sinh exception.</p>
      */
     private void onWin() {
-        stopTimer();
-        disposeTimer();
-        lblStatus.setText(tr("status.win", totalPairs));
-        if (gameState != null) gameState.setStatus(GameStatus.WON);
-        PauseTransition p = new PauseTransition(Duration.millis(500));
-        p.setOnFinished(e -> SceneManager.getInstance().showResult());
-        p.play();
+        try {
+            stopTimer();
+            disposeTimer();
+            lblStatus.setText(tr("status.win", totalPairs));
+            if (gameState != null) gameState.setStatus(GameStatus.WON);
+            PauseTransition p = new PauseTransition(Duration.millis(500));
+            p.setOnFinished(e -> SceneManager.getInstance().showResult());
+            p.play();
+        } catch (Exception ex) {
+            // 9.3.6: Xử lý exception trong onWin()
+            System.err.println("Error in onWin(): " + ex.getMessage());
+            ex.printStackTrace();
+        }
     }
     // ── Helpers ───────────────────────────────────────────────
     /**
