@@ -26,7 +26,7 @@ import java.util.ResourceBundle;
  *
  * <p>UseCase phụ trách:</p>
  * <ul>
- *   <li>[UC-01] Chọn cấp độ & Bắt đầu game</li>
+ *   <li>[1. Select Difficulty] Chọn cấp độ khó & Bắt đầu game</li>
  *   <li>[UC-05] Xem Bảng xếp hạng</li>
  *   <li>[UC-06] Xem Lịch sử điểm</li>
  *   <li>[UC-09] Xem Leaderboard (high score bar)</li>
@@ -71,40 +71,60 @@ public class MainMenuController implements Initializable {
             System.err.println("Không thể load high score: " + e.getMessage());
         }
     }
-    // UC-01 — Chọn cấp độ & Bắt đầu game
+    // ══════════════════════════════════════════════════════════
+    // 1. Select Difficulty — Chọn cấp độ khó & Bắt đầu game
+    // ══════════════════════════════════════════════════════════
+
     /**
-     * [UC-01] Thiết lập sự kiện cho 3 nút chọn độ khó.
-     * Mặc định chọn EASY khi mở menu.
+     * [1.1.1 - 1.1.2] Thiết lập sự kiện cho 3 nút chọn độ khó.
+     *
+     * <p>Bước 1.1.1: Hệ thống load menu.fxml và hiển thị Main Menu</p>
+     * <p>Bước 1.1.2: Người chơi nhìn thấy ba nút (btnEasy, btnMedium, btnHard)
+     *              và click vào một nút để chọn độ khó.</p>
+     * <p>Mặc định chọn EASY khi mở menu.</p>
      */
     private void setupUC01DifficultyButtons() {
-        btnEasy.setOnAction(e   -> onUCMM01EasyClick());
-        btnMedium.setOnAction(e -> onUCMM02MediumClick());
-        btnHard.setOnAction(e   -> onUCMM03HardClick());
+        // Gán sự kiện click cho từng nút
+        btnEasy.setOnAction(e   -> onSelectDifficultyEasy());
+        btnMedium.setOnAction(e -> onSelectDifficultyMedium());
+        btnHard.setOnAction(e   -> onSelectDifficultyHard());
 
-        // Mặc định chọn EASY
-        handleUC01SelectDifficulty(Difficulty.EASY);
+        // Mặc định chọn EASY (optional)
+        handleSelectDifficulty(Difficulty.EASY);
     }
     /**
-     * [UC-01] Xử lý chọn một độ khó — cập nhật UI selected state.
+     * [1.1.3 - 1.1.4] Xử lý chọn một độ khó — cập nhật UI selected state.
+     *
+     * <p>Bước 1.1.3: Hệ thống nhận sự kiện onSelectDifficulty*() từ FXML binding.
+     *              MainMenuController.handleSelectDifficulty(Difficulty) được gọi.</p>
+     * <p>Bước 1.1.4: Nút được chọn được highlight (đổi màu, scale animation).
+     *              Trạng thái selectedDifficulty trong controller được cập nhật.</p>
      *
      * <p>Precondition:  Màn hình menu đang hiển thị.</p>
      * <p>Postcondition: selectedDifficulty được set, nút tương ứng highlight.</p>
      *
-     * @param difficulty độ khó người dùng chọn
+     * @param difficulty độ khó người dùng chọn (EASY, MEDIUM, HARD)
      */
-    private void handleUC01SelectDifficulty(Difficulty difficulty) {
+    private void handleSelectDifficulty(Difficulty difficulty) {
         selectedDifficulty = difficulty;
 
+        // Cập nhật pseudo-class selected cho tất cả nút
         diffButtonMap.forEach((diff, btn) -> {
             boolean isSelected = diff == difficulty;
             btn.pseudoClassStateChanged(SELECTED, isSelected);
-            renderUC01ButtonScale(btn, isSelected);
+            renderButtonScaleAnimation(btn, isSelected);
         });
     }
+
     /**
-     * [UC-01] Scale animation cho nút được chọn / bỏ chọn.
+     * Hỗ trợ [1.1.4]: Tạo scale animation cho nút được chọn / bỏ chọn.
+     *
+     * <p>Khi nút được chọn: scale up 1.04x. Khi bỏ chọn: scale down về 1.0x.</p>
+     *
+     * @param btn nút cần animate
+     * @param isSelected true nếu nút được chọn, false nếu bỏ chọn
      */
-    private void renderUC01ButtonScale(Button btn, boolean isSelected) {
+    private void renderButtonScaleAnimation(Button btn, boolean isSelected) {
         ScaleTransition st = new ScaleTransition(Duration.millis(150), btn);
         st.setToX(isSelected ? 1.04 : 1.0);
         st.setToY(isSelected ? 1.04 : 1.0);
@@ -112,55 +132,81 @@ public class MainMenuController implements Initializable {
     }
 
     /**
-     * [UC-01] Bắt đầu game — chuyển sang GameScene với độ khó đã chọn.
+     * [1.1.5 - 1.1.7] Bắt đầu game — chuyển sang GameScene với độ khó đã chọn.
+     *
+     * <p>Bước 1.1.5: Người chơi click lại vào cùng nút đó (hoặc nhấn Start).</p>
+     * <p>Bước 1.1.6: Hệ thống gọi onStartGame().</p>
+     * <p>Bước 1.1.7: MainMenuController gọi SceneManager.showGame(difficulty).
+     *              SceneManager load game.fxml và tạo GameController mới.</p>
      *
      * <p>Precondition:  selectedDifficulty != null.</p>
      * <p>Postcondition: GameScene được load, GameState được khởi tạo.</p>
      */
     @FXML
-    public void onUC01StartGame() {
+    public void onStartGame() {
         if (selectedDifficulty == null) {
-            handleUC01SelectDifficulty(Difficulty.EASY);
+            handleSelectDifficulty(Difficulty.EASY);
         }
         SceneManager.getInstance().showGame(selectedDifficulty);
     }
 
     /**
-     * [UC-01 / UC-MM-01] Click nút Easy.
-     * Lần 1 → chọn Easy. Lần 2 (đã chọn rồi) → start game luôn.
+     * [1.1.2] Click nút Easy (4×4 · 8 cặp · 60s).
+     * <p>Lần 1 → chọn Easy (highlight).
+     * Lần 2 (nút đã được chọn rồi) → gọi onStartGame() để bắt đầu game.</p>
+     *
+     * <p>Phương thức hỗ trợ:
+     * - handleSelectDifficulty(Difficulty.EASY): cập nhật trạng thái highlight
+     * - onStartGame(): chuyển sang GameScene</p>
      */
     @FXML
-    public void onUCMM01EasyClick() {
+    public void onSelectDifficultyEasy() {
         if (selectedDifficulty == Difficulty.EASY) {
-            onUC01StartGame();
+            // Nút Easy đã được chọn → click lần 2 → start game
+            onStartGame();
         } else {
-            handleUC01SelectDifficulty(Difficulty.EASY);
+            // Click lần 1 → chỉ chọn Easy, highlight nút
+            handleSelectDifficulty(Difficulty.EASY);
         }
     }
 
     /**
-     * [UC-01 / UC-MM-02] Click nút Medium.
-     * Lần 1 → chọn Medium. Lần 2 → start game luôn.
+     * [1.1.2] Click nút Medium (6×6 · 18 cặp · 90s).
+     * <p>Lần 1 → chọn Medium (highlight).
+     * Lần 2 (nút đã được chọn rồi) → gọi onStartGame() để bắt đầu game.</p>
+     *
+     * <p>Phương thức hỗ trợ:
+     * - handleSelectDifficulty(Difficulty.MEDIUM): cập nhật trạng thái highlight
+     * - onStartGame(): chuyển sang GameScene</p>
      */
     @FXML
-    public void onUCMM02MediumClick() {
+    public void onSelectDifficultyMedium() {
         if (selectedDifficulty == Difficulty.MEDIUM) {
-            onUC01StartGame();
+            // Nút Medium đã được chọn → click lần 2 → start game
+            onStartGame();
         } else {
-            handleUC01SelectDifficulty(Difficulty.MEDIUM);
+            // Click lần 1 → chỉ chọn Medium, highlight nút
+            handleSelectDifficulty(Difficulty.MEDIUM);
         }
     }
 
     /**
-     * [UC-01 / UC-MM-03] Click nút Hard.
-     * Lần 1 → chọn Hard. Lần 2 → start game luôn.
+     * [1.1.2] Click nút Hard (8×8 · 32 cặp · 120s).
+     * <p>Lần 1 → chọn Hard (highlight).
+     * Lần 2 (nút đã được chọn rồi) → gọi onStartGame() để bắt đầu game.</p>
+     *
+     * <p>Phương thức hỗ trợ:
+     * - handleSelectDifficulty(Difficulty.HARD): cập nhật trạng thái highlight
+     * - onStartGame(): chuyển sang GameScene</p>
      */
     @FXML
-    public void onUCMM03HardClick() {
+    public void onSelectDifficultyHard() {
         if (selectedDifficulty == Difficulty.HARD) {
-            onUC01StartGame();
+            // Nút Hard đã được chọn → click lần 2 → start game
+            onStartGame();
         } else {
-            handleUC01SelectDifficulty(Difficulty.HARD);
+            // Click lần 1 → chỉ chọn Hard, highlight nút
+            handleSelectDifficulty(Difficulty.HARD);
         }
     }
     // ── Event Handlers ────────────────────────────────────────
@@ -198,39 +244,6 @@ public class MainMenuController implements Initializable {
     @FXML
     public void onLeaderboard() {
         SceneManager.getInstance().showLeaderboard();   // Mở BẢNG XẾP HẠNG
-    }
-
-    @FXML
-    public void onStartEasy() {
-        openGameScene(Difficulty.EASY);
-    }
-
-    @FXML
-    public void onStartMedium() {
-        openGameScene(Difficulty.MEDIUM);
-    }
-
-    @FXML
-    public void onStartHard() {
-        openGameScene(Difficulty.HARD);
-    }
-
-    private void openGameScene(Difficulty difficulty) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/game.fxml"));
-            Parent root = loader.load();
-
-            GameController gameController = loader.getController();
-            gameController.setDifficulty(difficulty);
-
-            Stage stage = (Stage) btnEasy.getScene().getWindow();
-            Scene scene = new Scene(root, 900, 700);
-            stage.setTitle("Memory Card Flip - " + difficulty.getDisplayName());
-            stage.setScene(scene);
-            stage.centerOnScreen();
-        } catch (IOException exception) {
-            throw new IllegalStateException("Cannot open game scene", exception);
-        }
     }
 
 }

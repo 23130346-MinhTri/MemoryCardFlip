@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  *
  * <p>UseCase phụ trách:</p>
  * <ul>
- *   <li>[UC-01] Chuyển sang GameScene sau khi chọn độ khó</li>
+ *   <li>[1. Select Difficulty] Chuyển sang GameScene sau khi chọn độ khó</li>
  *   <li>[UC-03] Kết thúc game → chuyển sang ResultScene</li>
  *   <li>[UC-10] Replay → reset GameScene</li>
  *   <li>[UC-09] Quay về MainMenu</li>
@@ -84,16 +84,24 @@ public void init(Stage stage) {
 }
 
     // ══════════════════════════════════════════════════════════
-    // UC-01 — Chuyển sang GameScene
+    // 1. Select Difficulty — Chuyển sang GameScene
     // ══════════════════════════════════════════════════════════
 
     /**
-     * [UC-01] Chuyển sang màn hình chơi game với độ khó đã chọn.
+     * [1.1.7 - 1.1.9] Chuyển sang màn hình chơi game với độ khó đã chọn.
+     *
+     * <p>Bước 1.1.7: MainMenuController gọi SceneManager.showGame(difficulty).
+     *              SceneManager load game.fxml và tạo GameController mới.</p>
+     * <p>Bước 1.1.8: GameController.init(GameState) được gọi:
+     *              tạo GameState với Difficulty đã chọn, khởi tạo card grid,
+     *              reset timer và score.</p>
+     * <p>Bước 1.1.9: GameScene được hiển thị. Timer bắt đầu đếm ngược.
+     *              AudioService phát BGM.</p>
      *
      * <p>Precondition:  difficulty != null, primaryStage đã init.</p>
      * <p>Postcondition: GameScene hiển thị, GameState mới được tạo.</p>
      *
-     * @param difficulty độ khó người dùng chọn ở UC-01
+     * @param difficulty độ khó người dùng chọn ở bước 1.1.2
      */
     public void showGame(Difficulty difficulty) {
         currentGameState = new GameState(difficulty);

@@ -39,11 +39,16 @@ import java.util.ResourceBundle;
 
 /**
  * Controller màn hình chơi game — game.fxml
- * UC-01 : Nhận Difficulty → khởi tạo bàn chơi
- * UC-02 : Lật thẻ — dùng CardFlipView + icon từ /assets/icons/
- * UC-09 : Kiểm tra cặp thẻ — khớp thì xóa, không khớp thì lật lại
- * UC-08 : Tính điểm và streak bonus
-
+ *
+ * <p>UseCase phụ trách:</p>
+ * <ul>
+ *   <li>[1. Select Difficulty] Nhận Difficulty → khởi tạo bàn chơi</li>
+ *   <li>[2. Flip Card] Lật thẻ — dùng CardFlipView + icon từ /assets/icons/</li>
+ *   <li>[3. Match Pair] Kiểm tra cặp thẻ — khớp thì xóa, không khớp thì lật lại</li>
+ *   <li>[4. Calculate Score] Tính điểm và streak bonus</li>
+ *   <li>[5. Pause Game] Tạm dừng ván chơi</li>
+ *   <li>[6. Resume Game] Tiếp tục ván chơi sau khi tạm dừng</li>
+ * </ul>
  */
 public class GameController implements Initializable {
     // ── FXML ──────────────────────────────────────────────────
@@ -148,7 +153,10 @@ public class GameController implements Initializable {
             }
         }
     }
-    /** Dùng khi MainMenuController.openGameScene() truyền difficulty trực tiếp */
+    /** 
+     * [1. Select Difficulty] Đặt độ khó và khởi tạo GameState.
+     * Được gọi từ SceneManager.showGame() hoặc khi reload game.
+     */
     public void setDifficulty(Difficulty d) {
         if (d == null) return;
         difficulty = d;
@@ -157,75 +165,134 @@ public class GameController implements Initializable {
         javafx.application.Platform.runLater(this::startBoard);
     }
     // ══════════════════════════════════════════════════════════
-    // [UC-01] Khởi tạo bàn chơi
+    // 1. Select Difficulty — Khởi tạo bàn chơi
     // ══════════════════════════════════════════════════════════
+
+    /**
+     * [1.1.8 - 1.1.10] Khởi tạo bàn chơi game.
+     *
+     * <p>Bước 1.1.8: GameController.startBoard() được gọi:
+     *              tạo GameState với Difficulty đã chọn, khởi tạo card grid,
+     *              reset timer, score, moves, và tất cả các labels HUD.</p>
+     * <p>Bước 1.1.9: GameScene được hiển thị. Timer bắt đầu đếm ngược.
+     *              AudioService phát BGM.</p>
+     * <p>Bước 1.1.10: Người chơi có thể bắt đầu lật thẻ bằng cách click vào bất kỳ thẻ nào.</p>
+     *
+     * <p>Postcondition:</p>
+     * <ul>
+     *   <li>Card grid được render đầy đủ theo độ khó đã chọn</li>
+     *   <li>Timer reset và bắt đầu đếm ngược</li>
+     *   <li>HUD labels được cập nhật (score, moves, pairs, time, combo)</li>
+     *   <li>BGM bắt đầu phát</li>
+     *   <li>Người chơi có thể click vào thẻ để lật</li>
+     * </ul>
+     */
     private void startBoard() {
+        // Phát nhạc nền (BGM)
         AudioService.getInstance().playBGM("/assets/sounds/game.mp3");
+        
+        // Dừng timer cũ (nếu có từ lần chơi trước)
         stopTimer();
+        
+        // Clear view map từ lần chơi trước
         viewMap.clear();
+        
+        // Tính toán số cặp thẻ dựa trên độ khó
         totalPairs   = difficulty.totalPairs();
+        
         // Ẩn combo notification khi restart game
         if (comboNotification != null) {
             comboNotification.hide();
         }
+        
+        // Cập nhật nhãn độ khó (vd: "Easy  4×4")
         int gs = difficulty.getGridSize();
         lblDifficulty.setText(difficulty.getDisplayName() + "  " + gs + "×" + gs);
-        // KHỞI TẠO UI HIỂN THỊ BAN ĐẦU
+        
+        // ── Khởi tạo UI HUD (Heads-Up Display) ──────────────────────
+        // Đặt lại tất cả các labels về trạng thái ban đầu
+        
         if (lblTime != null) {
-            lblTime.setText(tr("default.time"));
-            lblTime.setStyle("");
+            lblTime.setText(tr("default.time"));  // Vd: "01:00"
+            lblTime.setStyle("");  // Clear màu warning nếu có
         }
+        
         if (lblScore != null) {
-            lblScore.setText(tr("default.score"));
+            lblScore.setText(tr("default.score"));  // Vd: "0"
         }
+        
         if (lblMoves != null) {
-            lblMoves.setText(tr("default.moves"));
+            lblMoves.setText(tr("default.moves"));  // Vd: "0"
         }
+        
         if (lblPairs != null) {
-            lblPairs.setText("0 / " + totalPairs);
+            lblPairs.setText("0 / " + totalPairs);  // Vd: "0 / 8" (EASY)
         }
+        
         if (lblRemaining != null) {
-            lblRemaining.setText(String.valueOf(totalPairs));
+            lblRemaining.setText(String.valueOf(totalPairs));  // Số cặp còn lại
         }
+        
         if (timeProgressBar != null) {
-            timeProgressBar.setProgress(1.0);
-            timeProgressBar.getStyleClass().remove("time-progress-warning");
+            timeProgressBar.setProgress(1.0);  // Progress bar đầy 100%
+            timeProgressBar.getStyleClass().remove("time-progress-warning");  // Xóa style warning
         }
+        
         if (btnPause != null) {
-            btnPause.setText(tr("button.pause"));
-            btnPause.setDisable(false);
+            btnPause.setText(tr("button.pause"));  // Nút Pause
+            btnPause.setDisable(false);  // Kích hoạt nút
         }
+        
         if (lblCombo != null) {
-            lblCombo.setText("x0");
+            lblCombo.setText("x0");  // Combo counter bắt đầu từ 0
         }
-        lblStatus.setText(tr("status.start"));
+        
+        lblStatus.setText(tr("status.start"));  // Vd: "Game started!"
+        
+        // ── Xây dựng bộ bài ──────────────────────────────────────────
+        // Tạo các thẻ theo độ khó, shuffle, gắn vào card grid
         List<Card> deck = buildDeck();
         renderGrid(deck);
+        
+        // ── Khởi tạo GameState ────────────────────────────────────────
+        // Lưu deck vào GameState để game logic có thể truy cập
         if (gameState != null) {
-            gameState.reset();
-            gameState.setCards(deck.toArray(new Card[0]));
-            gameState.setStatus(GameStatus.PLAYING);
+            gameState.reset();  // Reset toàn bộ trạng thái (score, moves, combo, v.v.)
+            gameState.setCards(deck.toArray(new Card[0]));  // Gán deck
+            gameState.setStatus(GameStatus.PLAYING);  // Đánh dấu game đang chơi
+            
+            // Khởi tạo hoặc reset GameLogicService
             if (gameLogicService == null) {
                 gameLogicService = new GameLogicService(gameState, totalPairs);
             } else {
                 gameLogicService.reset(totalPairs);
             }
+            
+            // Khởi tạo hoặc reset Timer
             if (timerManager != null) {
-                timerManager.dispose();
+                timerManager.dispose();  // Dispose timer cũ
             }
             timerManager = new GameTimerService(gameState, new GameTimerService.Listener() {
                 @Override
                 public void onTick() {
-                    handleTimerTick();
+                    handleTimerTick();  // Cập nhật UI mỗi tick
                 }
                 @Override
                 public void onTimeUp() {
-                    handleUCGM09LoseGame();
+                    handleUCGM09LoseGame();  // Thua cuộc nếu hết thời gian
                 }
             });
         }
+        
+        // ── Cập nhật hiển thị thời gian ──────────────────────────────
         renderUCGM06Time();
+        
+        // ── Bắt đầu timer đếm ngược ──────────────────────────────────
         startTimer();
+        
+        // ══════════════════════════════════════════════════════════
+        // Bây giờ người chơi có thể bắt đầu lật thẻ!
+        // ══════════════════════════════════════════════════════════
     }
     /**
      * Cập nhật hiển thị điểm số
@@ -621,52 +688,131 @@ public class GameController implements Initializable {
     }
     // ── FXML handlers ─────────────────────────────────────────
     /**
-     * [UC-04] Toggles giữa tạm dừng và tiếp tục.
+     * [UC-05,6] Toggles giữa tạm dừng và tiếp tục.
      *
      * <p>Use Case này cho phép người chơi tạm dừng hoặc tiếp tục ván hiện tại.</p>
      * <p>Postcondition: nếu đang chơi thì chuyển sang PAUSED; nếu đang tạm dừng thì chuyển sang PLAYING.</p>
      */
+    // ══════════════════════════════════════════════════════════
+    // 5. Pause Game & 6. Resume Game — Tạm dừng & Tiếp tục
+    // ══════════════════════════════════════════════════════════
+
+    /**
+     * [5.1.2 - 5.1.6] Xử lý click nút Pause — toggle trạng thái game.
+     *
+     * <p>Bước 5.1.0: Người chơi đang trong ván chơi.</p>
+     * <p>Bước 5.1.1: GameStatus = PLAYING, timer đang chạy.</p>
+     * <p>Bước 5.1.2: Người chơi click vào nút btnPause (icon ⏸).</p>
+     * <p>Bước 5.1.3: game.fxml kích hoạt sự kiện. GameController.onTogglePause() được gọi.</p>
+     * <p>Bước 5.1.4: Controller kiểm tra gameState != null và GameStatus hợp lệ.</p>
+     * <p>Bước 5.1.5: Phân nhánh theo trạng thái hiện tại:</p>
+     * <ul>
+     *   <li>Nếu status = PLAYING → gọi pauseGame() (Usecase 5)</li>
+     *   <li>Nếu status = PAUSED → gọi resumeGame() (Usecase 6)</li>
+     * </ul>
+     * <p>Bước 5.1.6: UI được cập nhật: lblStatus đổi text, btnPause đổi trạng thái.</p>
+     *
+     * <p>Precondition: gameState != null, game đang chơi hoặc đã tạm dừng.</p>
+     * <p>Postcondition: Trạng thái game được toggle (PLAYING ↔ PAUSED).</p>
+     */
     @FXML
     private void onTogglePause() {
+        // Bước 5.1.4: Kiểm tra gameState hợp lệ
         if (gameState == null) return;
+        
+        // Bước 5.1.5: Phân nhánh theo GameStatus hiện tại
         if (gameState.getStatus() == GameStatus.PLAYING) {
+            // Chuyển sang PAUSED (Usecase 5: Pause Game)
             pauseGame();
         } else if (gameState.getStatus() == GameStatus.PAUSED) {
+            // Chuyển sang PLAYING (Usecase 6: Resume Game)
             resumeGame();
         }
     }
     /**
-     * [UC-04] Tạm dừng ván chơi.
+     * [5. Pause Game] Tạm dừng ván chơi.
      *
-     * <p>Postcondition: timer bị dừng, status hiển thị Pause, và âm thanh nền dừng lại.</p>
+     * <p>Được gọi từ onTogglePause() khi GameStatus = PLAYING.</p>
+     *
+     * <p>Hành động chi tiết:</p>
+     * <ul>
+     *   <li>Dừng timer (stopTimer()) — thời gian ngừng đếm ngược</li>
+     *   <li>Đặt GameStatus = PAUSED</li>
+     *   <li>Cập nhật UI:</li>
+     *     <ul>
+     *       <li>lblStatus: Đổi thành "Paused" (từ i18n)</li>
+     *       <li>btnPause: Đổi icon/text thành "Resume" (để người chơi click tiếp tục)</li>
+     *     </ul>
+     *   <li>Dừng âm thanh nền (pauseBGM())</li>
+     * </ul>
+     *
+     * <p>Precondition: gameState != null, GameStatus = PLAYING.</p>
+     * <p>Postcondition: GameStatus = PAUSED, timer dừng, UI cập nhật, âm thanh tạm dừng.</p>
      */
     private void pauseGame() {
+        // Kiểm tra precondition
         if (gameState == null || gameState.getStatus() != GameStatus.PLAYING) return;
+        
+        // Dừng timer
         stopTimer();
+        
+        // Cập nhật GameStatus
         gameState.setStatus(GameStatus.PAUSED);
+        
+        // Cập nhật UI - lblStatus
         if (lblStatus != null) {
-            lblStatus.setText(tr("status.pause"));
+            lblStatus.setText(tr("status.pause"));  // Vd: "Game Paused"
         }
+        
+        // Cập nhật UI - btnPause (đổi thành Resume)
         if (btnPause != null) {
-            btnPause.setText(tr("button.resume"));
+            btnPause.setText(tr("button.resume"));  // Vd: "⏵ Resume"
         }
+        
+        // Dừng âm thanh nền
         AudioService.getInstance().pauseBGM();
     }
     /**
-     * [UC-04] Tiếp tục ván chơi sau khi đã tạm dừng.
+     * [6. Resume Game] Tiếp tục ván chơi sau khi đã tạm dừng.
      *
-     * <p>Postcondition: timer tiếp tục chạy, trạng thái trở lại PLAYING, và âm thanh nền được tiếp tục.</p>
+     * <p>Được gọi từ onTogglePause() khi GameStatus = PAUSED.</p>
+     *
+     * <p>Hành động chi tiết:</p>
+     * <ul>
+     *   <li>Đặt GameStatus = PLAYING</li>
+     *   <li>Khởi động lại timer (startTimer()) — thời gian tiếp tục đếm ngược từ giá trị tạm dừng</li>
+     *   <li>Cập nhật UI:</li>
+     *     <ul>
+     *       <li>lblStatus: Đổi thành "Resumed" hoặc "Game On" (từ i18n)</li>
+     *       <li>btnPause: Đổi icon/text lại thành "Pause" (để người chơi có thể tạm dừng lại)</li>
+     *     </ul>
+     *   <li>Tiếp tục phát âm thanh nền (resumeBGM())</li>
+     * </ul>
+     *
+     * <p>Precondition: gameState != null, GameStatus = PAUSED.</p>
+     * <p>Postcondition: GameStatus = PLAYING, timer chạy, UI cập nhật, âm thanh phát lại.</p>
      */
     private void resumeGame() {
+        // Kiểm tra precondition
         if (gameState == null || gameState.getStatus() != GameStatus.PAUSED) return;
+        
+        // Cập nhật GameStatus
         gameState.setStatus(GameStatus.PLAYING);
+        
+        // Khởi động lại timer
         startTimer();
+        
+        // Cập nhật UI - lblStatus
         if (lblStatus != null) {
-            lblStatus.setText(tr("status.resume"));
+            lblStatus.setText(tr("status.resume"));  // Vd: "Game Resumed"
         }
+        
+        // Cập nhật UI - btnPause (đổi lại thành Pause)
         if (btnPause != null) {
-            btnPause.setText(tr("button.pause"));
+            btnPause.setText(tr("button.pause"));  // Vd: "⏸ Pause"
         }
+        
+        // Tiếp tục phát âm thanh nền
         AudioService.getInstance().resumeBGM();
     }
     @FXML
