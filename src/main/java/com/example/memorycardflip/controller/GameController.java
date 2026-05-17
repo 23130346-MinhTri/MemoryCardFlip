@@ -43,9 +43,11 @@ import java.util.ResourceBundle;
  * <p>UseCase phụ trách:</p>
  * <ul>
  *   <li>[1. Select Difficulty] Nhận Difficulty → khởi tạo bàn chơi</li>
- *   <li>[UC-02] Lật thẻ — dùng CardFlipView + icon từ /assets/icons/</li>
- *   <li>[UC-09] Kiểm tra cặp thẻ — khớp thì xóa, không khớp thì lật lại</li>
- *   <li>[UC-08] Tính điểm và streak bonus</li>
+ *   <li>[2. Flip Card] Lật thẻ — dùng CardFlipView + icon từ /assets/icons/</li>
+ *   <li>[3. Match Pair] Kiểm tra cặp thẻ — khớp thì xóa, không khớp thì lật lại</li>
+ *   <li>[4. Calculate Score] Tính điểm và streak bonus</li>
+ *   <li>[5. Pause Game] Tạm dừng ván chơi</li>
+ *   <li>[6. Resume Game] Tiếp tục ván chơi sau khi tạm dừng</li>
  * </ul>
  */
 public class GameController implements Initializable {
@@ -686,52 +688,131 @@ public class GameController implements Initializable {
     }
     // ── FXML handlers ─────────────────────────────────────────
     /**
-     * [UC-04] Toggles giữa tạm dừng và tiếp tục.
+     * [UC-05,6] Toggles giữa tạm dừng và tiếp tục.
      *
      * <p>Use Case này cho phép người chơi tạm dừng hoặc tiếp tục ván hiện tại.</p>
      * <p>Postcondition: nếu đang chơi thì chuyển sang PAUSED; nếu đang tạm dừng thì chuyển sang PLAYING.</p>
      */
+    // ══════════════════════════════════════════════════════════
+    // 5. Pause Game & 6. Resume Game — Tạm dừng & Tiếp tục
+    // ══════════════════════════════════════════════════════════
+
+    /**
+     * [5.1.2 - 5.1.6] Xử lý click nút Pause — toggle trạng thái game.
+     *
+     * <p>Bước 5.1.0: Người chơi đang trong ván chơi.</p>
+     * <p>Bước 5.1.1: GameStatus = PLAYING, timer đang chạy.</p>
+     * <p>Bước 5.1.2: Người chơi click vào nút btnPause (icon ⏸).</p>
+     * <p>Bước 5.1.3: game.fxml kích hoạt sự kiện. GameController.onTogglePause() được gọi.</p>
+     * <p>Bước 5.1.4: Controller kiểm tra gameState != null và GameStatus hợp lệ.</p>
+     * <p>Bước 5.1.5: Phân nhánh theo trạng thái hiện tại:</p>
+     * <ul>
+     *   <li>Nếu status = PLAYING → gọi pauseGame() (Usecase 5)</li>
+     *   <li>Nếu status = PAUSED → gọi resumeGame() (Usecase 6)</li>
+     * </ul>
+     * <p>Bước 5.1.6: UI được cập nhật: lblStatus đổi text, btnPause đổi trạng thái.</p>
+     *
+     * <p>Precondition: gameState != null, game đang chơi hoặc đã tạm dừng.</p>
+     * <p>Postcondition: Trạng thái game được toggle (PLAYING ↔ PAUSED).</p>
+     */
     @FXML
     private void onTogglePause() {
+        // Bước 5.1.4: Kiểm tra gameState hợp lệ
         if (gameState == null) return;
+        
+        // Bước 5.1.5: Phân nhánh theo GameStatus hiện tại
         if (gameState.getStatus() == GameStatus.PLAYING) {
+            // Chuyển sang PAUSED (Usecase 5: Pause Game)
             pauseGame();
         } else if (gameState.getStatus() == GameStatus.PAUSED) {
+            // Chuyển sang PLAYING (Usecase 6: Resume Game)
             resumeGame();
         }
     }
     /**
-     * [UC-04] Tạm dừng ván chơi.
+     * [5. Pause Game] Tạm dừng ván chơi.
      *
-     * <p>Postcondition: timer bị dừng, status hiển thị Pause, và âm thanh nền dừng lại.</p>
+     * <p>Được gọi từ onTogglePause() khi GameStatus = PLAYING.</p>
+     *
+     * <p>Hành động chi tiết:</p>
+     * <ul>
+     *   <li>Dừng timer (stopTimer()) — thời gian ngừng đếm ngược</li>
+     *   <li>Đặt GameStatus = PAUSED</li>
+     *   <li>Cập nhật UI:</li>
+     *     <ul>
+     *       <li>lblStatus: Đổi thành "Paused" (từ i18n)</li>
+     *       <li>btnPause: Đổi icon/text thành "Resume" (để người chơi click tiếp tục)</li>
+     *     </ul>
+     *   <li>Dừng âm thanh nền (pauseBGM())</li>
+     * </ul>
+     *
+     * <p>Precondition: gameState != null, GameStatus = PLAYING.</p>
+     * <p>Postcondition: GameStatus = PAUSED, timer dừng, UI cập nhật, âm thanh tạm dừng.</p>
      */
     private void pauseGame() {
+        // Kiểm tra precondition
         if (gameState == null || gameState.getStatus() != GameStatus.PLAYING) return;
+        
+        // Dừng timer
         stopTimer();
+        
+        // Cập nhật GameStatus
         gameState.setStatus(GameStatus.PAUSED);
+        
+        // Cập nhật UI - lblStatus
         if (lblStatus != null) {
-            lblStatus.setText(tr("status.pause"));
+            lblStatus.setText(tr("status.pause"));  // Vd: "Game Paused"
         }
+        
+        // Cập nhật UI - btnPause (đổi thành Resume)
         if (btnPause != null) {
-            btnPause.setText(tr("button.resume"));
+            btnPause.setText(tr("button.resume"));  // Vd: "⏵ Resume"
         }
+        
+        // Dừng âm thanh nền
         AudioService.getInstance().pauseBGM();
     }
     /**
-     * [UC-04] Tiếp tục ván chơi sau khi đã tạm dừng.
+     * [6. Resume Game] Tiếp tục ván chơi sau khi đã tạm dừng.
      *
-     * <p>Postcondition: timer tiếp tục chạy, trạng thái trở lại PLAYING, và âm thanh nền được tiếp tục.</p>
+     * <p>Được gọi từ onTogglePause() khi GameStatus = PAUSED.</p>
+     *
+     * <p>Hành động chi tiết:</p>
+     * <ul>
+     *   <li>Đặt GameStatus = PLAYING</li>
+     *   <li>Khởi động lại timer (startTimer()) — thời gian tiếp tục đếm ngược từ giá trị tạm dừng</li>
+     *   <li>Cập nhật UI:</li>
+     *     <ul>
+     *       <li>lblStatus: Đổi thành "Resumed" hoặc "Game On" (từ i18n)</li>
+     *       <li>btnPause: Đổi icon/text lại thành "Pause" (để người chơi có thể tạm dừng lại)</li>
+     *     </ul>
+     *   <li>Tiếp tục phát âm thanh nền (resumeBGM())</li>
+     * </ul>
+     *
+     * <p>Precondition: gameState != null, GameStatus = PAUSED.</p>
+     * <p>Postcondition: GameStatus = PLAYING, timer chạy, UI cập nhật, âm thanh phát lại.</p>
      */
     private void resumeGame() {
+        // Kiểm tra precondition
         if (gameState == null || gameState.getStatus() != GameStatus.PAUSED) return;
+        
+        // Cập nhật GameStatus
         gameState.setStatus(GameStatus.PLAYING);
+        
+        // Khởi động lại timer
         startTimer();
+        
+        // Cập nhật UI - lblStatus
         if (lblStatus != null) {
-            lblStatus.setText(tr("status.resume"));
+            lblStatus.setText(tr("status.resume"));  // Vd: "Game Resumed"
         }
+        
+        // Cập nhật UI - btnPause (đổi lại thành Pause)
         if (btnPause != null) {
-            btnPause.setText(tr("button.pause"));
+            btnPause.setText(tr("button.pause"));  // Vd: "⏸ Pause"
         }
+        
+        // Tiếp tục phát âm thanh nền
         AudioService.getInstance().resumeBGM();
     }
     @FXML
