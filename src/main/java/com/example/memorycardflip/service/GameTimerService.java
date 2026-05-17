@@ -6,6 +6,13 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.util.Duration;
 
+/**
+ * [UC12 - Count down timer]
+ * Service phụ trách bộ đếm ngược của một ván chơi.
+ *
+ * Timeline chạy mỗi 1 giây, giảm timeRemaining trong GameState,
+ * sau đó báo về GameController để cập nhật UI hoặc xử lý hết giờ.
+ */
 public class GameTimerService {
 
     public interface Listener {
@@ -24,6 +31,10 @@ public class GameTimerService {
     public void updateGameState(GameState newState) {
         this.gameState = newState;
     }
+    /**
+     * Bắt đầu đếm ngược khi game đang ở trạng thái PLAYING.
+     * Nếu timer chưa có thì tạo Timeline mới, nếu đã có thì chạy tiếp.
+     */
     public void start() {
         if (gameState == null || gameState.getStatus() != GameStatus.PLAYING) {
             return;
@@ -39,12 +50,18 @@ public class GameTimerService {
         }
     }
 
+    /**
+     * Tạm dừng timer nhưng vẫn giữ Timeline để có thể chạy tiếp khi resume.
+     */
     public void stop() {
         if (timer != null) {
             timer.stop();
         }
     }
 
+    /**
+     * Hủy timer hiện tại, dùng khi kết thúc ván hoặc tạo ván mới.
+     */
     public void dispose() {
         if (timer != null) {
             timer.stop();
@@ -52,6 +69,12 @@ public class GameTimerService {
         }
     }
 
+    /**
+     * Một nhịp đếm ngược:
+     * - giảm thời gian còn lại 1 giây
+     * - báo UI cập nhật nhãn thời gian/thanh tiến trình
+     * - nếu hết giờ thì dừng timer và báo thua.
+     */
     private void tick() {
         if (gameState == null || gameState.getStatus() != GameStatus.PLAYING) {
             return;

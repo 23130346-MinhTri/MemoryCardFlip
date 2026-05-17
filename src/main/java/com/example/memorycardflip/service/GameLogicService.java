@@ -27,6 +27,10 @@ public class GameLogicService {
         this.totalPairs = totalPairs;
     }
 
+    /**
+     * [UC4 - Play again]
+     * Cập nhật lại tổng số cặp khi ván mới được tạo hoặc bàn chơi được dựng lại.
+     */
     public void reset(int totalPairs) {
         this.totalPairs = totalPairs;
     }

@@ -8,9 +8,9 @@
 <?import javafx.scene.layout.VBox?>
 
 <!--
-    result.fxml — Màn hình hiển thị kết quả sau khi thắng/thua
+    result.fxml — [UC3 View result] Màn hình hiển thị kết quả sau khi thắng/thua
     Controller : com.example.memorycardflip.controller.ResultController
-    UseCase    : UC-06 (Kết thúc game & Kết quả)
+    UseCase    : UC-03 (View result - Xem kết quả ván chơi)
 -->
 <StackPane xmlns="http://javafx.com/javafx/21"
            xmlns:fx="http://javafx.com/fxml/1"
@@ -23,64 +23,65 @@
             <Insets top="40" right="32" bottom="40" left="32"/>
         </padding>
 
-        <!-- Tiêu đề kết quả (WIN / GAME OVER) -->
+        <!-- [UC3] Tiêu đề kết quả (WIN / GAME OVER), style đổi theo trạng thái ván -->
         <Label fx:id="lblResultTitle"
                text="KẾT QUẢ"
                styleClass="result-title"
                maxWidth="Infinity"
                alignment="CENTER"/>
 
-        <!-- Khung thống kê chi tiết -->
+        <!-- [UC3] Khung thống kê chi tiết lấy dữ liệu từ GameState trong ResultController -->
         <VBox spacing="16"
               alignment="CENTER"
               styleClass="stats-card">
 
-            <!-- Độ khó -->
+            <!-- [UC3] Độ khó và kích thước lưới của ván vừa chơi -->
             <HBox alignment="CENTER_LEFT" spacing="20">
                 <Label text="ĐỘ KHÓ" styleClass="stats-label" minWidth="100"/>
                 <Label fx:id="lblDifficultyValue" text="Easy (4x4)" styleClass="stats-value"/>
             </HBox>
 
-            <!-- Điểm số -->
+            <!-- [UC3] Điểm số cuối cùng -->
             <HBox alignment="CENTER_LEFT" spacing="20">
                 <Label text="ĐIỂM SỐ" styleClass="stats-label" minWidth="100"/>
                 <Label fx:id="lblScoreValue" text="0" styleClass="stats-value, stats-score"/>
             </HBox>
 
-            <!-- Số lượt di chuyển -->
+            <!-- [UC3] Tổng số lượt di chuyển/lật thẻ -->
             <HBox alignment="CENTER_LEFT" spacing="20">
                 <Label text="SỐ LƯỢT" styleClass="stats-label" minWidth="100"/>
                 <Label fx:id="lblMovesValue" text="0" styleClass="stats-value"/>
             </HBox>
 
-            <!-- Thời gian còn lại -->
+            <!-- [UC12] Hiển thị thời gian còn lại sau khi timer dừng ở cuối ván -->
             <HBox alignment="CENTER_LEFT" spacing="20">
                 <Label text="THỜI GIAN CÒN" styleClass="stats-label" minWidth="100"/>
                 <Label fx:id="lblTimeRemainingValue" text="00:00" styleClass="stats-value, stats-time"/>
             </HBox>
 
-            <!-- Số cặp đã ghép -->
+            <!-- [UC3] Số cặp đã ghép trên tổng số cặp của độ khó -->
             <HBox alignment="CENTER_LEFT" spacing="20">
                 <Label text="CẶP ĐÃ GHÉP" styleClass="stats-label" minWidth="100"/>
                 <Label fx:id="lblPairsValue" text="0 / 0" styleClass="stats-value"/>
             </HBox>
 
-            <!-- High Score / Kỷ lục (sẽ được cập nhật sau khi lưu) -->
+            <!-- [UC3] High Score / Kỷ lục được cập nhật sau khi lưu điểm -->
             <HBox alignment="CENTER_LEFT" spacing="20">
                 <Label text="KỶ LỤC MỚI" styleClass="stats-label" minWidth="100"/>
                 <Label fx:id="lblNewHighScore" text="---" styleClass="stats-value, stats-highscore"/>
             </HBox>
         </VBox>
 
-        <!-- Thông báo tổng kết -->
+        <!-- [UC3] Thông báo tổng kết theo kết quả thắng/thua -->
         <Label fx:id="lblSummary"
                text=""
                styleClass="summary-text"
                wrapText="true"
                alignment="CENTER"/>
 
-        <!-- Các nút hành động -->
+        <!-- [UC3][UC4] Các nút hành động sau khi xem kết quả -->
         <HBox alignment="CENTER" spacing="20">
+            <!-- [UC4] Chơi lại cùng độ khó của ván vừa kết thúc -->
             <Button text="CHƠI LẠI"
                     onAction="#onUCRS02Replay"
                     styleClass="primary-btn"/>

@@ -137,6 +137,7 @@
     -fx-text-fill: #fadb6b;
     -fx-effect: dropshadow(gaussian, rgba(245,189,27,0.75), 8, 0, 0, 0);
 }
+/* [UC4] Nút restart/chơi lại trong HUD của GameScene */
 .restart-btn {
     -fx-background-color: rgba(74,144,217,0.15);
     -fx-border-color: rgba(74,144,217,0.35); -fx-border-width: 1;
@@ -146,7 +147,7 @@
 }
 .restart-btn:hover { -fx-background-color: rgba(74,144,217,0.30); -fx-text-fill: #ffffff; }
 
-/* Thêm style cho thanh thời gian */
+/* [UC12] Style cho thanh đếm ngược thời gian trên màn chơi */
 .time-progress-full {
     -fx-accent: #22c55e;
     -fx-padding: 0 0 0 0;
@@ -169,6 +170,7 @@
     -fx-background-radius: 0;
     -fx-padding: 0;
 }
+/* [UC12] Khi còn ít thời gian, thanh tiến trình chuyển sang màu cảnh báo */
 .time-progress-warning .bar {
     -fx-background-color: linear-gradient(to right, #f59e0b, #ef4444);
 }
@@ -381,13 +383,13 @@
    RESULT SCENE - SỬA MÀU CHỮ TRẮNG CHO PHẦN RESULT
    ════════════════════════════════════════════════════════════ */
 
-/* Container chính của result scene */
+/* [UC3] Container chính của màn hình View result */
 .result-scene,
 .stack-pane-result {
     -fx-background-color: #0f1b2d;
 }
 
-/* Card thống kê - nền sáng hơn một chút để nổi bật */
+/* [UC3] Card thống kê kết quả: độ khó, điểm, lượt, thời gian, cặp ghép */
 .stats-card {
     -fx-background-color: #162032;
     -fx-border-color: rgba(255,255,255,0.08);
@@ -413,24 +415,24 @@
     -fx-text-fill: #ffffff;  /* ← MÀU TRẮNG */
 }
 
-/* Điểm số - nổi bật hơn */
+/* [UC3] Điểm số trên màn kết quả - nổi bật hơn */
 .stats-score {
     -fx-text-fill: #f5c842;  /* Màu vàng cho điểm */
     -fx-font-size: 20px;
 }
 
-/* Thời gian còn lại */
+/* [UC12] Thời gian còn lại ở màn kết quả */
 .stats-time {
     -fx-text-fill: #7ec8e3;  /* Xanh sáng */
 }
 
-/* High score mới */
+/* [UC3] High score/kỷ lục mới trên màn kết quả */
 .stats-highscore {
     -fx-text-fill: #ffd700;  /* Vàng sáng */
     -fx-font-size: 14px;
 }
 
-/* Summary text (Xuất sắc! Bạn đã hoàn thành...) */
+/* [UC3] Summary text (Xuất sắc! Bạn đã hoàn thành...) */
 .summary-text {
     -fx-font-size: 13px;
     -fx-text-fill: #b8d4f0;
@@ -438,7 +440,7 @@
     -fx-wrap-text: true;
 }
 
-/* Result title (YOU WIN! / GAME OVER) */
+/* [UC3] Result title (YOU WIN! / GAME OVER) */
 .result-title {
     -fx-font-size: 36px;
     -fx-font-weight: bold;
@@ -456,7 +458,7 @@
     -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.3), 12, 0, 0, 0);
 }
 
-/* Các nút trong result scene */
+/* [UC3][UC4] Các nút trong result scene, gồm nút CHƠI LẠI */
 .primary-btn {
     -fx-background-color: linear-gradient(to bottom, #2a6f8f, #1a4f6f);
     -fx-border-color: #3a8faf;
@@ -696,7 +698,7 @@
     -fx-pref-width: Infinity;
 }
 
-/* Win/Lose title glow */
+/* [UC3] Win/Lose title glow */
 .result-title.result-win {
     -fx-text-fill: #22c55e;
     -fx-effect: dropshadow(gaussian, rgba(34,197,94,0.45), 16, 0, 0, 0);

@@ -115,6 +115,7 @@ public class ScoreManager {
      * Kiểm tra xem có phải điểm cao nhất mới không
      */
     public boolean isNewHighScore(Difficulty difficulty, int score) {
+        // [UC3] ResultController dùng để quyết định hiển thị "Kỷ lục mới!" trên màn kết quả.
         Optional<ScoreRecord> highScore = getHighScore(difficulty);
         return highScore.isEmpty() || score > highScore.get().getScore();
     }
@@ -153,6 +154,7 @@ public class ScoreManager {
      * [UC-05] Lấy tất cả các bản ghi điểm để hiển thị trên lịch sử hoặc leaderboard.
      */
     public int getBestScore(Difficulty difficulty) {
+        // [UC3] Lấy điểm cao nhất để hiển thị ở màn View result sau khi ván kết thúc.
         return cache.stream()
                 .filter(r -> r.getDifficulty() == difficulty)
                 .mapToInt(ScoreRecord::getScore)

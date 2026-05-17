@@ -15,7 +15,7 @@
     game.fxml — Màn hình chơi game chính
     Controller : com.example.memorycardflip.controller.GameController
     UseCase    : UC-01 (Khởi tạo), UC-02 (Lật thẻ), UC-03 (Kiểm tra), UC-04(Tiính điểm)
-                 UC-05 (Đếm ngược thời gian), UC-07 (Đếm số & Dữ liệu)
+                 UC-12 (Count down timer - Đếm ngược thời gian), UC-07 (Đếm số & Dữ liệu)
     Updated    : Bổ sung Score, Moves, Time và ràng buộc dữ liệu
 -->
 <BorderPane xmlns="http://javafx.com/javafx/21"
@@ -71,7 +71,7 @@
 
                 <Separator orientation="VERTICAL" styleClass="hud-divider"/>
 
-                <!-- Nút chơi lại (Restart) -->
+                <!-- [UC4] Nút chơi lại ngay trong màn chơi: reset board hiện tại -->
                 <VBox styleClass="hud-group" alignment="CENTER">
                     <Button fx:id="btnRestart"
                             text="🔄 Chơi lại"
@@ -84,7 +84,7 @@
             <!-- ══════════════════════════════════════
                  THANH THỜI GIAN & CẢNH BÁO
                  ══════════════════════════════════════ -->
-            <!-- Thời gian còn lại (Time Remaining) -->
+            <!-- [UC12] Thời gian còn lại: label MM:SS và progress bar giảm dần theo timer -->
             <HBox styleClass="time-bar" alignment="CENTER_LEFT" spacing="10">
                 <padding>
                     <Insets left="16" right="16"/>

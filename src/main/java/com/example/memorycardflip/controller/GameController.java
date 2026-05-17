@@ -56,8 +56,8 @@ public class GameController implements Initializable {
     @FXML private StackPane   gridWrapper;
     @FXML private Label       lblDifficulty;
     @FXML private Label       lblPairs;
-    @FXML private Label       lblTime;
-    @FXML private ProgressBar timeProgressBar;
+    @FXML private Label       lblTime;          // [UC12] Hiển thị thời gian còn lại theo định dạng MM:SS
+    @FXML private ProgressBar timeProgressBar;  // [UC12] Thanh tiến trình giảm dần theo timeRemaining
     @FXML private Label       lblStatus;
     @FXML private Button      btnPause;
     // =============== THÊM CÁC FXML BINDING MỚI ===============
@@ -79,6 +79,7 @@ public class GameController implements Initializable {
 
     private final Map<String, CardFlipView> viewMap = new HashMap<>();
     private int     totalPairs   = 0;
+    // [UC12] Quản lý Timeline đếm ngược, start/stop/dispose theo vòng đời ván chơi.
     private GameTimerService timerManager;
     private GameLogicService gameLogicService;
     private ComboNotificationController comboNotification;
@@ -170,6 +171,7 @@ public class GameController implements Initializable {
 
     /**
      * [1.1.8 - 1.1.10] Khởi tạo bàn chơi game.
+     * [UC4 - Play again] Hàm này cũng được gọi lại khi người chơi bấm "Chơi lại".
      *
      * <p>Bước 1.1.8: GameController.startBoard() được gọi:
      *              tạo GameState với Difficulty đã chọn, khởi tạo card grid,
@@ -188,19 +190,20 @@ public class GameController implements Initializable {
      * </ul>
      */
     private void startBoard() {
+        // [UC4] Bắt đầu lại toàn bộ ván: nhạc, timer, grid, HUD và trạng thái chơi.
         // Phát nhạc nền (BGM)
         AudioService.getInstance().playBGM("/assets/sounds/game.mp3");
         
-        // Dừng timer cũ (nếu có từ lần chơi trước)
+        // [UC4] Dừng timer cũ để ván mới không còn tick từ ván trước.
         stopTimer();
         
-        // Clear view map từ lần chơi trước
+        // [UC4] Xóa map view cũ trước khi render bộ bài mới.
         viewMap.clear();
         
         // Tính toán số cặp thẻ dựa trên độ khó
         totalPairs   = difficulty.totalPairs();
         
-        // Ẩn combo notification khi restart game
+        // [UC4] Ẩn combo notification khi restart game
         if (comboNotification != null) {
             comboNotification.hide();
         }
@@ -257,21 +260,23 @@ public class GameController implements Initializable {
         // ── Khởi tạo GameState ────────────────────────────────────────
         // Lưu deck vào GameState để game logic có thể truy cập
         if (gameState != null) {
-            gameState.reset();  // Reset toàn bộ trạng thái (score, moves, combo, v.v.)
+            // [UC4] Reset toàn bộ trạng thái (score, moves, combo, timer, selection...).
+            gameState.reset();
             gameState.setCards(deck.toArray(new Card[0]));  // Gán deck
             gameState.setStatus(GameStatus.PLAYING);  // Đánh dấu game đang chơi
             
-            // Khởi tạo hoặc reset GameLogicService
+            // [UC4] Reset logic ghép cặp để lượt chơi mới không còn selection/matchedPairs cũ.
             if (gameLogicService == null) {
                 gameLogicService = new GameLogicService(gameState, totalPairs);
             } else {
                 gameLogicService.reset(totalPairs);
             }
             
-            // Khởi tạo hoặc reset Timer
+            // [UC4] Hủy timer cũ và tạo timer mới cho lượt chơi lại.
             if (timerManager != null) {
                 timerManager.dispose();  // Dispose timer cũ
             }
+            // [UC12] Khởi tạo timer với callback: mỗi tick cập nhật UI, hết giờ thì xử lý thua.
             timerManager = new GameTimerService(gameState, new GameTimerService.Listener() {
                 @Override
                 public void onTick() {
@@ -284,9 +289,11 @@ public class GameController implements Initializable {
             });
         }
         
+        // [UC12] Render thời gian ban đầu trước khi timer bắt đầu chạy.
         // ── Cập nhật hiển thị thời gian ──────────────────────────────
         renderUCGM06Time();
-        
+
+        // [UC12] Bắt đầu bộ đếm ngược cho ván hiện tại.
         // ── Bắt đầu timer đếm ngược ──────────────────────────────────
         startTimer();
         
@@ -449,7 +456,7 @@ public class GameController implements Initializable {
                     
                     // 9.2.11: Kiểm tra điều kiện chiến thắng (matchedPairs == totalPairs)
                     if (matchedPairs == totalPairs) {
-                        // 9.2.12: Chuyển sang màn hình kết quả (onWin)
+                        // [UC3] Khi ghép đủ cặp, chuyển sang luồng View result.
                         onWin();
                     }
                 });
@@ -500,7 +507,7 @@ public class GameController implements Initializable {
         });
     }
     /**
-     * [UC-03, UC-09] Xử lý khi người chơi hoàn thành toàn bộ cặp bài.
+     * [UC3 - View result] Xử lý khi người chơi hoàn thành toàn bộ cặp bài.
      *
      * <p>Use Case này kết thúc phiên chơi và chuyển sang màn hình kết quả.</p>
      * <p>Postcondition: gameState chuyển sang trạng thái WON, timer dừng, và ResultScene được mở.</p>
@@ -508,11 +515,13 @@ public class GameController implements Initializable {
      */
     private void onWin() {
         try {
+            // [UC3] Khóa trạng thái ván trước khi mở ResultScene để kết quả không còn thay đổi.
             stopTimer();
             disposeTimer();
             lblStatus.setText(tr("status.win", totalPairs));
             if (gameState != null) gameState.setStatus(GameStatus.WON);
             PauseTransition p = new PauseTransition(Duration.millis(500));
+            // [UC3] Sau hiệu ứng ngắn, chuyển sang màn hình View result.
             p.setOnFinished(e -> SceneManager.getInstance().showResult());
             p.play();
         } catch (Exception ex) {
@@ -553,10 +562,10 @@ public class GameController implements Initializable {
         return MessageFormat.format(messages.getString(key), args);
     }
     /**
-     * [UC-GM-06] Cập nhật hiển thị thời gian còn lại trên HUD.
+     * [UC12 - Count down timer] Cập nhật hiển thị thời gian còn lại trên HUD.
      *
      * <p>Precondition: Difficulty đã được chọn cho ván hiện tại.</p>
-     * <p>Postcondition: Nhãn thời gian hiển thị đúng số giây còn lại.</p>
+     * <p>Postcondition: Nhãn thời gian hiển thị đúng MM:SS, progress bar phản ánh tỷ lệ thời gian còn lại.</p>
      */
     private void renderUCGM06Time() {
         int remaining = difficulty.getTimeLimit();
@@ -574,7 +583,7 @@ public class GameController implements Initializable {
         }
     }
     /**
-     * [UC-GM-06] Khởi động bộ đếm ngược cho ván hiện tại.
+     * [UC12 - Count down timer] Khởi động bộ đếm ngược cho ván hiện tại.
      *
      * <p>Precondition: gameState != null và trạng thái đang PLAYING.</p>
      * <p>Postcondition: Mỗi giây sẽ gọi xử lý UC-GM-06.</p>
@@ -585,7 +594,7 @@ public class GameController implements Initializable {
         }
     }
     /**
-     * [UC-GM-06] Dừng bộ đếm ngược hiện tại.
+     * [UC12 - Count down timer] Dừng bộ đếm ngược hiện tại.
      *
      * <p>Postcondition: Không còn nhịp timer nào chạy cho ván hiện tại.</p>
      */
@@ -601,13 +610,13 @@ public class GameController implements Initializable {
         }
     }
     /**
-     * [UC-GM-06] Giảm thời gian còn lại sau mỗi giây.
+     * [UC12 - Count down timer] Giảm thời gian còn lại sau mỗi giây.
      *
      * <p>Precondition: GameStatus == PLAYING.</p>
      * <p>Postcondition: timeRemaining giảm 1; gần hết giờ gọi UC-GM-07; hết giờ gọi UC-GM-09.</p>
      */
     /**
-     * [UC-09] Xử lý mỗi nhịp đếm ngược.
+     * [UC12 - Count down timer] Xử lý mỗi nhịp đếm ngược.
      *
      * <p>Use Case này cập nhật thời gian mỗi giây và kiểm tra khi còn dưới 10 giây.</p>
      * <p>Postcondition: thời gian hiển thị được cập nhật, điểm hiển thị được refresh, và cảnh báo gần hết giờ được kích hoạt.</p>
@@ -622,7 +631,7 @@ public class GameController implements Initializable {
         }
     }
     /**
-     * [UC-GM-07] Cảnh báo người chơi khi sắp hết giờ.
+     * [UC12 - Count down timer] Cảnh báo người chơi khi sắp hết giờ.
      *
      * <p>Precondition: timeRemaining <= 10.</p>
      * <p>Postcondition: Nhãn thời gian chuyển đỏ, đậm và status hiển thị cảnh báo.</p>
@@ -639,7 +648,7 @@ public class GameController implements Initializable {
         }
     }
     /**
-     * [UC-GM-09] Xử lý thua game khi hết giờ.
+     * [UC12 - Count down timer] Xử lý thua game khi hết giờ.
      *
      * <p>Precondition: timeRemaining <= 0.</p>
      * <p>Postcondition: Dừng timer, khóa input bằng LOST state và cập nhật HUD.</p>
@@ -649,11 +658,13 @@ public class GameController implements Initializable {
         disposeTimer();
         if (gameState != null) {
             gameState.setTimeRemaining(0);
+            // [UC3] Đánh dấu LOST để ResultController hiển thị GAME OVER.
             gameState.setStatus(GameStatus.LOST);
         }
         renderUCGM06Time();
         lblStatus.setText(tr("timer.expired"));
         PauseTransition p = new PauseTransition(Duration.millis(500));
+        // [UC3] Hết giờ cũng đi tới View result với trạng thái thua.
         p.setOnFinished(e -> SceneManager.getInstance().showResult());
         p.play();
     }
@@ -817,6 +828,7 @@ public class GameController implements Initializable {
     }
     @FXML
     private void handleUC01Restart() {
+        // [UC4] Nút "Chơi lại" ngay trong GameScene: dựng lại bàn chơi hiện tại.
         javafx.application.Platform.runLater(this::startBoard);
     }
     @FXML
