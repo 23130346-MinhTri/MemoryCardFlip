@@ -37,8 +37,8 @@ public class SceneManager {
 
     // ── Đường dẫn FXML ───────────────────────────────────────
     private static final String FXML_MENU   = "/fxml/menu.fxml";
-    private static final String FXML_GAME   = "/fxml/game.fxml";
-    private static final String FXML_RESULT = "/fxml/result.fxml";
+    private static final String FXML_GAME   = "/fxml/game.fxml"; // [UC4] Màn chơi được load lại khi Play again
+    private static final String FXML_RESULT = "/fxml/result.fxml"; // [UC3] FXML màn hình View result
 
     // ── Kích thước cửa sổ ────────────────────────────────────
     private static final double WIDTH  = 540;
@@ -49,6 +49,7 @@ public class SceneManager {
 
     // ── State ─────────────────────────────────────────────────
     private Stage primaryStage;
+    // [UC4] Giữ GameState hiện tại để biết difficulty khi người chơi bấm Play again.
     private GameState currentGameState;
 
     // ── Private constructor ───────────────────────────────────
@@ -120,25 +121,28 @@ public void init(Stage stage) {
      * <p>Postcondition: ResultScene hiển thị với đúng thống kê.</p>
      */
     public void showResult() {
+        // [UC3] Giữ nguyên currentGameState để ResultController đọc và hiển thị thống kê cuối ván.
         switchScene(FXML_RESULT);
     }
 
     // ══════════════════════════════════════════════════════════
-    // UC-10 — Replay
+    // UC4 — Play again / Replay
     // ══════════════════════════════════════════════════════════
 
     /**
-     * [UC-10] Chơi lại cùng độ khó — tạo GameState mới, load lại GameScene.
+     * [UC4 - Play again] Chơi lại cùng độ khó — tạo GameState mới, load lại GameScene.
      *
      * <p>Precondition:  currentGameState != null.</p>
      * <p>Postcondition: GameScene mới, GameState reset về 0.</p>
      */
     public void replayGame() {
         if (currentGameState == null) {
+            // [UC4] Fallback an toàn nếu người chơi replay khi chưa có ván trước đó.
             LOGGER.warning("[UC-10] currentGameState null → fallback EASY");
             showGame(Difficulty.EASY);
             return;
         }
+        // [UC4] Lấy lại difficulty của ván vừa xong để tạo ván mới cùng cấp độ.
         showGame(currentGameState.getDifficulty());
     }
 // ══════════════════════════════════════════════════════════
@@ -158,8 +162,8 @@ public void init(Stage stage) {
     // ── Getter ────────────────────────────────────────────────
 
     /**
-     * Lấy GameState ván vừa kết thúc.
-     * ResultController dùng để hiển thị thống kê [UC-07].
+     * [UC3 - View result] Lấy GameState ván vừa kết thúc.
+     * ResultController dùng dữ liệu này để hiển thị thống kê trên màn kết quả.
      */
     public GameState getCurrentGameState() {
         return currentGameState;

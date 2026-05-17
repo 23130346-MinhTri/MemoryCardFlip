@@ -19,6 +19,7 @@ public class GameState {
     // ── Stats ─────────────────────────────────────────────────
     private final IntegerProperty matchedPairs;
     private final IntegerProperty moves;
+    // [UC12] Số giây còn lại của ván chơi, được GameTimerService giảm mỗi tick.
     private final IntegerProperty timeRemaining;
     private final ObjectProperty<GameStatus> status;
     private final IntegerProperty wrongAttempts;
@@ -58,6 +59,12 @@ public class GameState {
 
     public int getTimeRemaining()            { return timeRemaining.get(); }
     public void setTimeRemaining(int v)      { timeRemaining.set(v); }
+
+    /**
+     * [UC12 - Count down timer]
+     * Giảm thời gian còn lại 1 giây nhưng không cho giá trị âm.
+     * GameTimerService gọi hàm này sau mỗi KeyFrame 1 giây.
+     */
     public void decrementTime() {
         int t = timeRemaining.get();
         if (t > 0) timeRemaining.set(t - 1);
@@ -121,14 +128,24 @@ public class GameState {
         return matchedPairs.get() == difficulty.totalPairs();
     }
 
+    /**
+     * [UC12 - Count down timer]
+     * Kiểm tra điều kiện hết giờ để GameController chuyển sang trạng thái LOST.
+     */
     public boolean isTimeUp() {
         return timeRemaining.get() <= 0;
     }
 
     // ── Reset ─────────────────────────────────────────────────
+    /**
+     * [UC4 - Play again]
+     * Đưa toàn bộ trạng thái ván chơi về ban đầu khi người chơi bấm "Chơi lại":
+     * số cặp, lượt, timer, combo, lỗi, thẻ đang chọn và trạng thái xử lý.
+     */
     public void reset() {
         matchedPairs.set(0);
         moves.set(0);
+        // [UC4][UC12] Khi bắt đầu/chơi lại ván, timer quay về giới hạn của độ khó.
         timeRemaining.set(difficulty.getTimeLimit());
         status.set(GameStatus.IDLE);
         comboCount = 0;

@@ -80,7 +80,8 @@ public class Card {
         isFlipped.set(false); // ← đổi true → false
     }
     /**
-     *  Reset thẻ về trạng thái ban đầu (dùng khi restart game).
+     * [UC4 - Play again]
+     * Reset thẻ về trạng thái ban đầu khi chơi lại/restart game.
      */
     public void reset() {
         isFlipped.set(false);
