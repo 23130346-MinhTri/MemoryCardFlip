@@ -530,29 +530,93 @@ public class GameController implements Initializable {
             ex.printStackTrace();
         }
     }
-    // ── Helpers ───────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────
+
     /**
      * [UC-08] Cập nhật HUD điểm, lượt và streak sau mỗi hành động.
      *
-     * <p>Use Case này hiển thị điểm số, số lượt, số cặp còn lại và combo hiện tại.</p>
-     * <p>Postcondition: các nhãn trên HUD phản ánh trạng thái gameState mới nhất.</p>
+     * <p>UC-10: Hiển thị điểm số (lblScore)</p>
+     * <p>UC-11: Hiển thị combo (lblCombo)</p>
+     *
+     * <p>Use Case này hiển thị:</p>
+     * <ul>
+     *   <li>Điểm số hiện tại</li>
+     *   <li>Số lượt di chuyển</li>
+     *   <li>Số cặp đã ghép / tổng số cặp</li>
+     *   <li>Số cặp còn lại</li>
+     *   <li>Combo streak hiện tại</li>
+     * </ul>
+     *
+     * <p>Flow xử lý:</p>
+     * <ul>
+     *   <li>10.1.11: Làm mới HUD → lblScore.setText()</li>
+     *   <li>11.1.9: Cập nhật HUD → lblCombo.setText()</li>
+     * </ul>
+     *
+     * <p>Postcondition:</p>
+     * <ul>
+     *   <li>HUD phản ánh trạng thái mới nhất của gameState</li>
+     *   <li>Điểm số được cập nhật sau mỗi lần ghép</li>
+     *   <li>Combo hiển thị đúng streak hiện tại</li>
+     *   <li>Số lượt và số cặp còn lại được refresh</li>
+     * </ul>
      */
     private void updateHUD() {
+
+        // UC-10: Cập nhật số cặp đã ghép
         if (lblPairs != null && gameLogicService != null) {
-            lblPairs.setText(gameLogicService.getMatchedPairs() + " / " + totalPairs);
+            lblPairs.setText(
+                    gameLogicService.getMatchedPairs() + " / " + totalPairs
+            );
         }
+
+        // UC-10: Cập nhật số cặp còn lại
         if (lblRemaining != null && gameLogicService != null) {
-            lblRemaining.setText(String.valueOf(totalPairs - gameLogicService.getMatchedPairs()));
+            lblRemaining.setText(
+                    String.valueOf(totalPairs - gameLogicService.getMatchedPairs())
+            );
         }
+
+        // UC-10: Cập nhật ĐIỂM SỐ (lblScore)
+        //
+        // Bước 10.1.11:
+        // Hệ thống làm mới HUD sau khi tính điểm
         if (lblScore != null && gameState != null) {
-            lblScore.setText(String.valueOf(gameState.calculateScore()));
+
+            // [UC-10.1.3 - 10.1.9]
+            // Tính điểm dựa trên:
+            // - số cặp đã ghép
+            // - số lượt di chuyển
+            // - thời gian còn lại
+            // - combo streak
+            int score = gameState.calculateScore();
+
+            // Bước 10.1.11:
+            // Hiển thị điểm số mới lên HUD
+            lblScore.setText(String.valueOf(score));
         }
+
+        // UC-10: Cập nhật số lượt di chuyển
         if (lblMoves != null && gameState != null) {
-            lblMoves.setText(String.valueOf(gameState.getMoves()));
+
+            // Hiển thị tổng số lần người chơi đã chọn cặp thẻ
+            lblMoves.setText(
+                    String.valueOf(gameState.getMoves())
+            );
         }
-        // ✅ THÊM COMBO
+
+        // UC-11: Cập nhật COMBO (lblCombo)
+        //
+        // Bước 11.1.9:
+        // Hệ thống cập nhật HUD combo streak
         if (lblCombo != null && gameState != null) {
-            lblCombo.setText("x" + gameState.getComboCount());
+
+            // Hiển thị combo hiện tại
+            // Ví dụ:
+            // x0, x1, x2, x3...
+            lblCombo.setText(
+                    "x" + gameState.getComboCount()
+            );
         }
     }
     private String tr(String key, Object... args) {
