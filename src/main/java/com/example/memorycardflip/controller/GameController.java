@@ -133,6 +133,16 @@ public class GameController implements Initializable {
                 });
             }
         });
+        // Auto-pause khi mất focus
+        gridWrapper.sceneProperty().addListener((obs, old, newScene) -> {
+            if (newScene != null) {
+                newScene.getWindow().focusedProperty().addListener((obs2, oldVal, newVal) -> {
+                    if (!newVal && gameState != null && gameState.getStatus() == GameStatus.PLAYING) {
+                        pauseGame();
+                    }
+                });
+            }
+        });
     }
     private void loadComboNotification() {
         try {
