@@ -18,6 +18,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.geometry.Insets;
@@ -115,6 +116,21 @@ public class GameController implements Initializable {
         gridWrapper.heightProperty().addListener((obs, oldVal, newVal) -> {
             if (Math.abs(newVal.doubleValue() - oldVal.doubleValue()) > 1.0) {
                 rerender();
+            }
+        });
+        // Thêm phím tắt ESC
+        gridWrapper.sceneProperty().addListener((obs, old, newScene) -> {
+            if (newScene != null) {
+                newScene.setOnKeyPressed(event -> {
+                    if (event.getCode() == KeyCode.ESCAPE && gameState != null) {
+                        if (gameState.getStatus() == GameStatus.PLAYING) {
+                            pauseGame();
+                        } else if (gameState.getStatus() == GameStatus.PAUSED) {
+                            resumeGame();
+                        }
+                        event.consume();
+                    }
+                });
             }
         });
     }
