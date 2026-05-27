@@ -12,6 +12,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -88,6 +89,14 @@ public class MainMenuController implements Initializable {
         btnEasy.setOnAction(e   -> onSelectDifficultyEasy());
         btnMedium.setOnAction(e -> onSelectDifficultyMedium());
         btnHard.setOnAction(e   -> onSelectDifficultyHard());
+        // Thêm tooltip
+        Tooltip easyTooltip = new Tooltip("4×4 lưới · 8 cặp thẻ · 60 giây");
+        Tooltip mediumTooltip = new Tooltip("6×6 lưới · 18 cặp thẻ · 90 giây");
+        Tooltip hardTooltip = new Tooltip("8×8 lưới · 32 cặp thẻ · 120 giây");
+
+        Tooltip.install(btnEasy, easyTooltip);
+        Tooltip.install(btnMedium, mediumTooltip);
+        Tooltip.install(btnHard, hardTooltip);
 
         // Mặc định chọn EASY (optional)
         handleSelectDifficulty(Difficulty.EASY);
