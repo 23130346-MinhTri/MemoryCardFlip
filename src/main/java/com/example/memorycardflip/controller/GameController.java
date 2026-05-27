@@ -22,6 +22,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.geometry.Insets;
 import javafx.util.Duration;
+import javafx.stage.Stage;
+import com.example.memorycardflip.ui.NotificationManager;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -139,6 +141,11 @@ public class GameController implements Initializable {
             comboNotification = null;
         }
     }
+
+    /**
+     * [11.1.6] Gắn overlay thông báo combo vào vùng chơi để nó xuất hiện ngay trên game board.
+     * Nếu root scene không sẵn sàng, overlay sẽ được gắn sau khi scene được tạo.
+     */
     private void addNotificationToScene() {
         if (notificationOverlay == null || comboNotification == null) return;
 
@@ -146,12 +153,11 @@ public class GameController implements Initializable {
             ((StackPane) notificationOverlay.getParent()).getChildren().remove(notificationOverlay);
         }
 
-        if (gridWrapper.getScene().getRoot() instanceof StackPane) {
-            StackPane root = (StackPane) gridWrapper.getScene().getRoot();
-            if (!root.getChildren().contains(notificationOverlay)) {
-                StackPane.setAlignment(notificationOverlay, javafx.geometry.Pos.CENTER);
-                root.getChildren().add(notificationOverlay);
-            }
+        if (!gridWrapper.getChildren().contains(notificationOverlay)) {
+            notificationOverlay.setMouseTransparent(true);
+            notificationOverlay.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            StackPane.setAlignment(notificationOverlay, javafx.geometry.Pos.CENTER);
+            gridWrapper.getChildren().add(notificationOverlay);
         }
     }
     /** 
@@ -203,7 +209,7 @@ public class GameController implements Initializable {
         // Tính toán số cặp thẻ dựa trên độ khó
         totalPairs   = difficulty.totalPairs();
         
-        // [UC4] Ẩn combo notification khi restart game
+            // [11.2.1] Khi chơi lại, ẩn combo notification để không giữ trạng thái cũ.
         if (comboNotification != null) {
             comboNotification.hide();
         }
@@ -423,6 +429,7 @@ public class GameController implements Initializable {
             @Override
             public void onMatch(Card firstCard, Card secondCard,
                                 int matchedPairs, int totalPairs, int comboCount) {
+                // Luồng chính: hai thẻ khớp -> cập nhật điểm/streak, hiệu ứng thắng cặp, kiểm tra điều kiện win.
                 // 9.1.2: Lấy CardFlipView từ viewMap
                 CardFlipView v1 = viewMap.get(firstCard.getId());
                 CardFlipView v2 = viewMap.get(secondCard.getId());
@@ -431,7 +438,7 @@ public class GameController implements Initializable {
                 firstCard.match();
                 secondCard.match();
                 
-                // 9.2.5: Cập nhật HUD (điểm, combo, moves)
+                // 9.2.5: [11.1.9-11.1.10]  Cập nhật HUD (điểm, combo, moves)
                 updateHUD();
                 
                 // 9.2.6: Cập nhật thông báo "Khớp!"
@@ -440,8 +447,20 @@ public class GameController implements Initializable {
                 //   HIỆU ỨNG
                 AnimationService.playMatchEffect(v1);
                 AnimationService.playMatchEffect(v2);
+                // [11.1.6] Chỉ hiển thị thông báo combo khi comboCount >= 2.
                 if (comboNotification != null && comboCount > 1) {
                     comboNotification.showCombo(comboCount);
+                }
+                // [11.1.6 / 11.2.4] Nếu comboCount đủ cao, showCombo() đã đổi icon/text sang HOT/MEGA STREAK.
+                if (comboCount >= 3 && gridWrapper.getScene() != null) {
+                    try {
+                        Stage owner = (Stage) gridWrapper.getScene().getWindow();
+                        NotificationManager.showStreakNotification(owner,
+                                "Streak x" + comboCount,
+                                "Bạn đang streak " + comboCount + " lần!",
+                                "★");
+                    } catch (Exception ignored) {
+                    }
                 }
                 
                 // 9.2.7: PauseTransition(280ms) để hiển thị hiệu ứng matched
@@ -465,6 +484,7 @@ public class GameController implements Initializable {
             // 9.3.0 - 9.3.9: Nhánh hai thẻ không khớp
             @Override
             public void onMismatch(Card firstCard, Card secondCard) {
+                // Luồng phụ: hai thẻ không khớp -> combo đã reset ở service, UI phát hiệu ứng sai và lật lại thẻ.
                 // 9.1.2: Lấy CardFlipView từ viewMap
                 CardFlipView v1 = viewMap.get(firstCard.getId());
                 CardFlipView v2 = viewMap.get(secondCard.getId());
@@ -476,6 +496,7 @@ public class GameController implements Initializable {
                 }
                 
                 // 9.2.5: Cập nhật HUD
+                // [11.2.6] Nếu lblCombo == null thì không thể hiển thị HUD combo, nhưng combo vẫn được tính trong model.
                 updateHUD();
                 
                 // Hiệu ứng shake để báo không khớp
@@ -538,6 +559,8 @@ public class GameController implements Initializable {
      * <p>Postcondition: các nhãn trên HUD phản ánh trạng thái gameState mới nhất.</p>
      */
     private void updateHUD() {
+        // Luồng chính + phụ đều đi qua đây để đồng bộ HUD sau mỗi lần xử lý match/mismatch.
+        // [11.1.9-11.1.10] Đồng bộ comboCount từ model sang HUD: lblCombo.setText("x" + comboCount).
         if (lblPairs != null && gameLogicService != null) {
             lblPairs.setText(gameLogicService.getMatchedPairs() + " / " + totalPairs);
         }
