@@ -2,14 +2,10 @@ package com.example.memorycardflip.controller;
 
 import com.example.memorycardflip.model.Difficulty;
 import com.example.memorycardflip.model.ScoreRecord;
-import com.example.memorycardflip.controller.ScoreManager;
 import com.example.memorycardflip.ui.SceneManager;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.beans.binding.Bindings;
 
 import java.net.URL;
 import java.util.List;
