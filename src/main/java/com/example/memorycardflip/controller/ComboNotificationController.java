@@ -3,6 +3,7 @@ package com.example.memorycardflip.controller;
 import javafx.animation.FadeTransition;
 import javafx.animation.RotateTransition;
 import javafx.animation.ScaleTransition;
+import com.example.memorycardflip.service.AudioService;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
@@ -49,6 +50,10 @@ public class ComboNotificationController implements Initializable {
         bubblePane.toFront();
 
         if (comboCount >= 2) {
+            // Phát âm thanh streak bonus cho đúng 2 lần
+            if (comboCount == 2) {
+                AudioService.getInstance().playEffect("/assets/sounds/game-bonus.mp3");
+            }
             lblComboText.setText("x" + comboCount);
 
             if (comboCount >= 5) {

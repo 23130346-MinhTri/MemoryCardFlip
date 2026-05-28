@@ -1,6 +1,7 @@
 package com.example.memorycardflip.ui;
 
 import com.example.memorycardflip.controller.StreakNotificationController;
+import com.example.memorycardflip.service.AudioService;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.fxml.FXMLLoader;
@@ -16,6 +17,8 @@ import java.io.IOException;
 public class NotificationManager {
     public static void showStreakNotification(Stage owner, String title, String message, String iconText) {
         try {
+            AudioService.getInstance().playEffect("/assets/sounds/game-bonus.mp3");
+
             FXMLLoader loader = new FXMLLoader(NotificationManager.class.getResource("/fxml/components/streak_notification.fxml"));
             Parent root = loader.load();
             StreakNotificationController controller = loader.getController();
