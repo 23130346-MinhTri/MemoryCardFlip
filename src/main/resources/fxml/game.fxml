@@ -126,7 +126,7 @@
                 </padding>
 
                 <!-- Combo hiển thị (nếu có) và thông báo -->
-                <Label fx:id="lblCombo" text="" styleClass="combo-text"/>
+                <Label fx:id="lblCombo" text="" styleClass="hud-combo-indicator"/>
                 <Label fx:id="lblStatus"
                        text="Lật thẻ để bắt đầu!"
                        styleClass="status-text"

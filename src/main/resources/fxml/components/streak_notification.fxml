@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.memorycardflip.controller.StreakNotificationController">
+  <children>
+    <HBox spacing="12" AnchorPane.topAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.bottomAnchor="0" fx:id="rootBox" styleClass="streak-root">
+      <children>
+        <Label fx:id="iconLabel" text="★" styleClass="streak-icon" />
+        <VBox alignment="CENTER_LEFT" spacing="2">
+          <children>
+            <Label fx:id="titleLabel" text="Streak!" styleClass="streak-title" />
+            <Label fx:id="messageLabel" text="Bạn vừa đạt streak!" styleClass="streak-message" />
+          </children>
+        </VBox>
+      </children>
+      <padding>
+        <Insets top="10" right="14" bottom="10" left="14" />
+      </padding>
+    </HBox>
+  </children>
+</AnchorPane>
