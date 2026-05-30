@@ -76,9 +76,19 @@ public class GameState {
     public int getWrongAttempts()            { return wrongAttempts.get(); }
     public void incrementWrongAttempts()     { wrongAttempts.set(wrongAttempts.get() + 1); }
 
+    /**
+     * [11.1.3] Trả về comboCount hiện tại sau khi hệ thống đã tăng combo.
+     */
     public int getComboCount()               { return comboCount; }
+
+    /**
+     * [11.1.3] Hệ thống gọi khi ghép đúng một cặp thẻ để tăng comboCount lên 1.
+     */
     public void incrementCombo()             { comboCount++; }
-// 2.3.8
+
+    /**
+     * [11.2.1] Hệ thống gọi khi ghép sai cặp để reset comboCount về 0.
+     */
     public void resetCombo()                 { comboCount = 0; }
 
     // ── Selection state (chỉ read, mutate qua GameLogicService) ──
@@ -114,6 +124,10 @@ public class GameState {
     }
 
     // ── Score ─────────────────────────────────────────────────
+    /**
+     * [11.1.4] Tính điểm thưởng combo theo công thức comboCount × 20.
+     * Giá trị này được cộng vào điểm tổng khi GameController cập nhật HUD.
+     */
     public int calculateScore() {
         if (matchedPairs.get() == 0) return 0;
         int base       = matchedPairs.get() * 100;
@@ -141,6 +155,9 @@ public class GameState {
      * [UC4 - Play again]
      * Đưa toàn bộ trạng thái ván chơi về ban đầu khi người chơi bấm "Chơi lại":
      * số cặp, lượt, timer, combo, lỗi, thẻ đang chọn và trạng thái xử lý.
+     */
+    /**
+     * [11.2.1] Khi bắt đầu ván mới hoặc chơi lại, toàn bộ trạng thái combo được reset.
      */
     public void reset() {
         matchedPairs.set(0);
