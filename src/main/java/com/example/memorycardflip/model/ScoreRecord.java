@@ -5,8 +5,18 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Bản ghi điểm số — lưu vào ScoreStorage sau mỗi ván thắng.
- * Dùng class thường thay vì record để Gson serialize/deserialize được.
+ * [UC-13 — Save High Score]
+ * Bản ghi điểm số bất biến — được tạo và lưu vào ScoreStorage sau mỗi ván thắng.
+ *
+ * <p>Dùng class thường (không phải Java record) để Gson có thể
+ * serialize/deserialize qua reflection.</p>
+ *
+ * <p><b>UC-13 Sequence references:</b></p>
+ * <ul>
+ *   <li>13.1.5  — ScoreManager gọi {@link #fromGameState(String, GameState)}</li>
+ *   <li>13.1.5  — Trong fromGameState(), điểm được tính theo công thức BR-13.2</li>
+ *   <li>13.1.5  — ScoreRecord trả kết quả về ScoreManager (bước 10)</li>
+ * </ul>
  */
 public class ScoreRecord {
 

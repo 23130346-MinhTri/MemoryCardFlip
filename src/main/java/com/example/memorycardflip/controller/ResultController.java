@@ -18,6 +18,16 @@ import java.util.ResourceBundle;
  * và hiển thị lên result.fxml: trạng thái WIN/LOSE, độ khó, điểm, số lượt,
  * thời gian còn lại, số cặp đã ghép và thông tin high score.
  */
+/**
+ * <p><b>UC-13 Sequence references:</b></p>
+        * <ul>
+ *   <li>13.1.2  — SceneManager tải result.fxml, tạo ResultController và truyền GameState</li>
+        *   <li>13.1.3  — initialize() lấy GameState và gọi loadUCRS01DisplayResult()</li>
+        *   <li>13.1.4  — loadUCRS01DisplayResult() gọi ScoreManager.saveScore(gameState, "Player")</li>
+        *   <li>13.1.9  — Kiểm tra isNewHighScore() và hiển thị "🏆 NEW HIGH SCORE!" nếu phá kỷ lục</li>
+        *   <li>13.1.10 — Màn hình Result hiển thị đầy đủ điểm, lượt, thời gian còn lại</li>
+        * </ul>
+        */
 public class ResultController implements Initializable {
     @FXML private Label lblResultTitle;          // [UC3] Tiêu đề kết quả: YOU WIN hoặc GAME OVER
     @FXML private Label lblDifficultyValue;      // [UC3] Độ khó của ván vừa kết thúc
@@ -44,6 +54,17 @@ public class ResultController implements Initializable {
      * <p>Use Case này trình bày kết quả cho người chơi khi ván đã WIN hoặc LOSE.</p>
      * <p>Precondition: SceneManager đang giữ currentGameState của ván vừa xong.</p>
      * <p>Postcondition: UI kết quả hiển thị trạng thái WIN/LOSE, điểm số, thời gian và số lượt.</p>
+     */
+    /**
+     * [UC-13 — 13.1.4 → 13.1.10] kết quả điểm và lưu điểm.
+     *
+     * <p><b>Precondition:</b> gameState != null (hoặc null → hiển thị fallback).</p>
+     * <p><b>Postcondition:</b></p>
+     * <ul>
+     *   <li>UI kết quả hiển thị WIN/LOSE, điểm số, số lượt, thời gian, số cặp.</li>
+     *   <li>Điểm đã được lưu vào ScoreManager cache và file JSON.</li>
+     *   <li>Nếu thắng và là kỷ lục mới → lblNewHighScore hiển thị "🏆 Kỷ lục mới!".</li>
+     * </ul>
      */
     private void loadUCRS01DisplayResult() {
         if (gameState == null) {
@@ -105,6 +126,7 @@ public class ResultController implements Initializable {
                 lblNewHighScore.setStyle("-fx-text-fill: #7ec8e3;");
             }
         } else {
+            // [13.2.2] Người chơi thua → không hiển thị New High Score
             lblNewHighScore.setText("---");
         }
 
