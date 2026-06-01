@@ -56,6 +56,11 @@
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.42.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-media</artifactId>
+            <version>21.0.6</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -66,6 +71,15 @@
                 <version>3.13.0</version>
                 <configuration>
                     <release>17</release>
+                </configuration>
+            </plugin>
+            <!-- Surefire 3.x để hỗ trợ JUnit 5 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <testSourceDirectory>src/test/java</testSourceDirectory>
                 </configuration>
             </plugin>
             <plugin>
