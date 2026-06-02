@@ -35,6 +35,8 @@ public class ScoreManager {
     private final ScoreStorage storage;
     private List<ScoreRecord> cache;
     private Consumer<List<ScoreRecord>> onScoreChanged;
+    private static final java.util.Comparator<ScoreRecord> SCORE_DESC =
+            java.util.Comparator.comparingInt(ScoreRecord::getScore).reversed();
 
     private ScoreManager() {
         // Có thể đổi sang SQLiteScoreStorage nếu muốn
@@ -55,6 +57,7 @@ public class ScoreManager {
     private void loadScores() {
         try {
             cache = storage.load();
+            cache.sort(SCORE_DESC);
         } catch (Exception e) {
             System.err.println("Không thể tải điểm: " + e.getMessage());
             cache = new java.util.ArrayList<>();
@@ -119,6 +122,7 @@ public class ScoreManager {
      */
     public List<ScoreRecord> getTopScores(int limit) {
         return cache.stream()
+                .sorted(SCORE_DESC)
                 .limit(limit)
                 .toList();
     }
@@ -129,6 +133,7 @@ public class ScoreManager {
     public List<ScoreRecord> getTopScores(Difficulty difficulty, int limit) {
         return cache.stream()
                 .filter(r -> r.getDifficulty() == difficulty)
+                .sorted(SCORE_DESC)
                 .limit(limit)
                 .toList();
     }
@@ -147,7 +152,7 @@ public class ScoreManager {
     public Optional<ScoreRecord> getHighScore(Difficulty difficulty) {
         return cache.stream()
                 .filter(r -> r.getDifficulty() == difficulty)
-                .findFirst();
+                .max(java.util.Comparator.comparingInt(ScoreRecord::getScore));
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -165,6 +170,7 @@ public class ScoreManager {
     public List<ScoreRecord> getScoresByDifficulty(Difficulty difficulty) {
         return cache.stream()
                 .filter(r -> r.getDifficulty() == difficulty)
+                .sorted(SCORE_DESC)
                 .toList();
     }
 

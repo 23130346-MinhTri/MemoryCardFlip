@@ -103,13 +103,14 @@ public class ResultController implements Initializable {
         int totalPairs = gameState.getDifficulty().totalPairs();
         lblPairsValue.setText(gameState.getMatchedPairs() + " / " + totalPairs);
 
-        // [UC3] Sau khi hiển thị thống kê, lưu điểm để phục vụ high score/lịch sử.
-        System.out.println("===== SAVING SCORE =====");
-        System.out.println("Matched pairs: " + gameState.getMatchedPairs());
-        System.out.println("Total pairs: " + gameState.getDifficulty().totalPairs());
-        String playerName = "Player";
-        // [UC-10] Lưu điểm cao vào bộ nhớ khi người chơi thắng.
-        scoreManager.saveScore(gameState, playerName);  // ← BỎ if(won), gọi trực tiếp
+        // [UC3] Sau khi hiển thị thống kê, chỉ lưu điểm khi ván thắng.
+        if (won) {
+            System.out.println("===== SAVING SCORE =====");
+            System.out.println("Matched pairs: " + gameState.getMatchedPairs());
+            System.out.println("Total pairs: " + gameState.getDifficulty().totalPairs());
+            String playerName = "Player";
+            scoreManager.saveScore(gameState, playerName);
+        }
 
         // [UC3] Chỉ hiển thị phần kỷ lục khi người chơi thắng.
         if (won) {
@@ -136,11 +137,6 @@ public class ResultController implements Initializable {
                 : "Bạn đã thua vì hết giờ. Cố gắng lần sau nhé!");
     }
 
-    private boolean checkIfNewHighScore(int currentScore) {
-        // TODO: Implement actual high score check from storage
-        // Tạm thời trả về true nếu score > 100
-        return currentScore > 100;
-    }
     /**
      * [UC4 - Play again] Chơi lại cùng độ khó hiện tại từ màn kết quả.
      *
