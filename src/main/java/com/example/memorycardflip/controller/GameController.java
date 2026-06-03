@@ -821,10 +821,15 @@ public class GameController implements Initializable {
      *
      * <p>Precondition: gameState != null, GameStatus = PLAYING.</p>
      * <p>Postcondition: GameStatus = PAUSED, timer dừng, UI cập nhật, âm thanh tạm dừng.</p>
+     *Fix: Khi pause game, tất cả thẻ sẽ bị khóa không thể click.
+     *          Điều này ngăn người chơi tiếp tục lật thẻ khi game đang tạm dừng.
      */
     private void pauseGame() {
         // Kiểm tra precondition
         if (gameState == null || gameState.getStatus() != GameStatus.PLAYING) return;
+
+        // [UC-05] Khóa tất cả thẻ trước khi pause
+        disableAllCards(true);
 
         // Dừng timer
         stopTimer();
@@ -844,6 +849,19 @@ public class GameController implements Initializable {
 
         // Dừng âm thanh nền
         AudioService.getInstance().pauseBGM();
+    }
+    /**
+     * [UC-05][UC-06] Helper method để khóa/mở khóa tất cả thẻ trên bàn chơi.
+     *
+     * @param disabled true nếu muốn khóa thẻ (disable click), false nếu mở khóa
+     */
+    private void disableAllCards(boolean disabled) {
+        if (cardGrid == null) return;
+        for (javafx.scene.Node node : cardGrid.getChildren()) {
+            if (node instanceof CardFlipView) {
+                ((CardFlipView) node).setDisable(disabled);
+            }
+        }
     }
     /**
      * [6. Resume Game] Tiếp tục ván chơi sau khi đã tạm dừng.
