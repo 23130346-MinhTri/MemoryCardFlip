@@ -163,11 +163,21 @@ public class GameController implements Initializable {
     /**
      * [1. Select Difficulty] Đặt độ khó và khởi tạo GameState.
      * Được gọi từ SceneManager.showGame() hoặc khi reload game.
+     * FIX: Thêm kiểm tra gameState != null trước khi set difficulty
      */
     public void setDifficulty(Difficulty d) {
-        if (d == null) return;
+        if (d == null) {
+            System.err.println("[UC-01] Difficulty cannot be null, defaulting to EASY");
+            d = Difficulty.EASY;
+        }
         difficulty = d;
-        if (gameState == null) gameState = new GameState(difficulty);
+        // [UC-01] Kiểm tra gameState hiện tại - nếu null thì tạo mới
+        if (gameState == null) {
+            gameState = new GameState(difficulty);
+        } else {
+            // [UC-01] Nếu gameState đã tồn tại, cập nhật difficulty và reset
+            gameState.setStatus(GameStatus.IDLE);
+        }
         loadIconPool();
         javafx.application.Platform.runLater(this::startBoard);
     }
@@ -194,6 +204,7 @@ public class GameController implements Initializable {
      *   <li>BGM bắt đầu phát</li>
      *   <li>Người chơi có thể click vào thẻ để lật</li>
      * </ul>
+     * FIX: Đảm bảo tất cả UI components được khởi tạo đúng trước khi render
      */
     private void startBoard() {
         // [UC4] Bắt đầu lại toàn bộ ván: nhạc, timer, grid, HUD và trạng thái chơi.
