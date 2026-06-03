@@ -18,11 +18,12 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.geometry.Insets;
 import javafx.util.Duration;
+import javafx.stage.Stage;
+import com.example.memorycardflip.ui.NotificationManager;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -118,31 +119,6 @@ public class GameController implements Initializable {
                 rerender();
             }
         });
-        // Thêm phím tắt ESC
-        gridWrapper.sceneProperty().addListener((obs, old, newScene) -> {
-            if (newScene != null) {
-                newScene.setOnKeyPressed(event -> {
-                    if (event.getCode() == KeyCode.ESCAPE && gameState != null) {
-                        if (gameState.getStatus() == GameStatus.PLAYING) {
-                            pauseGame();
-                        } else if (gameState.getStatus() == GameStatus.PAUSED) {
-                            resumeGame();
-                        }
-                        event.consume();
-                    }
-                });
-            }
-        });
-        // Auto-pause khi mất focus
-        gridWrapper.sceneProperty().addListener((obs, old, newScene) -> {
-            if (newScene != null) {
-                newScene.getWindow().focusedProperty().addListener((obs2, oldVal, newVal) -> {
-                    if (!newVal && gameState != null && gameState.getStatus() == GameStatus.PLAYING) {
-                        pauseGame();
-                    }
-                });
-            }
-        });
     }
     private void loadComboNotification() {
         try {
@@ -165,6 +141,11 @@ public class GameController implements Initializable {
             comboNotification = null;
         }
     }
+
+    /**
+     * [11.1.6] Gắn overlay thông báo combo vào vùng chơi để nó xuất hiện ngay trên game board.
+     * Nếu root scene không sẵn sàng, overlay sẽ được gắn sau khi scene được tạo.
+     */
     private void addNotificationToScene() {
         if (notificationOverlay == null || comboNotification == null) return;
 
@@ -172,15 +153,14 @@ public class GameController implements Initializable {
             ((StackPane) notificationOverlay.getParent()).getChildren().remove(notificationOverlay);
         }
 
-        if (gridWrapper.getScene().getRoot() instanceof StackPane) {
-            StackPane root = (StackPane) gridWrapper.getScene().getRoot();
-            if (!root.getChildren().contains(notificationOverlay)) {
-                StackPane.setAlignment(notificationOverlay, javafx.geometry.Pos.CENTER);
-                root.getChildren().add(notificationOverlay);
-            }
+        if (!gridWrapper.getChildren().contains(notificationOverlay)) {
+            notificationOverlay.setMouseTransparent(true);
+            notificationOverlay.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            StackPane.setAlignment(notificationOverlay, javafx.geometry.Pos.CENTER);
+            gridWrapper.getChildren().add(notificationOverlay);
         }
     }
-    /** 
+    /**
      * [1. Select Difficulty] Đặt độ khó và khởi tạo GameState.
      * Được gọi từ SceneManager.showGame() hoặc khi reload game.
      */
@@ -219,70 +199,71 @@ public class GameController implements Initializable {
         // [UC4] Bắt đầu lại toàn bộ ván: nhạc, timer, grid, HUD và trạng thái chơi.
         // Phát nhạc nền (BGM)
         AudioService.getInstance().playBGM("/assets/sounds/game.mp3");
-        
+
         // [UC4] Dừng timer cũ để ván mới không còn tick từ ván trước.
         stopTimer();
-        
+
         // [UC4] Xóa map view cũ trước khi render bộ bài mới.
         viewMap.clear();
-        
+
         // Tính toán số cặp thẻ dựa trên độ khó
         totalPairs   = difficulty.totalPairs();
+
         
-        // [UC4] Ẩn combo notification khi restart game
+            // [11.2.1] Khi chơi lại, ẩn combo notification để không giữ trạng thái cũ.
         if (comboNotification != null) {
             comboNotification.hide();
         }
-        
+
         // Cập nhật nhãn độ khó (vd: "Easy  4×4")
         int gs = difficulty.getGridSize();
         lblDifficulty.setText(difficulty.getDisplayName() + "  " + gs + "×" + gs);
-        
+
         // ── Khởi tạo UI HUD (Heads-Up Display) ──────────────────────
         // Đặt lại tất cả các labels về trạng thái ban đầu
-        
+
         if (lblTime != null) {
             lblTime.setText(tr("default.time"));  // Vd: "01:00"
             lblTime.setStyle("");  // Clear màu warning nếu có
         }
-        
+
         if (lblScore != null) {
             lblScore.setText(tr("default.score"));  // Vd: "0"
         }
-        
+
         if (lblMoves != null) {
             lblMoves.setText(tr("default.moves"));  // Vd: "0"
         }
-        
+
         if (lblPairs != null) {
             lblPairs.setText("0 / " + totalPairs);  // Vd: "0 / 8" (EASY)
         }
-        
+
         if (lblRemaining != null) {
             lblRemaining.setText(String.valueOf(totalPairs));  // Số cặp còn lại
         }
-        
+
         if (timeProgressBar != null) {
             timeProgressBar.setProgress(1.0);  // Progress bar đầy 100%
             timeProgressBar.getStyleClass().remove("time-progress-warning");  // Xóa style warning
         }
-        
+
         if (btnPause != null) {
             btnPause.setText(tr("button.pause"));  // Nút Pause
             btnPause.setDisable(false);  // Kích hoạt nút
         }
-        
+
         if (lblCombo != null) {
             lblCombo.setText("x0");  // Combo counter bắt đầu từ 0
         }
-        
+
         lblStatus.setText(tr("status.start"));  // Vd: "Game started!"
-        
+
         // ── Xây dựng bộ bài ──────────────────────────────────────────
         // Tạo các thẻ theo độ khó, shuffle, gắn vào card grid
         List<Card> deck = buildDeck();
         renderGrid(deck);
-        
+
         // ── Khởi tạo GameState ────────────────────────────────────────
         // Lưu deck vào GameState để game logic có thể truy cập
         if (gameState != null) {
@@ -290,14 +271,14 @@ public class GameController implements Initializable {
             gameState.reset();
             gameState.setCards(deck.toArray(new Card[0]));  // Gán deck
             gameState.setStatus(GameStatus.PLAYING);  // Đánh dấu game đang chơi
-            
+
             // [UC4] Reset logic ghép cặp để lượt chơi mới không còn selection/matchedPairs cũ.
             if (gameLogicService == null) {
                 gameLogicService = new GameLogicService(gameState, totalPairs);
             } else {
                 gameLogicService.reset(totalPairs);
             }
-            
+
             // [UC4] Hủy timer cũ và tạo timer mới cho lượt chơi lại.
             if (timerManager != null) {
                 timerManager.dispose();  // Dispose timer cũ
@@ -314,7 +295,7 @@ public class GameController implements Initializable {
                 }
             });
         }
-        
+
         // [UC12] Render thời gian ban đầu trước khi timer bắt đầu chạy.
         // ── Cập nhật hiển thị thời gian ──────────────────────────────
         renderUCGM06Time();
@@ -322,7 +303,7 @@ public class GameController implements Initializable {
         // [UC12] Bắt đầu bộ đếm ngược cho ván hiện tại.
         // ── Bắt đầu timer đếm ngược ──────────────────────────────────
         startTimer();
-        
+
         // ══════════════════════════════════════════════════════════
         // Bây giờ người chơi có thể bắt đầu lật thẻ!
         // ══════════════════════════════════════════════════════════
@@ -331,15 +312,16 @@ public class GameController implements Initializable {
      * Cập nhật hiển thị điểm số
      */
     private List<Card> buildDeck() {
-        List<String> symbols = buildSymbolPool();
+        List<CardFace> faces = buildCardFacePool();
         List<Card>   deck    = new ArrayList<>();
         for (int i = 0; i < totalPairs; i++) {
             String pairId   = "pair-" + i;
-            String symbol   = symbols.get(i % symbols.size());
+            CardFace face   = faces.get(i % faces.size());
+            String symbol   = face.symbol();
             // String imageUrl = iconPool.isEmpty() ? null : iconPool.get(i % iconPool.size());
             String imageUrl = null;
-            deck.add(new Card("c" + (i * 2),     pairId, CardType.EMOJI, symbol, imageUrl, i * 2));
-            deck.add(new Card("c" + (i * 2 + 1), pairId, CardType.EMOJI, symbol, imageUrl, i * 2 + 1));
+            deck.add(new Card("c" + (i * 2),     pairId, face.type(), symbol, imageUrl, i * 2));
+            deck.add(new Card("c" + (i * 2 + 1), pairId, face.type(), symbol, imageUrl, i * 2 + 1));
         }
         Collections.shuffle(deck);
         return deck;
@@ -444,42 +426,64 @@ public class GameController implements Initializable {
             @Override
             public void onFirstCardSelected(Card firstCard) {
                 lblStatus.setText(tr("status.chooseSecond"));
+                // [UC2 v2.0] Bật highlight xanh để báo hiệu đang chờ thẻ thứ hai
+                view.showHighlight(true);
             }
             // 9.2.0 - 9.2.12: Nhánh hai thẻ khớp nhau
             @Override
             public void onMatch(Card firstCard, Card secondCard,
                                 int matchedPairs, int totalPairs, int comboCount) {
+                // Luồng chính: hai thẻ khớp -> cập nhật điểm/streak, hiệu ứng thắng cặp, kiểm tra điều kiện win.
                 // 9.1.2: Lấy CardFlipView từ viewMap
                 CardFlipView v1 = viewMap.get(firstCard.getId());
                 CardFlipView v2 = viewMap.get(secondCard.getId());
-                
+
+                // [UC2 v2.0] Tắt highlight thẻ đầu tiên khi đã khớp cặp
+                if (v1 != null) v1.showHighlight(false);
+
                 // 9.2.1: Đánh dấu hai thẻ đã matched
                 firstCard.match();
                 secondCard.match();
+
+
                 
-                // 9.2.5: Cập nhật HUD (điểm, combo, moves)
+                // 9.2.5: [11.1.9-11.1.10]  Cập nhật HUD (điểm, combo, moves)
                 updateHUD();
-                
+
                 // 9.2.6: Cập nhật thông báo "Khớp!"
                 lblStatus.setText(tr("status.match", matchedPairs, totalPairs));
-                
+
                 //   HIỆU ỨNG
                 AnimationService.playMatchEffect(v1);
                 AnimationService.playMatchEffect(v2);
+                // [11.1.6] Chỉ hiển thị thông báo combo khi comboCount >= 2.
                 if (comboNotification != null && comboCount > 1) {
                     comboNotification.showCombo(comboCount);
                 }
+
+                // [11.1.6 / 11.2.4] Nếu comboCount đủ cao, showCombo() đã đổi icon/text sang HOT/MEGA STREAK.
+                if (comboCount >= 3 && gridWrapper.getScene() != null) {
+                    try {
+                        Stage owner = (Stage) gridWrapper.getScene().getWindow();
+                        NotificationManager.showStreakNotification(owner,
+                                "Streak x" + comboCount,
+                                "Bạn đang streak " + comboCount + " lần!",
+                                "★");
+                    } catch (Exception ignored) {
+                    }
+                }
                 
+
                 // 9.2.7: PauseTransition(280ms) để hiển thị hiệu ứng matched
                 PauseTransition pause = new PauseTransition(Duration.millis(280));
                 pause.setOnFinished(e -> {
                     // 9.2.8: Gọi setMatched(true) để đánh dấu thẻ trên UI
                     v1.setMatched(true);
                     v2.setMatched(true);
-                    
+
                     // 9.2.9: Gọi clearSelection() để reset firstCard/secondCard
                     gameLogicService.clearSelection();
-                    
+
                     // 9.2.11: Kiểm tra điều kiện chiến thắng (matchedPairs == totalPairs)
                     if (matchedPairs == totalPairs) {
                         // [UC3] Khi ghép đủ cặp, chuyển sang luồng View result.
@@ -491,40 +495,45 @@ public class GameController implements Initializable {
             // 9.3.0 - 9.3.9: Nhánh hai thẻ không khớp
             @Override
             public void onMismatch(Card firstCard, Card secondCard) {
+                // Luồng phụ: hai thẻ không khớp -> combo đã reset ở service, UI phát hiệu ứng sai và lật lại thẻ.
                 // 9.1.2: Lấy CardFlipView từ viewMap
                 CardFlipView v1 = viewMap.get(firstCard.getId());
                 CardFlipView v2 = viewMap.get(secondCard.getId());
-                
+
                 // 9.3.1: Kiểm tra views hợp lệ
                 if (v1 == null || v2 == null) {
                     gameLogicService.clearSelection();
                     return;
                 }
-                
+
+                // [UC2 v2.0] Tắt highlight thẻ đầu tiên khi bị mismatch
+                v1.showHighlight(false);
+
                 // 9.2.5: Cập nhật HUD
+                // [11.2.6] Nếu lblCombo == null thì không thể hiển thị HUD combo, nhưng combo vẫn được tính trong model.
                 updateHUD();
-                
+
                 // Hiệu ứng shake để báo không khớp
                 AnimationService.playShakeAnimation(v1);
                 AnimationService.playShakeAnimation(v2);
-                
+
                 // 9.3.2: Cập nhật thông báo "Không khớp!"
                 lblStatus.setText(tr("status.mismatch"));
-                
+
                 // 9.3.3: PauseTransition(750ms) để người chơi quan sát
                 PauseTransition pause = new PauseTransition(Duration.millis(750));
                 pause.setOnFinished(e -> {
                     // 9.3.4-9.3.5: Lật úp hai thẻ (faceDown)
                     firstCard.faceDown();
                     secondCard.faceDown();
-                    
+
                     // 9.3.6-9.3.7: Hiển thị mặt sau (showBack)
                     v1.showBack();
                     v2.showBack();
-                    
+
                     // 9.3.8: Gọi clearSelection() để reset firstCard/secondCard
                     gameLogicService.clearSelection();
-                    
+
                     // 9.3.9: resolving = false được gọi inside clearSelection()
                     lblStatus.setText(tr("status.continueFlipping"));
                 });
@@ -556,93 +565,31 @@ public class GameController implements Initializable {
             ex.printStackTrace();
         }
     }
-// ── Helpers ───────────────────────────────────────────────
-
+    // ── Helpers ───────────────────────────────────────────────
     /**
      * [UC-08] Cập nhật HUD điểm, lượt và streak sau mỗi hành động.
      *
-     * <p>UC-10: Hiển thị điểm số (lblScore)</p>
-     * <p>UC-11: Hiển thị combo (lblCombo)</p>
-     *
-     * <p>Use Case này hiển thị:</p>
-     * <ul>
-     *   <li>Điểm số hiện tại</li>
-     *   <li>Số lượt di chuyển</li>
-     *   <li>Số cặp đã ghép / tổng số cặp</li>
-     *   <li>Số cặp còn lại</li>
-     *   <li>Combo streak hiện tại</li>
-     * </ul>
-     *
-     * <p>Flow xử lý:</p>
-     * <ul>
-     *   <li>10.1.11: Làm mới HUD → lblScore.setText()</li>
-     *   <li>11.1.9: Cập nhật HUD → lblCombo.setText()</li>
-     * </ul>
-     *
-     * <p>Postcondition:</p>
-     * <ul>
-     *   <li>HUD phản ánh trạng thái mới nhất của gameState</li>
-     *   <li>Điểm số được cập nhật sau mỗi lần ghép</li>
-     *   <li>Combo hiển thị đúng streak hiện tại</li>
-     *   <li>Số lượt và số cặp còn lại được refresh</li>
-     * </ul>
+     * <p>Use Case này hiển thị điểm số, số lượt, số cặp còn lại và combo hiện tại.</p>
+     * <p>Postcondition: các nhãn trên HUD phản ánh trạng thái gameState mới nhất.</p>
      */
     private void updateHUD() {
-
-        // UC-10: Cập nhật số cặp đã ghép
+        // Luồng chính + phụ đều đi qua đây để đồng bộ HUD sau mỗi lần xử lý match/mismatch.
+        // [11.1.9-11.1.10] Đồng bộ comboCount từ model sang HUD: lblCombo.setText("x" + comboCount).
         if (lblPairs != null && gameLogicService != null) {
-            lblPairs.setText(
-                    gameLogicService.getMatchedPairs() + " / " + totalPairs
-            );
+            lblPairs.setText(gameLogicService.getMatchedPairs() + " / " + totalPairs);
         }
-
-        // UC-10: Cập nhật số cặp còn lại
         if (lblRemaining != null && gameLogicService != null) {
-            lblRemaining.setText(
-                    String.valueOf(totalPairs - gameLogicService.getMatchedPairs())
-            );
+            lblRemaining.setText(String.valueOf(totalPairs - gameLogicService.getMatchedPairs()));
         }
-
-        // UC-10: Cập nhật ĐIỂM SỐ (lblScore)
-        //
-        // Bước 10.1.11:
-        // Hệ thống làm mới HUD sau khi tính điểm
         if (lblScore != null && gameState != null) {
-
-            // [UC-10.1.3 - 10.1.9]
-            // Tính điểm dựa trên:
-            // - số cặp đã ghép
-            // - số lượt di chuyển
-            // - thời gian còn lại
-            // - combo streak
-            int score = gameState.calculateScore();
-
-            // Bước 10.1.11:
-            // Hiển thị điểm số mới lên HUD
-            lblScore.setText(String.valueOf(score));
+            lblScore.setText(String.valueOf(gameState.calculateScore()));
         }
-
-        // UC-10: Cập nhật số lượt di chuyển
         if (lblMoves != null && gameState != null) {
-
-            // Hiển thị tổng số lần người chơi đã chọn cặp thẻ
-            lblMoves.setText(
-                    String.valueOf(gameState.getMoves())
-            );
+            lblMoves.setText(String.valueOf(gameState.getMoves()));
         }
-
-        // UC-11: Cập nhật COMBO (lblCombo)
-        //
-        // Bước 11.1.9:
-        // Hệ thống cập nhật HUD combo streak
+        // ✅ THÊM COMBO
         if (lblCombo != null && gameState != null) {
-
-            // Hiển thị combo hiện tại
-            // Ví dụ:
-            // x0, x1, x2, x3...
-            lblCombo.setText(
-                    "x" + gameState.getComboCount()
-            );
+            lblCombo.setText("x" + gameState.getComboCount());
         }
     }
     private String tr(String key, Object... args) {
@@ -782,11 +729,20 @@ public class GameController implements Initializable {
         return l.endsWith(".png") || l.endsWith(".jpg") || l.endsWith(".jpeg")
                 || l.endsWith(".gif") || l.endsWith(".webp");
     }
-    private List<String> buildSymbolPool() {
-        List<String> s = new ArrayList<>();
-        for (CardType t : CardType.values()) Collections.addAll(s, t.getSymbols());
-        return s;
+    private List<CardFace> buildCardFacePool() {
+        List<CardFace> faces = new ArrayList<>();
+        // [UC2 v2.0] Lấy symbol từ TECH trước, sau đó các loại khác
+        // Shuffle để mỗi ván có thể xuất hiện ký hiệu khác nhau
+        for (CardType type : List.of(CardType.UI_ICONS, CardType.DEVICES, CardType.PROGRAMMING, CardType.CLOUD)) {
+            for (String symbol : type.getSymbols()) {
+                faces.add(new CardFace(type, symbol));
+            }
+        }
+        Collections.shuffle(faces);
+        return faces;
     }
+
+    private record CardFace(CardType type, String symbol) {}
     // ── FXML handlers ─────────────────────────────────────────
     /**
      * [UC-05,6] Toggles giữa tạm dừng và tiếp tục.
@@ -820,7 +776,7 @@ public class GameController implements Initializable {
     private void onTogglePause() {
         // Bước 5.1.4: Kiểm tra gameState hợp lệ
         if (gameState == null) return;
-        
+
         // Bước 5.1.5: Phân nhánh theo GameStatus hiện tại
         if (gameState.getStatus() == GameStatus.PLAYING) {
             // Chuyển sang PAUSED (Usecase 5: Pause Game)
@@ -853,23 +809,23 @@ public class GameController implements Initializable {
     private void pauseGame() {
         // Kiểm tra precondition
         if (gameState == null || gameState.getStatus() != GameStatus.PLAYING) return;
-        
+
         // Dừng timer
         stopTimer();
-        
+
         // Cập nhật GameStatus
         gameState.setStatus(GameStatus.PAUSED);
-        
+
         // Cập nhật UI - lblStatus
         if (lblStatus != null) {
             lblStatus.setText(tr("status.pause"));  // Vd: "Game Paused"
         }
-        
+
         // Cập nhật UI - btnPause (đổi thành Resume)
         if (btnPause != null) {
             btnPause.setText(tr("button.resume"));  // Vd: "⏵ Resume"
         }
-        
+
         // Dừng âm thanh nền
         AudioService.getInstance().pauseBGM();
     }
@@ -896,23 +852,23 @@ public class GameController implements Initializable {
     private void resumeGame() {
         // Kiểm tra precondition
         if (gameState == null || gameState.getStatus() != GameStatus.PAUSED) return;
-        
+
         // Cập nhật GameStatus
         gameState.setStatus(GameStatus.PLAYING);
-        
+
         // Khởi động lại timer
         startTimer();
-        
+
         // Cập nhật UI - lblStatus
         if (lblStatus != null) {
             lblStatus.setText(tr("status.resume"));  // Vd: "Game Resumed"
         }
-        
+
         // Cập nhật UI - btnPause (đổi lại thành Pause)
         if (btnPause != null) {
             btnPause.setText(tr("button.pause"));  // Vd: "⏸ Pause"
         }
-        
+
         // Tiếp tục phát âm thanh nền
         AudioService.getInstance().resumeBGM();
     }

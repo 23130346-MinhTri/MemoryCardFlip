@@ -57,6 +57,10 @@ public class CardFlipView extends StackPane {
         setMinSize(width, height);
         setPrefSize(width, height);
         setMaxSize(width, height);
+        backImageView.setFitWidth(width * 0.66);
+        backImageView.setFitHeight(height * 0.66);
+        frontImageView.setFitWidth(width * 0.78);
+        frontImageView.setFitHeight(height * 0.68);
     }
 /*
 *2.3.5 Hiển thị mặt trước thẻ kèm hiệu ứng lật khi người chơi chọn thẻ.
@@ -101,7 +105,7 @@ public class CardFlipView extends StackPane {
             refreshStyle();
         });
     }
-// 9.4.3 Đánh dấu thẻ đã được ghép cặp thành công, giữ nguyên mặt trước và vô hiệu hóa tương tác.
+    // 9.4.3 Đánh dấu thẻ đã được ghép cặp thành công, giữ nguyên mặt trước và vô hiệu hóa tương tác.
     public void setMatched(boolean matched) {
         this.matched = matched;
         if (matched) {
@@ -116,6 +120,22 @@ public class CardFlipView extends StackPane {
             setVisible(true);
             setManaged(true);
             setMouseTransparent(false);
+        }
+    }
+
+    /**
+     * [UC2 v2.0] Highlight/bỏ highlight thẻ đầu tiên được chọn.
+     * Khi on=true: thêm drop shadow xanh để báo hiệu đang chờ thẻ thứ hai.
+     * Khi on=false: xóa hiệu ứng (sau khi có thẻ thứ hai hoặc mismatch).
+     *
+     * Precondition: thẻ đang ở trạng thái faceUp, chưa matched.
+     * Postcondition: glow effect được bật/tắt tương ứng.
+     */
+    public void showHighlight(boolean on) {
+        if (on) {
+            setStyle("-fx-effect: dropshadow(gaussian, #2563EB, 18, 0.75, 0, 0);");
+        } else {
+            setStyle("");
         }
     }
 

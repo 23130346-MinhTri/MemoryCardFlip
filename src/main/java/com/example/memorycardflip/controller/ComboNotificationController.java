@@ -1,206 +1,133 @@
 package com.example.memorycardflip.controller;
 
 import javafx.animation.FadeTransition;
+import javafx.animation.RotateTransition;
 import javafx.animation.ScaleTransition;
+import com.example.memorycardflip.service.AudioService;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.util.Duration;
-
 import java.net.URL;
 import java.util.ResourceBundle;
 
-/**
- * UC-11: Hiển thị thông báo Streak/Combo
- *
- * Bước 11.1.6 - 11.1.8:
- * Animation hiển thị combo
- */
 public class ComboNotificationController implements Initializable {
 
-    // ── FXML Components ───────────────────────────────────────
-
-    @FXML
-    private StackPane rootPane;
-
-    @FXML
-    private StackPane bubblePane;
-
-    @FXML
-    private Label lblComboIcon;
-
-    @FXML
-    private Label lblComboText;
-
-    @FXML
-    private Label lblSubText;
-
-    // ── Animation ─────────────────────────────────────────────
-
+    @FXML private StackPane rootPane;
+    @FXML private VBox bubblePane;
+    @FXML private Label lblComboIcon;
+    @FXML private Label lblComboText;
+    @FXML private Label lblSubText;
+    @FXML private Label lblTagline;
     private FadeTransition currentFadeOut;
 
-    // ── Initialize ────────────────────────────────────────────
-
+    /**
+     * [11.1.6] Chuẩn bị trạng thái ẩn ban đầu cho thông báo combo.
+     * View chỉ xuất hiện khi showCombo() được gọi sau khi match thành công.
+     */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
-        // Ẩn notification khi khởi tạo
         if (rootPane != null) {
-
             rootPane.setOpacity(0);
-
             rootPane.setVisible(false);
         }
     }
-    // UC-11: Hiển thị thông báo combo
+
     /**
-     * [UC-11]
-     * Hiển thị thông báo combo/streak.
+     * [11.1.6-11.1.8] Hiển thị thông báo combo khi comboCount >= 2.
      *
-     * Bước 11.1.6:
-     * Được gọi khi comboCount >= 2
-     *
-     * Bước 11.1.7:
-     * Pop-in animation (200ms)
-     *
-     * Bước 11.1.8:
-     * Hiển thị 1.5s → fade-out (300ms)
-     *
-     * Bước 11.2.4:
-     * Phân cấp hiển thị theo comboCount
-     *
-     * Bước 11.2.5:
-     * Xử lý chồng animation/effect
+     * Thứ tự xử lý:
+     * - [11.1.6] Chọn kiểu hiển thị theo comboCount, Mega Streak từ comboCount >= 5
+     * - [11.1.7] Chạy pop-in animation
+     * - [11.1.8] Giữ hiển thị rồi fade-out
      */
     public void showCombo(int comboCount) {
+        if (currentFadeOut != null) currentFadeOut.stop();
+        bubblePane.getStyleClass().removeAll("level-2", "level-3", "level-4", "level-5");
+        rootPane.toFront();
+        bubblePane.toFront();
 
-        // [UC-11.2.5]
-        // Dừng animation cũ nếu đang chạy
-        if (currentFadeOut != null) {
-            currentFadeOut.stop();
-        }
-
-        // [UC-11.1.6]
-        // Chỉ hiển thị khi combo >= 2
         if (comboCount >= 2) {
-
-            // Hiển thị số combo
+            // Phát âm thanh streak bonus cho đúng 2 lần
+            if (comboCount == 2) {
+                AudioService.getInstance().playEffect("/assets/sounds/game-bonus.mp3");
+            }
             lblComboText.setText("x" + comboCount);
 
-
-            // [UC-11.2.4]
-            // Phân cấp hiển thị theo comboCount
-
             if (comboCount >= 5) {
-
-                lblComboIcon.setText("🔥🔥🔥");
-
+                lblComboIcon.setText("⚡⚡⚡");
                 lblSubText.setText("MEGA STREAK!!!");
-
+                lblTagline.setText("Cực nóng, thưởng lớn đang kích hoạt");
+                bubblePane.getStyleClass().add("level-5");
             } else if (comboCount >= 4) {
-
-                lblComboIcon.setText("🔥🔥");
-
+                lblComboIcon.setText("⚡⚡");
                 lblSubText.setText("SUPER STREAK!!");
-
+                lblTagline.setText("Chuỗi đúng liên tiếp đang bùng nổ");
+                bubblePane.getStyleClass().add("level-4");
             } else if (comboCount >= 3) {
-
-                lblComboIcon.setText("🔥🔥");
-
+                lblComboIcon.setText("🔥⚡");
                 lblSubText.setText("HOT STREAK!");
-
+                lblTagline.setText("Bonus đang sáng rực trên màn hình");
+                bubblePane.getStyleClass().add("level-3");
             } else {
-
                 lblComboIcon.setText("🔥");
-
                 lblSubText.setText("STREAK!");
+                lblTagline.setText("Tiếp tục giữ nhịp để nhận bonus");
+                bubblePane.getStyleClass().add("level-2");
             }
 
-            // Hiển thị root pane
             rootPane.setVisible(true);
+            bubblePane.setScaleX(0.7);
+            bubblePane.setScaleY(0.7);
 
-            // ═══════════════════════════════════════════════════
-            // [UC-11.1.7]
-            // Pop-in animation (Scale + Fade)
-            // ═══════════════════════════════════════════════════
-
-            ScaleTransition popIn =
-                    new ScaleTransition(
-                            Duration.millis(200),
-                            bubblePane
-                    );
-
-            popIn.setFromX(0);
-
-            popIn.setFromY(0);
-
+            ScaleTransition popIn = new ScaleTransition(Duration.millis(200), bubblePane);
+            popIn.setFromX(0.7);
+            popIn.setFromY(0.7);
             popIn.setToX(1);
-
             popIn.setToY(1);
 
-            FadeTransition fadeIn =
-                    new FadeTransition(
-                            Duration.millis(200),
-                            rootPane
-                    );
+            ScaleTransition pulse = new ScaleTransition(Duration.millis(160), bubblePane);
+            pulse.setFromX(1);
+            pulse.setFromY(1);
+            pulse.setToX(1.06);
+            pulse.setToY(1.06);
+            pulse.setAutoReverse(true);
+            pulse.setCycleCount(2);
 
+            RotateTransition rotate = new RotateTransition(Duration.millis(220), bubblePane);
+            rotate.setFromAngle(-2);
+            rotate.setToAngle(2);
+            rotate.setAutoReverse(true);
+            rotate.setCycleCount(2);
+
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(200), rootPane);
             fadeIn.setFromValue(0);
-
             fadeIn.setToValue(1);
 
-            // Chạy animation
             fadeIn.play();
-
             popIn.play();
+            pulse.play();
+            rotate.play();
 
-            // ═══════════════════════════════════════════════════
-            // [UC-11.1.8]
-            // Hiển thị 1.5s → fade-out (300ms)
-            // ═══════════════════════════════════════════════════
-
-            FadeTransition fadeOut =
-                    new FadeTransition(
-                            Duration.millis(300),
-                            rootPane
-                    );
-
+            FadeTransition fadeOut = new FadeTransition(Duration.millis(300), rootPane);
             currentFadeOut = fadeOut;
-
-            // Delay trước khi fade out
-            fadeOut.setDelay(Duration.seconds(1.5));
-
+            fadeOut.setDelay(comboCount >= 4 ? Duration.seconds(2.3) : Duration.seconds(1.8));
             fadeOut.setToValue(0);
-
-            fadeOut.setOnFinished(
-                    e -> rootPane.setVisible(false)
-            );
-
+            fadeOut.setOnFinished(e -> {
+                rootPane.setVisible(false);
+                bubblePane.getStyleClass().removeAll("level-2", "level-3", "level-4", "level-5");
+            });
             fadeOut.play();
         }
     }
 
-    // ── Hide notification ─────────────────────────────────────
-
-    /**
-     * Ẩn combo notification bằng fade-out animation.
-     */
     public void hide() {
-
         if (rootPane != null && rootPane.isVisible()) {
-
-            FadeTransition fadeOut =
-                    new FadeTransition(
-                            Duration.millis(200),
-                            rootPane
-                    );
-
+            FadeTransition fadeOut = new FadeTransition(Duration.millis(200), rootPane);
             fadeOut.setToValue(0);
-
-            fadeOut.setOnFinished(
-                    e -> rootPane.setVisible(false)
-            );
-
+            fadeOut.setOnFinished(e -> rootPane.setVisible(false));
             fadeOut.play();
         }
     }
