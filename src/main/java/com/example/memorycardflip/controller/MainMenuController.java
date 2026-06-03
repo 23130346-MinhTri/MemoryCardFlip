@@ -7,6 +7,7 @@ import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.animation.RotateTransition;
 import javafx.animation.ScaleTransition;
+import javafx.application.Platform;
 import javafx.css.PseudoClass;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.FXML;
@@ -158,28 +159,30 @@ public class MainMenuController implements Initializable {
      * Hiển thị thông báo tạm thời (toast) trên menu.
      */
     private void showToast(String message) {
-        Label toast = new Label(message);
-        toast.setStyle("-fx-background-color: #1e3a5f; -fx-text-fill: white; -fx-padding: 8 16; -fx-background-radius: 20;");
-        toast.setOpacity(0);
-        StackPane root = (StackPane) btnEasy.getScene().getRoot();
-        root.getChildren().add(toast);
-        StackPane.setAlignment(toast, javafx.geometry.Pos.TOP_CENTER);
-        StackPane.setMargin(toast, new Insets(20, 0, 0, 0));
-        FadeTransition ft = new FadeTransition(Duration.seconds(0.3), toast);
-        ft.setFromValue(0);
-        ft.setToValue(1);
-        ft.play();
-        PauseTransition pt = new PauseTransition(Duration.seconds(1.5));
-        pt.setOnFinished(e -> {
-            FadeTransition out = new FadeTransition(Duration.seconds(0.3), toast);
-            out.setFromValue(1);
-            out.setToValue(0);
-            out.setOnFinished(ev -> root.getChildren().remove(toast));
-            out.play();
+        Platform.runLater(() -> {
+            if (btnEasy == null || btnEasy.getScene() == null) return;
+            Label toast = new Label(message);
+            toast.setStyle("-fx-background-color: #1e3a5f; -fx-text-fill: white; -fx-padding: 8 16; -fx-background-radius: 20;");
+            toast.setOpacity(0);
+            StackPane root = (StackPane) btnEasy.getScene().getRoot();
+            root.getChildren().add(toast);
+            StackPane.setAlignment(toast, javafx.geometry.Pos.TOP_CENTER);
+            StackPane.setMargin(toast, new Insets(20, 0, 0, 0));
+            FadeTransition ft = new FadeTransition(Duration.seconds(0.3), toast);
+            ft.setFromValue(0);
+            ft.setToValue(1);
+            ft.play();
+            PauseTransition pt = new PauseTransition(Duration.seconds(1.5));
+            pt.setOnFinished(e -> {
+                FadeTransition out = new FadeTransition(Duration.seconds(0.3), toast);
+                out.setFromValue(1);
+                out.setToValue(0);
+                out.setOnFinished(ev -> root.getChildren().remove(toast));
+                out.play();
+            });
+            pt.play();
         });
-        pt.play();
     }
-
     /**
      * Hỗ trợ [1.1.4]: Tạo scale animation cho nút được chọn / bỏ chọn.
      *
