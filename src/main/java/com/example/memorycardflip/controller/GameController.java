@@ -21,6 +21,7 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.geometry.Insets;
+import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import javafx.stage.Stage;
 import com.example.memorycardflip.ui.NotificationManager;
@@ -86,6 +87,7 @@ public class GameController implements Initializable {
     private GameLogicService gameLogicService;
     private ComboNotificationController comboNotification;
     private StackPane notificationOverlay;
+    private StackPane pausedOverlay;  // Overlay hiển thị khi tạm dừng
     // ══════════════════════════════════════════════════════════
     // Lifecycle
     // ══════════════════════════════════════════════════════════
@@ -825,31 +827,28 @@ public class GameController implements Initializable {
      *          Điều này ngăn người chơi tiếp tục lật thẻ khi game đang tạm dừng.
      */
     private void pauseGame() {
-        // Kiểm tra precondition
         if (gameState == null || gameState.getStatus() != GameStatus.PLAYING) return;
 
-        // [UC-05] Khóa tất cả thẻ trước khi pause
+        // [UC-05] Khóa tất cả thẻ
         disableAllCards(true);
+        // [UC-05] Tạo và hiển thị overlay nếu chưa có
+        if (pausedOverlay == null) {
+            createPausedOverlay();
+        }
+        if (pausedOverlay.getParent() == null) {
+            gridWrapper.getChildren().add(pausedOverlay);
+        }
+        pausedOverlay.setVisible(true);
 
-        // Dừng timer
         stopTimer();
-
-        // Cập nhật GameStatus
         gameState.setStatus(GameStatus.PAUSED);
-
-        // Cập nhật UI - lblStatus
-        if (lblStatus != null) {
-            lblStatus.setText(tr("status.pause"));  // Vd: "Game Paused"
-        }
-
-        // Cập nhật UI - btnPause (đổi thành Resume)
-        if (btnPause != null) {
-            btnPause.setText(tr("button.resume"));  // Vd: "⏵ Resume"
-        }
-
-        // Dừng âm thanh nền
+        if (lblStatus != null) lblStatus.setText(tr("status.pause"));
+        if (btnPause != null) btnPause.setText(tr("button.resume"));
         AudioService.getInstance().pauseBGM();
+        // [UC-05] Phát âm thanh pause (tùy chọn)
+        AudioService.getInstance().playEffect("/assets/sounds/pause.mp3");
     }
+
     /**
      * [UC-05][UC-06] Helper method để khóa/mở khóa tất cả thẻ trên bàn chơi.
      *
@@ -885,30 +884,41 @@ public class GameController implements Initializable {
      * <p>Postcondition: GameStatus = PLAYING, timer chạy, UI cập nhật, âm thanh phát lại.</p>
      */
     private void resumeGame() {
-        // Kiểm tra precondition
         if (gameState == null || gameState.getStatus() != GameStatus.PAUSED) return;
 
-        // Cập nhật GameStatus
-        gameState.setStatus(GameStatus.PLAYING);
-
-        // [UC-06] Mở khóa tất cả thẻ khi resume
+        // [UC-06] Mở khóa tất cả thẻ
         disableAllCards(false);
+        // [UC-06] Ẩn overlay
+        if (pausedOverlay != null) {
+            pausedOverlay.setVisible(false);
+        }
 
-        // Khởi động lại timer
+        gameState.setStatus(GameStatus.PLAYING);
         startTimer();
-
-        // Cập nhật UI - lblStatus
-        if (lblStatus != null) {
-            lblStatus.setText(tr("status.resume"));  // Vd: "Game Resumed"
-        }
-
-        // Cập nhật UI - btnPause (đổi lại thành Pause)
-        if (btnPause != null) {
-            btnPause.setText(tr("button.pause"));  // Vd: "⏸ Pause"
-        }
-
-        // Tiếp tục phát âm thanh nền
+        if (lblStatus != null) lblStatus.setText(tr("status.resume"));
+        if (btnPause != null) btnPause.setText(tr("button.pause"));
         AudioService.getInstance().resumeBGM();
+        AudioService.getInstance().playEffect("/assets/sounds/resume.mp3");
+    }
+    /**
+     * Tạo overlay tạm dừng với nút Resume bên trong.
+     */
+    private void createPausedOverlay() {
+        pausedOverlay = new StackPane();
+        pausedOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.75);");
+        pausedOverlay.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        pausedOverlay.setMouseTransparent(false); // bắt sự kiện click
+
+        VBox content = new VBox(20);
+        content.setAlignment(javafx.geometry.Pos.CENTER);
+        Label pauseLabel = new Label("⏸ GAME PAUSED");
+        pauseLabel.setStyle("-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #f5c842;");
+        Button resumeBtn = new Button("▶ RESUME");
+        resumeBtn.setStyle("-fx-background-color: #2a6f8f; -fx-text-fill: white; -fx-font-size: 18px; -fx-padding: 10 20;");
+        resumeBtn.setOnAction(e -> onTogglePause()); // gọi toggle để resume
+        content.getChildren().addAll(pauseLabel, resumeBtn);
+        pausedOverlay.getChildren().add(content);
+        StackPane.setAlignment(content, javafx.geometry.Pos.CENTER);
     }
     @FXML
     private void handleUC01Restart() {
