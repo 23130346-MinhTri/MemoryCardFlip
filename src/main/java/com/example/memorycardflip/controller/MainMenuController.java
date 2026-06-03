@@ -83,25 +83,30 @@ public class MainMenuController implements Initializable {
      * <p>Bước 1.1.2: Người chơi nhìn thấy ba nút (btnEasy, btnMedium, btnHard)
      *              và click vào một nút để chọn độ khó.</p>
      * <p>Mặc định chọn EASY khi mở menu.</p>
+     * FIX: Thêm kiểm tra null cho các button và tooltip
      */
     private void setupUC01DifficultyButtons() {
-        // Gán sự kiện click cho từng nút
-        btnEasy.setOnAction(e   -> onSelectDifficultyEasy());
-        btnMedium.setOnAction(e -> onSelectDifficultyMedium());
-        btnHard.setOnAction(e   -> onSelectDifficultyHard());
-        // Thêm tooltip
-        Tooltip easyTooltip = new Tooltip("4×4 lưới · 8 cặp thẻ · 60 giây");
-        Tooltip mediumTooltip = new Tooltip("6×6 lưới · 18 cặp thẻ · 90 giây");
-        Tooltip hardTooltip = new Tooltip("8×8 lưới · 32 cặp thẻ · 120 giây");
+        // Gán sự kiện click cho từng nút (kiểm tra null)
+        if (btnEasy != null) {
+            btnEasy.setOnAction(e -> onSelectDifficultyEasy());
+            Tooltip.install(btnEasy, new Tooltip("4×4 lưới · 8 cặp thẻ · 60 giây"));
+        }
 
-        Tooltip.install(btnEasy, easyTooltip);
-        Tooltip.install(btnMedium, mediumTooltip);
-        Tooltip.install(btnHard, hardTooltip);
+        if (btnMedium != null) {
+            btnMedium.setOnAction(e -> onSelectDifficultyMedium());
+            Tooltip.install(btnMedium, new Tooltip("6×6 lưới · 18 cặp thẻ · 90 giây"));
+        }
 
-        // Mặc định chọn EASY (optional)
+        if (btnHard != null) {
+            btnHard.setOnAction(e -> onSelectDifficultyHard());
+            Tooltip.install(btnHard, new Tooltip("8×8 lưới · 32 cặp thẻ · 120 giây"));
+        }
+
+        // Mặc định chọn EASY khi mở menu
         handleSelectDifficulty(Difficulty.EASY);
     }
     /**
+     *
      * [1.1.3 - 1.1.4] Xử lý chọn một độ khó — cập nhật UI selected state.
      *
      * <p>Bước 1.1.3: Hệ thống nhận sự kiện onSelectDifficulty*() từ FXML binding.
@@ -111,18 +116,30 @@ public class MainMenuController implements Initializable {
      *
      * <p>Precondition:  Màn hình menu đang hiển thị.</p>
      * <p>Postcondition: selectedDifficulty được set, nút tương ứng highlight.</p>
-     *
+     *FIX: Thêm animation và cập nhật đúng trạng thái selected
      * @param difficulty độ khó người dùng chọn (EASY, MEDIUM, HARD)
+     *
      */
     private void handleSelectDifficulty(Difficulty difficulty) {
+        if (difficulty == null) return;
         selectedDifficulty = difficulty;
 
         // Cập nhật pseudo-class selected cho tất cả nút
-        diffButtonMap.forEach((diff, btn) -> {
-            boolean isSelected = diff == difficulty;
-            btn.pseudoClassStateChanged(SELECTED, isSelected);
-            renderButtonScaleAnimation(btn, isSelected);
-        });
+        if (diffButtonMap.containsKey(Difficulty.EASY)) {
+            Button btn = diffButtonMap.get(Difficulty.EASY);
+            btn.pseudoClassStateChanged(SELECTED, difficulty == Difficulty.EASY);
+            renderButtonScaleAnimation(btn, difficulty == Difficulty.EASY);
+        }
+        if (diffButtonMap.containsKey(Difficulty.MEDIUM)) {
+            Button btn = diffButtonMap.get(Difficulty.MEDIUM);
+            btn.pseudoClassStateChanged(SELECTED, difficulty == Difficulty.MEDIUM);
+            renderButtonScaleAnimation(btn, difficulty == Difficulty.MEDIUM);
+        }
+        if (diffButtonMap.containsKey(Difficulty.HARD)) {
+            Button btn = diffButtonMap.get(Difficulty.HARD);
+            btn.pseudoClassStateChanged(SELECTED, difficulty == Difficulty.HARD);
+            renderButtonScaleAnimation(btn, difficulty == Difficulty.HARD);
+        }
     }
 
     /**
@@ -150,12 +167,19 @@ public class MainMenuController implements Initializable {
      *
      * <p>Precondition:  selectedDifficulty != null.</p>
      * <p>Postcondition: GameScene được load, GameState được khởi tạo.</p>
+     * FIX: Thêm kiểm tra selectedDifficulty != null và AudioService khởi tạo đúng
      */
     @FXML
     public void onStartGame() {
+        // Nếu chưa chọn độ khó nào, mặc định chọn EASY
         if (selectedDifficulty == null) {
             handleSelectDifficulty(Difficulty.EASY);
         }
+
+        // Dừng BGM menu trước khi chuyển scene (tránh 2 BGM chồng nhau)
+        AudioService.getInstance().stopBGM();
+
+        // Chuyển sang GameScene với độ khó đã chọn
         SceneManager.getInstance().showGame(selectedDifficulty);
     }
 
@@ -218,6 +242,7 @@ public class MainMenuController implements Initializable {
             handleSelectDifficulty(Difficulty.HARD);
         }
     }
+
     // ── Event Handlers ────────────────────────────────────────
     /** Toggle âm thanh on/off */
     @FXML
