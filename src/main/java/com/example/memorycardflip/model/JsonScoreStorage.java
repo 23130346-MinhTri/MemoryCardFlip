@@ -11,6 +11,21 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * [UC-13 — Save High Score]
+ * Implementation của {@link ScoreStorage} dùng file JSON cục bộ.
+ *
+ * <p>File lưu tại: {@code ~/.memorycardflip/scores.json} (BR-13.4).</p>
+ *
+ * <p><b>UC-13 Sequence references:</b></p>
+ * <ul>
+ *   <li>13.1.7  — ScoreManager gọi save(cache)</li>
+ *   <li>13.1.7  — JsonFile.write() ghi xuống ~/.memorycardflip/scores.json (bước 14)</li>
+ *   <li>13.1.7  — JsonFile trả về "Ghi thành công" → ScoreStorage (bước 15)</li>
+ *   <li>13.1.7  — ScoreStorage trả về "return success" → ScoreManager (bước 16)</li>
+ *   <li>BR-13.5 — load() được gọi khi ScoreManager khởi tạo để điền cache</li>
+ * </ul>
+ */
 public class JsonScoreStorage implements ScoreStorage {
 
     private static final Path SAVE_FILE = Path.of(
