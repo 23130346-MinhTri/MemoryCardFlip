@@ -865,7 +865,8 @@ public class GameController implements Initializable {
     }
     /**
      * [6. Resume Game] Tiếp tục ván chơi sau khi đã tạm dừng.
-     *
+     * FIX: Khi resume game, tất cả thẻ sẽ được mở khóa trở lại.
+     *            Chỉ những thẻ chưa matched mới có thể click được.
      * <p>Được gọi từ onTogglePause() khi GameStatus = PAUSED.</p>
      *
      * <p>Hành động chi tiết:</p>
@@ -889,6 +890,9 @@ public class GameController implements Initializable {
 
         // Cập nhật GameStatus
         gameState.setStatus(GameStatus.PLAYING);
+
+        // [UC-06] Mở khóa tất cả thẻ khi resume
+        disableAllCards(false);
 
         // Khởi động lại timer
         startTimer();
