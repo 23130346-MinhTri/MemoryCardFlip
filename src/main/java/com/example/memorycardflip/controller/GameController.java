@@ -188,7 +188,7 @@ public class GameController implements Initializable {
     /**
      * [1.1.8 - 1.1.10] Khởi tạo bàn chơi game.
      * [UC4 - Play again] Hàm này cũng được gọi lại khi người chơi bấm "Chơi lại".
-     *
+     * [UC-01] Đảm bảo difficulty được áp dụng đúng khi khởi tạo board mới.
      * <p>Bước 1.1.8: GameController.startBoard() được gọi:
      *              tạo GameState với Difficulty đã chọn, khởi tạo card grid,
      *              reset timer, score, moves, và tất cả các labels HUD.</p>
@@ -207,6 +207,11 @@ public class GameController implements Initializable {
      * FIX: Đảm bảo tất cả UI components được khởi tạo đúng trước khi render
      */
     private void startBoard() {
+        // [UC-01] Đảm bảo difficulty không bị null trước khi tính totalPairs
+        if (difficulty == null) {
+            difficulty = Difficulty.EASY;
+            if (gameState != null) gameState.setDifficulty(difficulty);
+        }
         // [UC4] Bắt đầu lại toàn bộ ván: nhạc, timer, grid, HUD và trạng thái chơi.
         // Phát nhạc nền (BGM)
         AudioService.getInstance().playBGM("/assets/sounds/game.mp3");
