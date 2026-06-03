@@ -3,16 +3,22 @@ package com.example.memorycardflip.controller;
 import com.example.memorycardflip.model.Difficulty;
 import com.example.memorycardflip.service.AudioService;
 import com.example.memorycardflip.ui.SceneManager;
+import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
+import javafx.animation.RotateTransition;
 import javafx.animation.ScaleTransition;
 import javafx.css.PseudoClass;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -116,7 +122,7 @@ public class MainMenuController implements Initializable {
      *
      * <p>Precondition:  Màn hình menu đang hiển thị.</p>
      * <p>Postcondition: selectedDifficulty được set, nút tương ứng highlight.</p>
-     *FIX: Thêm animation và cập nhật đúng trạng thái selected
+     *FIX: toast + ripple.
      * @param difficulty độ khó người dùng chọn (EASY, MEDIUM, HARD)
      *
      */
@@ -124,22 +130,54 @@ public class MainMenuController implements Initializable {
         if (difficulty == null) return;
         selectedDifficulty = difficulty;
 
-        // Cập nhật pseudo-class selected cho tất cả nút
-        if (diffButtonMap.containsKey(Difficulty.EASY)) {
-            Button btn = diffButtonMap.get(Difficulty.EASY);
-            btn.pseudoClassStateChanged(SELECTED, difficulty == Difficulty.EASY);
-            renderButtonScaleAnimation(btn, difficulty == Difficulty.EASY);
+        // Cập nhật pseudo-class và animation scale
+        for (Map.Entry<Difficulty, Button> entry : diffButtonMap.entrySet()) {
+            Button btn = entry.getValue();
+            boolean isSelected = entry.getKey() == difficulty;
+            btn.pseudoClassStateChanged(SELECTED, isSelected);
+            renderButtonScaleAnimation(btn, isSelected);
+            // Thêm hiệu ứng ripple (xoay nhẹ icon)
+            if (isSelected) {
+                Node icon = btn.lookup(".btn-icon");
+                if (icon != null) {
+                    RotateTransition rt = new RotateTransition(Duration.millis(200), icon);
+                    rt.setByAngle(360);
+                    rt.setCycleCount(1);
+                    rt.play();
+                }
+            }
         }
-        if (diffButtonMap.containsKey(Difficulty.MEDIUM)) {
-            Button btn = diffButtonMap.get(Difficulty.MEDIUM);
-            btn.pseudoClassStateChanged(SELECTED, difficulty == Difficulty.MEDIUM);
-            renderButtonScaleAnimation(btn, difficulty == Difficulty.MEDIUM);
-        }
-        if (diffButtonMap.containsKey(Difficulty.HARD)) {
-            Button btn = diffButtonMap.get(Difficulty.HARD);
-            btn.pseudoClassStateChanged(SELECTED, difficulty == Difficulty.HARD);
-            renderButtonScaleAnimation(btn, difficulty == Difficulty.HARD);
-        }
+
+        // [UC-01] Hiển thị toast thông báo
+        showToast("Đã chọn độ khó: " + difficulty.getDisplayName());
+
+        // [UC-01] Phát âm thanh khi chọn (nếu có file)
+        AudioService.getInstance().playEffect("/assets/sounds/select.mp3");
+    }
+    /**
+     * Hiển thị thông báo tạm thời (toast) trên menu.
+     */
+    private void showToast(String message) {
+        Label toast = new Label(message);
+        toast.setStyle("-fx-background-color: #1e3a5f; -fx-text-fill: white; -fx-padding: 8 16; -fx-background-radius: 20;");
+        toast.setOpacity(0);
+        StackPane root = (StackPane) btnEasy.getScene().getRoot();
+        root.getChildren().add(toast);
+        StackPane.setAlignment(toast, javafx.geometry.Pos.TOP_CENTER);
+        StackPane.setMargin(toast, new Insets(20, 0, 0, 0));
+        FadeTransition ft = new FadeTransition(Duration.seconds(0.3), toast);
+        ft.setFromValue(0);
+        ft.setToValue(1);
+        ft.play();
+        PauseTransition pt = new PauseTransition(Duration.seconds(1.5));
+        pt.setOnFinished(e -> {
+            FadeTransition out = new FadeTransition(Duration.seconds(0.3), toast);
+            out.setFromValue(1);
+            out.setToValue(0);
+            out.setOnFinished(ev -> root.getChildren().remove(toast));
+            out.play();
+        });
+        pt.play();
     }
 
     /**
