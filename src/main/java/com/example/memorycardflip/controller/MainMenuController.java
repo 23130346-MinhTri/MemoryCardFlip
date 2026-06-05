@@ -310,14 +310,24 @@ public class MainMenuController implements Initializable {
         SceneManager.getInstance().showScoreHistory();   // ← Đổi thành showScoreHistory()
     }
 
+    // ════════════════════════════════════════════════════════════════════════
+    // [UC-07 — Bước 7.1.1 → 7.1.3] onLeaderboard()
+    // ════════════════════════════════════════════════════════════════════════
+
     /**
-     * [UC-05] Mở màn hình Bảng xếp hạng.
+     * [UC-07 — 7.1.1 → 7.1.3] Xử lý click nút "Bảng xếp hạng".
      *
-     * <p>Use Case này cho phép người chơi xem danh sách điểm cao nhất theo độ khó.</p>
-     * <p>Postcondition: LeaderboardScene được hiển thị.</p>
+     * <p>Sequence diagram bước 2: MainMenuController.onLeaderboard() được gọi.</p>
+     * <p>Sequence diagram bước 3: Gọi SceneManager.showLeaderboard() để
+     * chuyển scene và tải leaderboard.fxml.</p>
+     *
+     * <p><b>Postcondition:</b> SceneManager tải leaderboard.fxml (bước 7.1.3),
+     * khởi tạo LeaderboardController và hiển thị màn hình bảng xếp hạng.</p>
      */
     @FXML
     public void onLeaderboard() {
+        // [7.1.2] Xử lý sự kiện click nút Leaderboard
+        // [7.1.3] Yêu cầu SceneManager chuyển sang màn hình bảng xếp hạng
         SceneManager.getInstance().showLeaderboard();   // Mở BẢNG XẾP HẠNG
     }
 
