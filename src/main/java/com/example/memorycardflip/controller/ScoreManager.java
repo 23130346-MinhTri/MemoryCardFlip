@@ -52,7 +52,7 @@ public class ScoreManager {
     }
 
     /**
-     * Tải điểm từ storage vào cache
+     * Tải điểm từ storage vào cache.
      */
     private void loadScores() {
         try {
@@ -63,6 +63,7 @@ public class ScoreManager {
             cache = new java.util.ArrayList<>();
         }
     }
+
     // ════════════════════════════════════════════════════════════════════════
     // [UC-13 — Bước 13.1.4 → 13.1.8] saveScore()
     // ════════════════════════════════════════════════════════════════════════
@@ -81,7 +82,7 @@ public class ScoreManager {
      * </ul>
      *
      * @param gameState  Trạng thái ván chơi vừa kết thúc
-     * @param playerName Tên người chơi (mặc định "Player")
+     * @param playerName Tên người chơi (mặc định "Player" nếu null)
      */
     public void saveScore(GameState gameState, String playerName) {
         if (gameState == null) return;
@@ -96,17 +97,16 @@ public class ScoreManager {
             ScoreRecord record = ScoreRecord.fromGameState(playerName, gameState);
             cache.add(record);
             cache.sort((a, b) -> Integer.compare(b.getScore(), a.getScore()));
-            storage.save(cache); // ← lưu xuống file
+            storage.save(cache);
             System.out.println("Đã lưu: " + record);
 
             if (onScoreChanged != null) onScoreChanged.accept(cache);
 
         } catch (Exception e) {
             System.err.println("Không thể lưu điểm: " + e.getMessage());
-            e.printStackTrace(); // ← xem stack trace đầy đủ
+            e.printStackTrace();
         }
     }
-
 
     // ════════════════════════════════════════════════════════════════════════
     // [UC-07 — Bước 7.1.5 → 7.1.6] getTopScores()
@@ -114,8 +114,6 @@ public class ScoreManager {
 
     /**
      * [UC-07 — 7.1.5 → 7.1.6] Lấy top N điểm cao nhất trên tất cả độ khó.
-     *
-     * <p>Sequence step 12-14: filter by difficulty → sort DESC → limit N.</p>
      *
      * @param limit Số bản ghi tối đa trả về
      * @return Danh sách điểm giảm dần, tối đa {@code limit} phần tử
@@ -128,7 +126,16 @@ public class ScoreManager {
     }
 
     /**
-     * Lấy top N điểm theo độ khó
+     * [UC-07 — 7.1.5 → 7.1.6] Lấy top N điểm theo độ khó.
+     *
+     * <p><b>Sequence diagram bước 12:</b> filter by difficulty</p>
+     * <p><b>Sequence diagram bước 13:</b> sort by score DESC</p>
+     * <p><b>Sequence diagram bước 14:</b> limit {@code limit}</p>
+     * <p><b>Sequence diagram bước 15:</b> return topList → LeaderboardController</p>
+     *
+     * @param difficulty Độ khó cần lọc
+     * @param limit      Số bản ghi tối đa trả về
+     * @return Top {@code limit} bản ghi điểm theo {@code difficulty}
      */
     public List<ScoreRecord> getTopScores(Difficulty difficulty, int limit) {
         return cache.stream()
@@ -136,23 +143,6 @@ public class ScoreManager {
                 .sorted(SCORE_DESC)
                 .limit(limit)
                 .toList();
-    }
-
-    /**
-     * [UC-07 — 7.1.5 → 7.1.6] Lấy top N điểm theo độ khó.
-     *
-     * <p><b>Sequence diagram bước 12:</b> filter by difficulty</p>
-     * <p><b>Sequence diagram bước 13:</b> sort by score DESC (cache đã được sort khi saveScore)</p>
-     * <p><b>Sequence diagram bước 14:</b> limit {@code limit}</p>
-     * <p><b>Sequence diagram bước 15:</b> return topList → LeaderboardController</p>
-     *
-     * @param difficulty Độ khó cần lọc
-     * @return Top {@code limit} bản ghi điểm theo {@code difficulty}
-     */
-    public Optional<ScoreRecord> getHighScore(Difficulty difficulty) {
-        return cache.stream()
-                .filter(r -> r.getDifficulty() == difficulty)
-                .max(java.util.Comparator.comparingInt(ScoreRecord::getScore));
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -166,6 +156,18 @@ public class ScoreManager {
      *
      * @param difficulty Độ khó cần tra
      * @return Optional chứa bản ghi điểm cao nhất, hoặc empty nếu chưa có dữ liệu
+     */
+    public Optional<ScoreRecord> getHighScore(Difficulty difficulty) {
+        return cache.stream()
+                .filter(r -> r.getDifficulty() == difficulty)
+                .max(java.util.Comparator.comparingInt(ScoreRecord::getScore));
+    }
+
+    /**
+     * [BR-07 — 7.1.5 → 7.1.6] Lấy tất cả scores theo độ khó, sorted DESC.
+     *
+     * @param difficulty Độ khó cần lọc
+     * @return Danh sách tất cả bản ghi theo {@code difficulty}, sắp xếp giảm dần
      */
     public List<ScoreRecord> getScoresByDifficulty(Difficulty difficulty) {
         return cache.stream()
@@ -189,15 +191,21 @@ public class ScoreManager {
      * @return {@code true} nếu chưa có điểm nào hoặc điểm mới cao hơn kỷ lục hiện tại
      */
     public boolean isNewHighScore(Difficulty difficulty, int score) {
-        // [UC3] ResultController dùng để quyết định hiển thị "Kỷ lục mới!" trên màn kết quả.
         Optional<ScoreRecord> highScore = getHighScore(difficulty);
         return highScore.isEmpty() || score > highScore.get().getScore();
     }
 
+    // ════════════════════════════════════════════════════════════════════════
+    // [UC-06] clearAllScores()
+    // ════════════════════════════════════════════════════════════════════════
+
     /**
-     * [UC-06] Xóa toàn bộ lịch sử điểm.
+     * [UC-06] Xóa toàn bộ lịch sử điểm khỏi cache và storage.
      *
      * <p>Use Case này cho phép người chơi xoá dữ liệu lịch sử đã lưu trên thiết bị.</p>
+     *
+     * <p><b>FIX:</b> Callback KHÔNG bị null hóa sau khi gọi để tránh mất callback
+     * trong các test case tiếp theo (side-effect không mong muốn).</p>
      */
     public void clearAllScores() {
         cache.clear();
@@ -205,11 +213,16 @@ public class ScoreManager {
             storage.clear();
             if (onScoreChanged != null) {
                 onScoreChanged.accept(cache);
+                // KHÔNG null hóa callback ở đây để tránh side-effect
             }
         } catch (Exception e) {
             System.err.println("Không thể xóa điểm: " + e.getMessage());
         }
     }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Callback & Utility
+    // ════════════════════════════════════════════════════════════════════════
 
     /**
      * [UC-13 — 13.1.8] Đăng ký callback nhận thông báo khi có điểm mới được lưu.
@@ -224,11 +237,14 @@ public class ScoreManager {
     }
 
     /**
-     * Lấy storage hiện tại
+     * Lấy storage hiện tại.
+     *
+     * @return ScoreStorage instance đang được dùng
      */
     public ScoreStorage getStorage() {
         return storage;
     }
+
     /**
      * [UC-03][UC-13 — 13.1.9] Lấy điểm cao nhất dạng int theo độ khó.
      *
@@ -237,15 +253,14 @@ public class ScoreManager {
      * @param difficulty Độ khó cần tra
      * @return Điểm cao nhất, hoặc 0 nếu chưa có dữ liệu
      */
-
     public int getBestScore(Difficulty difficulty) {
-        // [UC3] Lấy điểm cao nhất để hiển thị ở màn View result sau khi ván kết thúc.
         return cache.stream()
                 .filter(r -> r.getDifficulty() == difficulty)
                 .mapToInt(ScoreRecord::getScore)
                 .max()
                 .orElse(0);
     }
+
     /**
      * [UC-07][UC-13] Lấy tất cả bản ghi điểm (bản sao để tránh side-effect).
      *
@@ -253,5 +268,14 @@ public class ScoreManager {
      */
     public List<ScoreRecord> getAllScores() {
         return new java.util.ArrayList<>(cache);
+    }
+
+    /**
+     * Reset singleton instance cho mục đích testing.
+     *
+     * <p><b>CHỈ dùng trong unit test</b> để đảm bảo isolation giữa các test case.</p>
+     */
+    public static synchronized void resetForTesting() {
+        instance = null;
     }
 }
