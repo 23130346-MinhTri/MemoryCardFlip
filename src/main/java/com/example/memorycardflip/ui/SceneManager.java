@@ -16,8 +16,8 @@ import java.util.logging.Logger;
  *
  * <p>UseCase phụ trách:</p>
  * <ul>
- *   <li>[UC-01] Chuyển sang GameScene sau khi chọn độ khó</li>
- *   <li>[UC-07] Kết thúc game → chuyển sang ResultScene</li>
+ *   <li>[1. Select Difficulty] Chuyển sang GameScene sau khi chọn độ khó</li>
+ *   <li>[UC-03] Kết thúc game → chuyển sang ResultScene</li>
  *   <li>[UC-10] Replay → reset GameScene</li>
  *   <li>[UC-09] Quay về MainMenu</li>
  * </ul>
@@ -37,8 +37,8 @@ public class SceneManager {
 
     // ── Đường dẫn FXML ───────────────────────────────────────
     private static final String FXML_MENU   = "/fxml/menu.fxml";
-    private static final String FXML_GAME   = "/fxml/game.fxml";
-    private static final String FXML_RESULT = "/fxml/result.fxml";
+    private static final String FXML_GAME   = "/fxml/game.fxml"; // [UC4] Màn chơi được load lại khi Play again
+    private static final String FXML_RESULT = "/fxml/result.fxml"; // [UC3] FXML màn hình View result
 
     // ── Kích thước cửa sổ ────────────────────────────────────
     private static final double WIDTH  = 540;
@@ -49,7 +49,10 @@ public class SceneManager {
 
     // ── State ─────────────────────────────────────────────────
     private Stage primaryStage;
+    // [UC4] Giữ GameState hiện tại để biết difficulty khi người chơi bấm Play again.
     private GameState currentGameState;
+    // [UC4 - nâng cấp] Progressive mode: tự động đề xuất tăng độ khó sau WIN
+    private boolean progressiveMode = false;
 
     // ── Private constructor ───────────────────────────────────
     private SceneManager() {}
@@ -84,16 +87,24 @@ public void init(Stage stage) {
 }
 
     // ══════════════════════════════════════════════════════════
-    // UC-01 — Chuyển sang GameScene
+    // 1. Select Difficulty — Chuyển sang GameScene
     // ══════════════════════════════════════════════════════════
 
     /**
-     * [UC-01] Chuyển sang màn hình chơi game với độ khó đã chọn.
+     * [1.1.7 - 1.1.9] Chuyển sang màn hình chơi game với độ khó đã chọn.
+     *
+     * <p>Bước 1.1.7: MainMenuController gọi SceneManager.showGame(difficulty).
+     *              SceneManager load game.fxml và tạo GameController mới.</p>
+     * <p>Bước 1.1.8: GameController.init(GameState) được gọi:
+     *              tạo GameState với Difficulty đã chọn, khởi tạo card grid,
+     *              reset timer và score.</p>
+     * <p>Bước 1.1.9: GameScene được hiển thị. Timer bắt đầu đếm ngược.
+     *              AudioService phát BGM.</p>
      *
      * <p>Precondition:  difficulty != null, primaryStage đã init.</p>
      * <p>Postcondition: GameScene hiển thị, GameState mới được tạo.</p>
      *
-     * @param difficulty độ khó người dùng chọn ở UC-01
+     * @param difficulty độ khó người dùng chọn ở bước 1.1.2
      */
     public void showGame(Difficulty difficulty) {
         currentGameState = new GameState(difficulty);
@@ -101,26 +112,27 @@ public void init(Stage stage) {
     }
 
     // ══════════════════════════════════════════════════════════
-    // UC-07 — Kết thúc game → ResultScene
+    // UC-03 — Kết thúc game → ResultScene
     // ══════════════════════════════════════════════════════════
 
     /**
-     * [UC-07] Chuyển sang màn hình kết quả (WIN hoặc LOSE).
+     * [UC-03] Chuyển sang màn hình kết quả (WIN hoặc LOSE).
      * GameState giữ nguyên để ResultController đọc thống kê.
      *
      * <p>Precondition:  currentGameState != null, game đã kết thúc.</p>
      * <p>Postcondition: ResultScene hiển thị với đúng thống kê.</p>
      */
     public void showResult() {
+        // [UC3] Giữ nguyên currentGameState để ResultController đọc và hiển thị thống kê cuối ván.
         switchScene(FXML_RESULT);
     }
 
     // ══════════════════════════════════════════════════════════
-    // UC-10 — Replay
+    // UC4 — Play again / Replay
     // ══════════════════════════════════════════════════════════
 
     /**
-     * [UC-10] Chơi lại cùng độ khó — tạo GameState mới, load lại GameScene.
+     * [UC4 - Play again] Chơi lại cùng độ khó — tạo GameState mới, load lại GameScene.
      *
      * <p>Precondition:  currentGameState != null.</p>
      * <p>Postcondition: GameScene mới, GameState reset về 0.</p>
@@ -133,6 +145,31 @@ public void init(Stage stage) {
         }
         showGame(currentGameState.getDifficulty());
     }
+
+    /**
+     * [UC4 - nâng cấp] Chơi lại với độ khó tiếp theo (progressive mode).
+     * Được gọi từ ResultController khi người chơi chấp nhận tăng độ khó.
+     *
+     * @param difficulty Độ khó mới (đã được tính từ getNextDifficulty)
+     */
+    public void replayWithDifficulty(Difficulty difficulty) {
+        showGame(difficulty);
+    }
+
+    /**
+     * [UC4 - nâng cấp] Trả về độ khó kế tiếp sau độ khó hiện tại.
+     * EASY → MEDIUM → HARD → null (đã ở mức cao nhất).
+     */
+    public Difficulty getNextDifficulty(Difficulty current) {
+        return switch (current) {
+            case EASY   -> Difficulty.MEDIUM;
+            case MEDIUM -> Difficulty.HARD;
+            case HARD   -> null; // Đã max
+        };
+    }
+
+    public boolean isProgressiveMode() { return progressiveMode; }
+    public void setProgressiveMode(boolean progressiveMode) { this.progressiveMode = progressiveMode; }
 // ══════════════════════════════════════════════════════════
     // Quay về Menu
     // ══════════════════════════════════════════════════════════
@@ -150,8 +187,8 @@ public void init(Stage stage) {
     // ── Getter ────────────────────────────────────────────────
 
     /**
-     * Lấy GameState ván vừa kết thúc.
-     * ResultController dùng để hiển thị thống kê [UC-07].
+     * [UC3 - View result] Lấy GameState ván vừa kết thúc.
+     * ResultController dùng dữ liệu này để hiển thị thống kê trên màn kết quả.
      */
     public GameState getCurrentGameState() {
         return currentGameState;
@@ -182,7 +219,9 @@ public void init(Stage stage) {
         }
     }
     /**
-     * Hiển thị màn hình Lịch sử điểm (tất cả các ván đã chơi)
+     * [UC-06] Hiển thị màn hình Lịch sử điểm (tất cả các ván đã chơi).
+     *
+     * <p>Postcondition: màn hình score_history được load lên primaryStage.</p>
      */
     public void showScoreHistory() {
         try {
@@ -198,7 +237,9 @@ public void init(Stage stage) {
     }
 
     /**
-     * Hiển thị màn hình Bảng xếp hạng (top điểm cao)
+     * [UC-05] Hiển thị màn hình Bảng xếp hạng (top điểm cao).
+     *
+     * <p>Postcondition: màn hình leaderboard được load lên primaryStage.</p>
      */
     public void showLeaderboard() {
         try {
