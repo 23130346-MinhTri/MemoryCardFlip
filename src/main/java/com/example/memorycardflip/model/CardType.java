@@ -69,6 +69,7 @@ public enum CardType {
         return symbols[index];
     }
 
+
     public int symbolCount() {
         return symbols.length;
     }

@@ -21,6 +21,7 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.geometry.Insets;
+import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import javafx.stage.Stage;
 import com.example.memorycardflip.ui.NotificationManager;
@@ -86,6 +87,7 @@ public class GameController implements Initializable {
     private GameLogicService gameLogicService;
     private ComboNotificationController comboNotification;
     private StackPane notificationOverlay;
+    private StackPane pausedOverlay;  // Overlay hiển thị khi tạm dừng
     // ══════════════════════════════════════════════════════════
     // Lifecycle
     // ══════════════════════════════════════════════════════════
@@ -163,11 +165,21 @@ public class GameController implements Initializable {
     /**
      * [1. Select Difficulty] Đặt độ khó và khởi tạo GameState.
      * Được gọi từ SceneManager.showGame() hoặc khi reload game.
+     * FIX: Thêm kiểm tra gameState != null trước khi set difficulty
      */
     public void setDifficulty(Difficulty d) {
-        if (d == null) return;
+        if (d == null) {
+            System.err.println("[UC-01] Difficulty cannot be null, defaulting to EASY");
+            d = Difficulty.EASY;
+        }
         difficulty = d;
-        if (gameState == null) gameState = new GameState(difficulty);
+        // [UC-01] Kiểm tra gameState hiện tại - nếu null thì tạo mới
+        if (gameState == null) {
+            gameState = new GameState(difficulty);
+        } else {
+            // [UC-01] Nếu gameState đã tồn tại, cập nhật difficulty và reset
+            gameState.setStatus(GameStatus.IDLE);
+        }
         loadIconPool();
         javafx.application.Platform.runLater(this::startBoard);
     }
@@ -178,7 +190,7 @@ public class GameController implements Initializable {
     /**
      * [1.1.8 - 1.1.10] Khởi tạo bàn chơi game.
      * [UC4 - Play again] Hàm này cũng được gọi lại khi người chơi bấm "Chơi lại".
-     *
+     * [UC-01] Đảm bảo difficulty được áp dụng đúng khi khởi tạo board mới.
      * <p>Bước 1.1.8: GameController.startBoard() được gọi:
      *              tạo GameState với Difficulty đã chọn, khởi tạo card grid,
      *              reset timer, score, moves, và tất cả các labels HUD.</p>
@@ -194,8 +206,14 @@ public class GameController implements Initializable {
      *   <li>BGM bắt đầu phát</li>
      *   <li>Người chơi có thể click vào thẻ để lật</li>
      * </ul>
+     * FIX: Đảm bảo tất cả UI components được khởi tạo đúng trước khi render
      */
     private void startBoard() {
+        // [UC-01] Đảm bảo difficulty không bị null trước khi tính totalPairs
+        if (difficulty == null) {
+            difficulty = Difficulty.EASY;
+            if (gameState != null) gameState.setDifficulty(difficulty);
+        }
         // [UC4] Bắt đầu lại toàn bộ ván: nhạc, timer, grid, HUD và trạng thái chơi.
         // Phát nhạc nền (BGM)
         AudioService.getInstance().playBGM("/assets/sounds/game.mp3");
@@ -805,33 +823,49 @@ public class GameController implements Initializable {
      *
      * <p>Precondition: gameState != null, GameStatus = PLAYING.</p>
      * <p>Postcondition: GameStatus = PAUSED, timer dừng, UI cập nhật, âm thanh tạm dừng.</p>
+     *Fix: Khi pause game, tất cả thẻ sẽ bị khóa không thể click.
+     *          Điều này ngăn người chơi tiếp tục lật thẻ khi game đang tạm dừng.
      */
     private void pauseGame() {
-        // Kiểm tra precondition
         if (gameState == null || gameState.getStatus() != GameStatus.PLAYING) return;
 
-        // Dừng timer
+        // [UC-05] Khóa tất cả thẻ
+        disableAllCards(true);
+        // [UC-05] Tạo và hiển thị overlay nếu chưa có
+        if (pausedOverlay == null) {
+            createPausedOverlay();
+        }
+        if (pausedOverlay.getParent() == null) {
+            gridWrapper.getChildren().add(pausedOverlay);
+        }
+        pausedOverlay.setVisible(true);
+
         stopTimer();
-
-        // Cập nhật GameStatus
         gameState.setStatus(GameStatus.PAUSED);
-
-        // Cập nhật UI - lblStatus
-        if (lblStatus != null) {
-            lblStatus.setText(tr("status.pause"));  // Vd: "Game Paused"
-        }
-
-        // Cập nhật UI - btnPause (đổi thành Resume)
-        if (btnPause != null) {
-            btnPause.setText(tr("button.resume"));  // Vd: "⏵ Resume"
-        }
-
-        // Dừng âm thanh nền
+        if (lblStatus != null) lblStatus.setText(tr("status.pause"));
+        if (btnPause != null) btnPause.setText(tr("button.resume"));
         AudioService.getInstance().pauseBGM();
+        // [UC-05] Phát âm thanh pause (tùy chọn)
+        AudioService.getInstance().playEffect("/assets/sounds/pause.mp3");
+    }
+
+    /**
+     * [UC-05][UC-06] Helper method để khóa/mở khóa tất cả thẻ trên bàn chơi.
+     *
+     * @param disabled true nếu muốn khóa thẻ (disable click), false nếu mở khóa
+     */
+    private void disableAllCards(boolean disabled) {
+        if (cardGrid == null) return;
+        for (javafx.scene.Node node : cardGrid.getChildren()) {
+            if (node instanceof CardFlipView) {
+                ((CardFlipView) node).setDisable(disabled);
+            }
+        }
     }
     /**
      * [6. Resume Game] Tiếp tục ván chơi sau khi đã tạm dừng.
-     *
+     * FIX: Khi resume game, tất cả thẻ sẽ được mở khóa trở lại.
+     *            Chỉ những thẻ chưa matched mới có thể click được.
      * <p>Được gọi từ onTogglePause() khi GameStatus = PAUSED.</p>
      *
      * <p>Hành động chi tiết:</p>
@@ -850,27 +884,41 @@ public class GameController implements Initializable {
      * <p>Postcondition: GameStatus = PLAYING, timer chạy, UI cập nhật, âm thanh phát lại.</p>
      */
     private void resumeGame() {
-        // Kiểm tra precondition
         if (gameState == null || gameState.getStatus() != GameStatus.PAUSED) return;
 
-        // Cập nhật GameStatus
+        // [UC-06] Mở khóa tất cả thẻ
+        disableAllCards(false);
+        // [UC-06] Ẩn overlay
+        if (pausedOverlay != null) {
+            pausedOverlay.setVisible(false);
+        }
+
         gameState.setStatus(GameStatus.PLAYING);
-
-        // Khởi động lại timer
         startTimer();
-
-        // Cập nhật UI - lblStatus
-        if (lblStatus != null) {
-            lblStatus.setText(tr("status.resume"));  // Vd: "Game Resumed"
-        }
-
-        // Cập nhật UI - btnPause (đổi lại thành Pause)
-        if (btnPause != null) {
-            btnPause.setText(tr("button.pause"));  // Vd: "⏸ Pause"
-        }
-
-        // Tiếp tục phát âm thanh nền
+        if (lblStatus != null) lblStatus.setText(tr("status.resume"));
+        if (btnPause != null) btnPause.setText(tr("button.pause"));
         AudioService.getInstance().resumeBGM();
+        AudioService.getInstance().playEffect("/assets/sounds/resume.mp3");
+    }
+    /**
+     * Tạo overlay tạm dừng với nút Resume bên trong.
+     */
+    private void createPausedOverlay() {
+        pausedOverlay = new StackPane();
+        pausedOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.75);");
+        pausedOverlay.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        pausedOverlay.setMouseTransparent(false); // bắt sự kiện click
+
+        VBox content = new VBox(20);
+        content.setAlignment(javafx.geometry.Pos.CENTER);
+        Label pauseLabel = new Label("⏸ GAME PAUSED");
+        pauseLabel.setStyle("-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: #f5c842;");
+        Button resumeBtn = new Button("▶ RESUME");
+        resumeBtn.setStyle("-fx-background-color: #2a6f8f; -fx-text-fill: white; -fx-font-size: 18px; -fx-padding: 10 20;");
+        resumeBtn.setOnAction(e -> onTogglePause()); // gọi toggle để resume
+        content.getChildren().addAll(pauseLabel, resumeBtn);
+        pausedOverlay.getChildren().add(content);
+        StackPane.setAlignment(content, javafx.geometry.Pos.CENTER);
     }
     @FXML
     private void handleUC01Restart() {

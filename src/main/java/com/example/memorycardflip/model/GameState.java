@@ -170,4 +170,7 @@ public class GameState {
         firstSelectedCard = null;
         isResolving = false;
     }
+
+    public void setDifficulty(Difficulty difficulty) {
+    }
 }
