@@ -104,7 +104,10 @@
 .btn-badge-hard   { -fx-background-color: rgba(239,68,68,0.18);  -fx-text-fill: #ef4444; }
 
 /* Footer */
-.footer-row { -fx-spacing: 12; -fx-alignment: CENTER; }
+.footer-row {
+    -fx-spacing: 16;
+    -fx-padding: 20 0 0 0;
+}
 .footer-btn {
     -fx-background-color: transparent;
     -fx-border-color: rgba(255,255,255,0.10); -fx-border-width: 1;
@@ -714,4 +717,36 @@
 .result-title.result-lose {
     -fx-text-fill: #ef4444;
     -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.45), 16, 0, 0, 0);
+}
+/* Overlay tạm dừng – hiệu ứng mờ */
+.paused-overlay {
+    -fx-background-color: rgba(0,0,0,0.75);
+    -fx-alignment: center;
+}
+.paused-overlay .label {
+    -fx-font-size: 36px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #f5c842;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 0);
+}
+.paused-overlay .button {
+    -fx-background-color: linear-gradient(to bottom, #2a6f8f, #1a4f6f);
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-padding: 10 20;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+.paused-overlay .button:hover {
+    -fx-background-color: linear-gradient(to bottom, #3a8faf, #2a6f8f);
+}
+
+/* Toast notification */
+.toast-notification {
+    -fx-background-color: #1e3a5f;
+    -fx-text-fill: white;
+    -fx-padding: 8 16;
+    -fx-background-radius: 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8, 0, 0, 0);
 }
