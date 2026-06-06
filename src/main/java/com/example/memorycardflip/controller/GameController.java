@@ -471,6 +471,10 @@ public class GameController implements Initializable {
                 firstCard.match();
                 secondCard.match();
 
+                // Phát âm thanh ghép đúng
+                AudioService.getInstance().playEffect("/assets/sounds/game-bonus.mp3");
+
+
 
 
                 // 9.2.5: [11.1.9-11.1.10]  Cập nhật HUD (điểm, combo, moves)
@@ -906,7 +910,6 @@ public class GameController implements Initializable {
         if (lblStatus != null) lblStatus.setText(tr("status.resume"));
         if (btnPause != null) btnPause.setText(tr("button.pause"));
         AudioService.getInstance().resumeBGM();
-        AudioService.getInstance().playEffect("/assets/sounds/resume.mp3");
     }
     /**
      * Tạo overlay tạm dừng với nút Resume bên trong.
@@ -991,7 +994,7 @@ public class GameController implements Initializable {
         updateHUD();
 
         // Phát nhạc hiệu ứng lật lên
-        AudioService.getInstance().playEffect("/assets/sounds/flip.mp3");
+        AudioService.getInstance().playEffect("/assets/sounds/resume.mp3");
 
         // Lật ngửa 2 thẻ
         fCard.flip();
@@ -1020,7 +1023,7 @@ public class GameController implements Initializable {
             gameState.setResolving(false);
 
             // Phát âm thanh lật úp lại
-            AudioService.getInstance().playEffect("/assets/sounds/flip.mp3");
+            AudioService.getInstance().playEffect("/assets/sounds/resume.mp3");
         });
         delay.play();
     }
