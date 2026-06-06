@@ -21,6 +21,8 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.geometry.Insets;
+import javafx.geometry.Bounds;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import javafx.stage.Stage;
@@ -64,6 +66,7 @@ public class GameController implements Initializable {
     @FXML private Label       lblStatus;
     @FXML private Button      btnPause;
     @FXML private Button      btnHint;
+    @FXML private Pane        particlePane;
 
     // =============== THÊM CÁC FXML BINDING MỚI ===============
     @FXML private Label lblScore;      // Hiển thị điểm số
@@ -211,6 +214,9 @@ public class GameController implements Initializable {
      * FIX: Đảm bảo tất cả UI components được khởi tạo đúng trước khi render
      */
     private void startBoard() {
+        if (particlePane != null) {
+            particlePane.getChildren().clear();
+        }
         // [UC-01] Đảm bảo difficulty không bị null trước khi tính totalPairs
         if (difficulty == null) {
             difficulty = Difficulty.EASY;
@@ -473,6 +479,26 @@ public class GameController implements Initializable {
 
                 // Phát âm thanh ghép đúng
                 AudioService.getInstance().playEffect("/assets/sounds/game-bonus.mp3");
+
+                // Phát hiệu ứng hạt lấp lánh (sparkle particles)
+                if (v1 != null && v2 != null && particlePane != null) {
+                    try {
+                        Bounds b1 = v1.localToScene(v1.getBoundsInLocal());
+                        Bounds p1 = particlePane.sceneToLocal(b1);
+                        double x1 = p1.getMinX() + p1.getWidth() / 2;
+                        double y1 = p1.getMinY() + p1.getHeight() / 2;
+
+                        Bounds b2 = v2.localToScene(v2.getBoundsInLocal());
+                        Bounds p2 = particlePane.sceneToLocal(b2);
+                        double x2 = p2.getMinX() + p2.getWidth() / 2;
+                        double y2 = p2.getMinY() + p2.getHeight() / 2;
+
+                        AnimationService.spawnSparkleParticles(particlePane, x1, y1, comboCount);
+                        AnimationService.spawnSparkleParticles(particlePane, x2, y2, comboCount);
+                    } catch (Exception ex) {
+                        System.err.println("Lỗi hiển thị hạt lấp lánh: " + ex.getMessage());
+                    }
+                }
 
 
 
@@ -1007,7 +1033,7 @@ public class GameController implements Initializable {
         v2.showHighlight(true);
 
         // Lập lịch úp lại sau 2 giây
-        PauseTransition delay = new PauseTransition(Duration.seconds(1));
+        PauseTransition delay = new PauseTransition(Duration.seconds(2));
         delay.setOnFinished(e -> {
             // Úp lại
             fCard.faceDown();
@@ -1025,6 +1051,7 @@ public class GameController implements Initializable {
             // Phát âm thanh lật úp lại
             AudioService.getInstance().playEffect("/assets/sounds/resume.mp3");
         });
+
         delay.play();
     }
 
