@@ -78,6 +78,15 @@ class ScoreRecordTest {
 
     // ── fromGameState() ───────────────────────────────────────
 
+    /**
+     * Tests for `fromGameState()` conversion.
+     *
+     * Verifies that `ScoreRecord.fromGameState()` correctly computes
+     * `timeUsed`, `moves` and produces a positive `score` based on the
+     * completed `GameState`. Note: combo/streak bonuses are applied in the
+     * scoring logic (covered by `GameState` tests); this test ensures the
+     * leaderboard record reflects those derived scoring values.
+     */
     @Nested
     @DisplayName("fromGameState()")
     class FromGameStateTests {
