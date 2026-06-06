@@ -31,6 +31,11 @@ public class GameState {
     private Card firstSelectedCard;
     private boolean isResolving;
 
+    // ── Hint state ────────────────────────────────────────────
+    private int hintCount;
+    private int hintPenalty;
+
+
     // ── Constructor ───────────────────────────────────────────
     public GameState(Difficulty difficulty) {
         this.difficulty    = difficulty;
@@ -43,7 +48,10 @@ public class GameState {
         this.comboCount    = 0;
         this.firstSelectedCard = null;
         this.isResolving   = false;
+        this.hintCount     = 3;
+        this.hintPenalty   = 0;
     }
+
 
     // ── Getter / Setter ───────────────────────────────────────
     public Difficulty getDifficulty()  { return difficulty; }
@@ -95,6 +103,17 @@ public class GameState {
     public Card getFirstSelectedCard()       { return firstSelectedCard; }
     public boolean isResolving()             { return isResolving; }
 
+    // ── Hint state ────────────────────────────────────────────
+    public int getHintCount()                { return hintCount; }
+    public int getHintPenalty()              { return hintPenalty; }
+    public void useHint() {
+        if (hintCount > 0) {
+            hintCount--;
+            hintPenalty += 50;
+        }
+    }
+
+
     public void selectFirstCard(Card card) {
         this.firstSelectedCard = card;
     }
@@ -134,7 +153,7 @@ public class GameState {
         int comboBonus = comboCount * 20;
         int movePenalty = moves.get() * 5;
         int timeBonus  = Math.min(timeRemaining.get(), 30) * 3;
-        return Math.max(0, base + comboBonus - movePenalty + timeBonus);
+        return Math.max(0, base + comboBonus - movePenalty + timeBonus - hintPenalty);
     }
 
     // ── State check ───────────────────────────────────────────
@@ -169,6 +188,8 @@ public class GameState {
         wrongAttempts.set(0);
         firstSelectedCard = null;
         isResolving = false;
+        hintCount = 3;
+        hintPenalty = 0;
     }
 
     public void setDifficulty(Difficulty difficulty) {
