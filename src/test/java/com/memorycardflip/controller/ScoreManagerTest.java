@@ -17,15 +17,17 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * Unit tests cho ScoreManager Singleton.
  *
- * <p>Bao gồm các test cases cho:</p>
+ * <p>
+ * Bao gồm các test cases cho:
+ * </p>
  * <ul>
- *   <li>Saving scores (BR-13.1 — 13.1.4 → 13.1.8)</li>
- *   <li>Loading scores from storage (BR-13.5)</li>
- *   <li>Getting top scores by difficulty (BR-07 — 7.1.5 → 7.1.6)</li>
- *   <li>Getting high score by difficulty (BR-07 — 7.1.7)</li>
- *   <li>Checking new high score (BR-13.3, BR-13.9)</li>
- *   <li>Sorting and filtering logic</li>
- *   <li>Score change notification callback</li>
+ * <li>Saving scores (BR-13.1 — 13.1.4 → 13.1.8)</li>
+ * <li>Loading scores from storage (BR-13.5)</li>
+ * <li>Getting top scores by difficulty (BR-07 — 7.1.5 → 7.1.6)</li>
+ * <li>Getting high score by difficulty (BR-07 — 7.1.7)</li>
+ * <li>Checking new high score (BR-13.3, BR-13.9)</li>
+ * <li>Sorting and filtering logic</li>
+ * <li>Score change notification callback</li>
  * </ul>
  */
 @DisplayName("ScoreManager Tests (UC-07 & UC-13)")
@@ -93,7 +95,6 @@ class ScoreManagerTest {
             assertEquals(sizeBefore, sizeAfter, "Cache size should NOT change when gameState is null");
         }
 
-
         @Test
         @DisplayName("Cache được sort DESC theo score sau khi lưu")
         void shouldSortCacheDescendingByScore() {
@@ -132,7 +133,7 @@ class ScoreManagerTest {
             }
             gameState.setStatus(GameStatus.WON);
 
-            final boolean[] callbackInvoked = {false};
+            final boolean[] callbackInvoked = { false };
             manager.setOnScoreChanged(scores -> {
                 callbackInvoked[0] = true;
                 assertNotNull(scores, "Callback should receive non-null list");
@@ -149,7 +150,7 @@ class ScoreManagerTest {
             GameState gameState = new GameState(Difficulty.EASY);
             gameState.setStatus(GameStatus.LOST);
 
-            final boolean[] callbackInvoked = {false};
+            final boolean[] callbackInvoked = { false };
             manager.setOnScoreChanged(scores -> callbackInvoked[0] = true);
 
             manager.saveScore(gameState, "TestPlayer");
@@ -269,7 +270,7 @@ class ScoreManagerTest {
         @Test
         @DisplayName("Trả về highest score cho difficulty chỉ định")
         void shouldReturnHighestScoreForDifficulty() {
-            int[] timeRemaining = {20, 50, 35};
+            int[] timeRemaining = { 20, 50, 35 };
 
             for (int time : timeRemaining) {
                 GameState state = new GameState(Difficulty.EASY);
@@ -437,7 +438,7 @@ class ScoreManagerTest {
         @Test
         @DisplayName("setOnScoreChanged() lưu callback")
         void shouldSetCallback() {
-            final boolean[] called = {false};
+            final boolean[] called = { false };
             manager.setOnScoreChanged(scores -> called[0] = true);
 
             GameState state = new GameState(Difficulty.EASY);
@@ -556,7 +557,7 @@ class ScoreManagerTest {
 
             manager.saveScore(state, "TestPlayer");
 
-            final boolean[] callbackInvoked = {false};
+            final boolean[] callbackInvoked = { false };
             manager.setOnScoreChanged(scores -> {
                 callbackInvoked[0] = true;
                 assertTrue(scores.isEmpty(), "Cleared scores should be empty");
@@ -626,7 +627,7 @@ class ScoreManagerTest {
         @Test
         @DisplayName("Trả về highest score khi có multiple scores")
         void shouldReturnHighestScoreAmongMultiple() {
-            int[] times = {10, 30, 50};
+            int[] times = { 10, 30, 50 };
 
             for (int time : times) {
                 GameState state = new GameState(Difficulty.EASY);
@@ -728,6 +729,283 @@ class ScoreManagerTest {
     // ═══════════════════════════════════════════════════════════════════════════
     // Cleanup
     // ═══════════════════════════════════════════════════════════════════════════
+
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // [UC-07 Enhancement] searchByPlayerName() Tests
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("searchByPlayerName()")
+    class SearchByPlayerNameTests {
+
+        @Test
+        @DisplayName("Tìm kiếm theo tên người chơi không phân biệt hoa/thường")
+        void shouldSearchCaseInsensitive() {
+            GameState state = new GameState(Difficulty.EASY);
+            for (int i = 0; i < Difficulty.EASY.totalPairs(); i++) {
+                state.incrementMatchedPairs();
+            }
+            state.setStatus(GameStatus.WON);
+
+            manager.saveScore(state, "JohnDoe");
+
+            List<ScoreRecord> results = manager.searchByPlayerName("johndoe", Difficulty.EASY);
+
+            assertEquals(1, results.size(), "Should find 'JohnDoe' when searching 'johndoe'");
+            assertEquals("JohnDoe", results.get(0).getPlayerName());
+        }
+
+        @Test
+        @DisplayName("Tìm kiếm partial match (substring)")
+        void shouldSearchPartialMatch() {
+            for (String name : new String[] { "Alice", "Bob", "Alvin" }) {
+                GameState state = new GameState(Difficulty.EASY);
+                for (int i = 0; i < Difficulty.EASY.totalPairs(); i++) {
+                    state.incrementMatchedPairs();
+                }
+                state.setStatus(GameStatus.WON);
+                state.setTimeRemaining(30 + (int) (Math.random() * 20));
+                manager.saveScore(state, name);
+            }
+
+            List<ScoreRecord> results = manager.searchByPlayerName("Al", Difficulty.EASY);
+
+            assertEquals(2, results.size(), "Should find 'Alice' and 'Alvin' when searching 'Al'");
+            assertTrue(results.stream().allMatch(r -> r.getPlayerName().contains("Al")));
+        }
+
+        @Test
+        @DisplayName("Trả về empty list khi không có match")
+        void shouldReturnEmptyWhenNoMatch() {
+            GameState state = new GameState(Difficulty.EASY);
+            for (int i = 0; i < Difficulty.EASY.totalPairs(); i++) {
+                state.incrementMatchedPairs();
+            }
+            state.setStatus(GameStatus.WON);
+
+            manager.saveScore(state, "Alice");
+
+            List<ScoreRecord> results = manager.searchByPlayerName("Bob", Difficulty.EASY);
+
+            assertTrue(results.isEmpty(), "Should return empty list for non-existent player");
+        }
+
+        @Test
+        @DisplayName("Trả về tất cả scores khi search text trống")
+        void shouldReturnAllWhenSearchEmpty() {
+            for (int i = 0; i < 3; i++) {
+                GameState state = new GameState(Difficulty.EASY);
+                for (int j = 0; j < Difficulty.EASY.totalPairs(); j++) {
+                    state.incrementMatchedPairs();
+                }
+                state.setStatus(GameStatus.WON);
+                manager.saveScore(state, "Player" + i);
+            }
+
+            List<ScoreRecord> results = manager.searchByPlayerName("", Difficulty.EASY);
+
+            assertEquals(3, results.size(), "Should return all scores when search is empty");
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // [UC-07 Enhancement] sortScores() Tests
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("sortScores()")
+    class SortScoresTests {
+
+        @Test
+        @DisplayName("Sắp xếp theo score DESC (mặc định)")
+        void shouldSortByScoreDescending() {
+            List<ScoreRecord> scores = new java.util.ArrayList<>();
+            for (int time : new int[] { 10, 30, 50 }) {
+                GameState state = new GameState(Difficulty.EASY);
+                for (int i = 0; i < Difficulty.EASY.totalPairs(); i++) {
+                    state.incrementMatchedPairs();
+                }
+                state.setStatus(GameStatus.WON);
+                state.setTimeRemaining(time);
+                scores.add(ScoreRecord.fromGameState("Player", state));
+            }
+
+            List<ScoreRecord> sorted = manager.sortScores(scores, "score", false);
+
+            for (int i = 0; i < sorted.size() - 1; i++) {
+                assertTrue(sorted.get(i).getScore() >= sorted.get(i + 1).getScore(),
+                        "Should be sorted DESC by score");
+            }
+        }
+
+        @Test
+        @DisplayName("Sắp xếp theo thời gian ASC")
+        void shouldSortByTimeAscending() {
+            List<ScoreRecord> scores = new java.util.ArrayList<>();
+            for (int time : new int[] { 10, 30, 50 }) {
+                GameState state = new GameState(Difficulty.EASY);
+                for (int i = 0; i < Difficulty.EASY.totalPairs(); i++) {
+                    state.incrementMatchedPairs();
+                }
+                state.setStatus(GameStatus.WON);
+                state.setTimeRemaining(time);
+                scores.add(ScoreRecord.fromGameState("Player", state));
+            }
+
+            List<ScoreRecord> sorted = manager.sortScores(scores, "time", true);
+
+            for (int i = 0; i < sorted.size() - 1; i++) {
+                assertTrue(sorted.get(i).getTimeUsed() <= sorted.get(i + 1).getTimeUsed(),
+                        "Should be sorted ASC by time");
+            }
+        }
+
+        @Test
+        @DisplayName("Sắp xếp theo số lượt DESC")
+        void shouldSortByMovesDescending() {
+            List<ScoreRecord> scores = new java.util.ArrayList<>();
+            for (int i = 0; i < 3; i++) {
+                GameState state = new GameState(Difficulty.EASY);
+                for (int j = 0; j < Difficulty.EASY.totalPairs(); j++) {
+                    state.incrementMatchedPairs();
+                }
+                state.setStatus(GameStatus.WON);
+                state.setTimeRemaining(30);
+                scores.add(ScoreRecord.fromGameState("Player", state));
+            }
+
+            List<ScoreRecord> sorted = manager.sortScores(scores, "moves", false);
+
+            for (int i = 0; i < sorted.size() - 1; i++) {
+                assertTrue(sorted.get(i).getMoves() >= sorted.get(i + 1).getMoves(),
+                        "Should be sorted DESC by moves");
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // [UC-07 Enhancement] Statistics Methods Tests
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("Statistics Methods")
+    class StatisticsTests {
+
+        @Test
+        @DisplayName("getAverageScore() tính toán chính xác")
+        void shouldCalculateAverageScoreCorrectly() {
+            int[] times = { 10, 20, 30 };
+            for (int time : times) {
+                GameState state = new GameState(Difficulty.EASY);
+                for (int i = 0; i < Difficulty.EASY.totalPairs(); i++) {
+                    state.incrementMatchedPairs();
+                }
+                state.setStatus(GameStatus.WON);
+                state.setTimeRemaining(time);
+                manager.saveScore(state, "Player");
+            }
+
+            int avgScore = manager.getAverageScore(Difficulty.EASY);
+
+            assertTrue(avgScore > 0, "Average score should be positive");
+        }
+
+        @Test
+        @DisplayName("getAverageMoves() tính toán chính xác")
+        void shouldCalculateAverageMovesCorrectly() {
+            for (int i = 0; i < 3; i++) {
+                GameState state = new GameState(Difficulty.EASY);
+                for (int j = 0; j < Difficulty.EASY.totalPairs(); j++) {
+                    state.incrementMatchedPairs();
+                    state.incrementMoves();
+                }
+                state.setStatus(GameStatus.WON);
+                manager.saveScore(state, "Player" + i);
+            }
+
+            int avgMoves = manager.getAverageMoves(Difficulty.EASY);
+
+            assertTrue(avgMoves > 0, "Average moves should be positive");
+        }
+
+        @Test
+        @DisplayName("getAverageTime() tính toán chính xác")
+        void shouldCalculateAverageTimeCorrectly() {
+            int[] times = { 10, 20, 30 };
+            for (int time : times) {
+                GameState state = new GameState(Difficulty.EASY);
+                for (int i = 0; i < Difficulty.EASY.totalPairs(); i++) {
+                    state.incrementMatchedPairs();
+                }
+                state.setStatus(GameStatus.WON);
+                state.setTimeRemaining(time);
+                manager.saveScore(state, "Player");
+            }
+
+            long avgTime = manager.getAverageTime(Difficulty.EASY);
+
+            assertTrue(avgTime > 0, "Average time should be positive");
+        }
+
+        @Test
+        @DisplayName("getTotalGames() đếm số ván chơi chính xác")
+        void shouldCountTotalGamesCorrectly() {
+            int gameCount = 5;
+            for (int i = 0; i < gameCount; i++) {
+                GameState state = new GameState(Difficulty.EASY);
+                for (int j = 0; j < Difficulty.EASY.totalPairs(); j++) {
+                    state.incrementMatchedPairs();
+                }
+                state.setStatus(GameStatus.WON);
+                manager.saveScore(state, "Player" + i);
+            }
+
+            int total = manager.getTotalGames(Difficulty.EASY);
+
+            assertEquals(gameCount, total, "Should count all games correctly");
+        }
+
+        @Test
+        @DisplayName("getStatistics() trả về map đầy đủ")
+        void shouldReturnCompleteStatisticsMap() {
+            for (int i = 0; i < 3; i++) {
+                GameState state = new GameState(Difficulty.EASY);
+                for (int j = 0; j < Difficulty.EASY.totalPairs(); j++) {
+                    state.incrementMatchedPairs();
+                }
+                state.setStatus(GameStatus.WON);
+                state.setTimeRemaining(20 + i * 10);
+                manager.saveScore(state, "Player" + i);
+            }
+
+            java.util.Map<String, Object> stats = manager.getStatistics(Difficulty.EASY);
+
+            assertTrue(stats.containsKey("total"), "Should contain 'total'");
+            assertTrue(stats.containsKey("avgScore"), "Should contain 'avgScore'");
+            assertTrue(stats.containsKey("avgMoves"), "Should contain 'avgMoves'");
+            assertTrue(stats.containsKey("avgTime"), "Should contain 'avgTime'");
+            assertTrue(stats.containsKey("bestScore"), "Should contain 'bestScore'");
+            assertTrue(stats.containsKey("worstScore"), "Should contain 'worstScore'");
+
+            assertEquals(3, stats.get("total"), "Total should be 3");
+            assertTrue((Integer) stats.get("avgScore") > 0);
+            assertTrue((Integer) stats.get("bestScore") >= (Integer) stats.get("worstScore"));
+        }
+
+        @Test
+        @DisplayName("Statistics trả về 0 khi không có dữ liệu")
+        void shouldReturnZeroStatsWhenNoData() {
+            manager.clearAllScores();
+
+            int avgScore = manager.getAverageScore(Difficulty.EASY);
+            int total = manager.getTotalGames(Difficulty.EASY);
+
+            assertEquals(0, avgScore, "Should return 0 when no scores");
+            assertEquals(0, total, "Should return 0 when no games");
+        }
+    }
 
     @AfterEach
     void tearDown() {

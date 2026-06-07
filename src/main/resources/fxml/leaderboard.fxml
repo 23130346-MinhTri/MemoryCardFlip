@@ -20,13 +20,30 @@
     <Label text="🏆 BẢNG XẾP HẠNG 🏆" styleClass="result-title"
            maxWidth="Infinity" alignment="CENTER"/>
 
-    <!-- Filter bar -->
+    <!-- Difficulty & Top Info bar -->
     <HBox alignment="CENTER_LEFT" spacing="10" styleClass="filter-bar">
         <Label text="Chọn độ khó:" styleClass="stats-label"/>
         <ComboBox fx:id="comboDifficulty" prefWidth="110"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblTotalScores" styleClass="stats-badge"/>
         <Label fx:id="lblBestScore"   styleClass="stats-badge,stats-score"/>
+    </HBox>
+
+    <!-- Search bar -->
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="filter-bar">
+        <Label text="Tìm kiếm tên:" styleClass="stats-label"/>
+        <TextField fx:id="txtPlayerNameFilter" 
+                   promptText="Nhập tên người chơi..."
+                   prefWidth="200"/>
+        <Region HBox.hgrow="ALWAYS"/>
+    </HBox>
+
+    <!-- Sort & Filter Controls -->
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="filter-bar">
+        <Label text="Sắp xếp:" styleClass="stats-label"/>
+        <ComboBox fx:id="comboSortBy" prefWidth="110"/>
+        <CheckBox fx:id="chkSortAscending" text="Tăng dần"/>
+        <Region HBox.hgrow="ALWAYS"/>
     </HBox>
 
     <!-- Table — cột tự co giãn theo chiều rộng -->
@@ -41,6 +58,19 @@
             <TableColumn fx:id="colDate"       text="Ngày chơi"      minWidth="100" prefWidth="120"/>
         </columns>
     </TableView>
+
+    <!-- Analytics Panel -->
+    <VBox spacing="10" styleClass="analytics-panel" VBox.vgrow="NEVER">
+        <Label text="📈 THỐNG KÊ" styleClass="stats-title"
+               maxWidth="Infinity" alignment="CENTER"/>
+        <FlowPane alignment="CENTER" hgap="10" vgap="8" prefWrapLength="700">
+            <Label fx:id="lblAvgScore"    text="📊 TB Điểm: --" styleClass="stats-badge,analytics-label"/>
+            <Label fx:id="lblAvgMoves"    text="📊 TB Lượt: --" styleClass="stats-badge,analytics-label"/>
+            <Label fx:id="lblAvgTime"     text="📊 TB TG: --"   styleClass="stats-badge,analytics-label"/>
+            <Label fx:id="lblWorstScore"  text="📉 Thấp nhất: --" styleClass="stats-badge,analytics-label"/>
+            <Label fx:id="lblTotalGames"  text="🎮 Tổng ván: --" styleClass="stats-badge,analytics-label"/>
+        </FlowPane>
+    </VBox>
 
     <!-- Action bar -->
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="action-bar">

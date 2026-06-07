@@ -691,6 +691,33 @@
     -fx-text-fill: #b8d4f0;
 }
 
+/* ── Analytics Panel (UC-07 Enhancement) ─────────────────── */
+.analytics-panel {
+    -fx-background-color: #1a2636;
+    -fx-border-color: rgba(127,179,211,0.25);
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 12 16 12 16;
+    -fx-margin: 8 0 8 0;
+    -fx-spacing: 8;
+}
+
+.stats-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #7fb3d3;
+}
+
+.analytics-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #b8d4f0;
+    -fx-padding: 6 12 6 12;
+    -fx-min-width: 140px;
+    -fx-alignment: CENTER;
+}
+
 /* ── Action button row ───────────────────────────────────── */
 .action-bar {
     -fx-padding: 8 0 0 0;
