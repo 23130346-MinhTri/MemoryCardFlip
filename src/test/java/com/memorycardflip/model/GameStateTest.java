@@ -27,11 +27,13 @@ class GameStateTest {
         void easyDefaults() {
             assertAll(
                     () -> assertEquals(Difficulty.EASY, easyState.getDifficulty()),
-                    () -> assertEquals(60,              easyState.getTimeRemaining()),
-                    () -> assertEquals(0,               easyState.getMatchedPairs()),
-                    () -> assertEquals(0,               easyState.getMoves()),
+                    () -> assertEquals(60, easyState.getTimeRemaining()),
+                    () -> assertEquals(0, easyState.getMatchedPairs()),
+                    () -> assertEquals(0, easyState.getMoves()),
                     () -> assertEquals(GameStatus.IDLE, easyState.getStatus()),
-                    () -> assertEquals(0,               easyState.getComboCount())
+                    () -> assertEquals(0, easyState.getComboCount()),
+                    () -> assertEquals(3, easyState.getHintCount()),
+                    () -> assertEquals(0, easyState.getHintPenalty())
             );
         }
 
@@ -269,6 +271,100 @@ class GameStateTest {
         }
     }
 
+    // ── HINT SYSTEM ─────────────────────────────────────
+
+    @Nested
+    @DisplayName("Hint System Tests")
+    class HintSystemTests {
+
+        @Test
+        @DisplayName("Mặc định ban đầu có 3 gợi ý và phạt 0 điểm")
+        void hintDefaults() {
+            assertEquals(3, easyState.getHintCount());
+            assertEquals(0, easyState.getHintPenalty());
+        }
+
+        @Test
+        @DisplayName("Sử dụng gợi ý -> giảm số lượt gợi ý và tăng điểm phạt")
+        void useHintDecrementsCountAndIncreasesPenalty() {
+            easyState.useHint();
+            assertEquals(2, easyState.getHintCount());
+            assertEquals(50, easyState.getHintPenalty());
+
+            easyState.useHint();
+            assertEquals(1, easyState.getHintCount());
+            assertEquals(100, easyState.getHintPenalty());
+
+            easyState.useHint();
+            assertEquals(0, easyState.getHintCount());
+            assertEquals(150, easyState.getHintPenalty());
+        }
+
+        @Test
+        @DisplayName("Sử dụng gợi ý khi đã hết lượt -> không giảm thêm và không phạt thêm")
+        void useHintWhenEmpty() {
+            easyState.useHint(); // 3 -> 2
+            easyState.useHint(); // 2 -> 1
+            easyState.useHint(); // 1 -> 0
+
+            easyState.useHint(); // 0 -> 0 (no-op)
+            assertEquals(0, easyState.getHintCount());
+            assertEquals(150, easyState.getHintPenalty());
+        }
+
+        @Test
+        @DisplayName("Tính điểm số có trừ điểm phạt của gợi ý")
+        void calculateScoreWithHintPenalty() {
+            // Thiết lập trạng thái có 1 cặp ghép đúng (100 điểm)
+            easyState.incrementMatchedPairs();
+            int scoreBeforeHint = easyState.calculateScore();
+            assertTrue(scoreBeforeHint > 0);
+
+            // Dùng 1 gợi ý (phạt 50 điểm)
+            easyState.useHint();
+            int scoreAfterHint = easyState.calculateScore();
+            assertEquals(scoreBeforeHint - 50, scoreAfterHint);
+        }
+
+        @Test
+        @DisplayName("Tìm cặp thẻ chưa khớp đầu tiên trên bàn chơi")
+        void testFindFirstUnmatchedPair() {
+            // Chuẩn bị 4 thẻ (2 cặp)
+            Card c1 = new Card("1", "pairA", CardType.ANIMAL, "🐶", 0);
+            Card c2 = new Card("2", "pairB", CardType.ANIMAL, "🐱", 1);
+            Card c3 = new Card("3", "pairA", CardType.ANIMAL, "🐶", 2);
+            Card c4 = new Card("4", "pairB", CardType.ANIMAL, "🐱", 3);
+
+            Card[] cards = {c1, c2, c3, c4};
+            easyState.setCards(cards);
+
+            // Chưa có cặp nào matched -> Phải trả về cặp pairA đầu tiên (c1 và c3)
+            Card[] unmatchedPair = easyState.findFirstUnmatchedPair();
+            assertNotNull(unmatchedPair);
+            assertEquals(2, unmatchedPair.length);
+            assertEquals("1", unmatchedPair[0].getId());
+            assertEquals("3", unmatchedPair[1].getId());
+
+            // Đánh dấu c1 và c3 đã match
+            c1.match();
+            c3.match();
+
+            // Cặp tiếp theo chưa matched là pairB (c2 và c4)
+            unmatchedPair = easyState.findFirstUnmatchedPair();
+            assertNotNull(unmatchedPair);
+            assertEquals(2, unmatchedPair.length);
+            assertEquals("2", unmatchedPair[0].getId());
+            assertEquals("4", unmatchedPair[1].getId());
+
+            // Đánh dấu nốt c2 và c4 đã match
+            c2.match();
+            c4.match();
+
+            // Không còn cặp nào chưa matched -> Phải trả về null
+            assertNull(easyState.findFirstUnmatchedPair());
+        }
+    }
+
     // ── RESET ───────────────────────────────────────────
 
     @Test
@@ -279,15 +375,18 @@ class GameStateTest {
         easyState.setTimeRemaining(10);
         easyState.setStatus(GameStatus.PLAYING);
         easyState.incrementCombo();
+        easyState.useHint(); // Tiêu tốn 1 gợi ý
 
         easyState.reset();
 
         assertAll(
-                () -> assertEquals(0,               easyState.getMatchedPairs()),
-                () -> assertEquals(0,               easyState.getMoves()),
-                () -> assertEquals(60,              easyState.getTimeRemaining()),
+                () -> assertEquals(0, easyState.getMatchedPairs()),
+                () -> assertEquals(0, easyState.getMoves()),
+                () -> assertEquals(60, easyState.getTimeRemaining()),
                 () -> assertEquals(GameStatus.IDLE, easyState.getStatus()),
-                () -> assertEquals(0,               easyState.getComboCount())
+                () -> assertEquals(0, easyState.getComboCount()),
+                () -> assertEquals(3, easyState.getHintCount()),
+                () -> assertEquals(0, easyState.getHintPenalty())
         );
     }
 }

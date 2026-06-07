@@ -973,30 +973,11 @@ public class GameController implements Initializable {
         }
 
         // Tìm một cặp thẻ chưa matched
-        Card firstHintCard = null;
-        Card secondHintCard = null;
-        Card[] cards = gameState.getCards();
-        if (cards == null || cards.length == 0) return;
+        Card[] pair = gameState.findFirstUnmatchedPair();
+        if (pair == null || pair.length < 2) return;
 
-        for (int i = 0; i < cards.length; i++) {
-            Card c1 = cards[i];
-            if (c1.isMatched()) continue;
-            for (int j = i + 1; j < cards.length; j++) {
-                Card c2 = cards[j];
-                if (c2.isMatched()) continue;
-                if (c1.getPairId().equals(c2.getPairId())) {
-                    firstHintCard = c1;
-                    secondHintCard = c2;
-                    break;
-                }
-            }
-            if (firstHintCard != null) break;
-        }
-
-        if (firstHintCard == null || secondHintCard == null) return;
-
-        final Card fCard = firstHintCard;
-        final Card sCard = secondHintCard;
+        final Card fCard = pair[0];
+        final Card sCard = pair[1];
 
         CardFlipView v1 = viewMap.get(fCard.getId());
         CardFlipView v2 = viewMap.get(sCard.getId());

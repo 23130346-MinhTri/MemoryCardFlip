@@ -113,6 +113,27 @@ public class GameState {
         }
     }
 
+    /**
+     * [UC2 v2.0] Tìm cặp thẻ chưa ghép khớp đầu tiên trên bàn chơi.
+     */
+    public Card[] findFirstUnmatchedPair() {
+        Card[] cardList = getCards();
+        if (cardList == null || cardList.length == 0) return null;
+
+        for (int i = 0; i < cardList.length; i++) {
+            Card c1 = cardList[i];
+            if (c1.isMatched()) continue;
+            for (int j = i + 1; j < cardList.length; j++) {
+                Card c2 = cardList[j];
+                if (c2.isMatched()) continue;
+                if (c1.getPairId().equals(c2.getPairId())) {
+                    return new Card[] { c1, c2 };
+                }
+            }
+        }
+        return null;
+    }
+
 
     public void selectFirstCard(Card card) {
         this.firstSelectedCard = card;
