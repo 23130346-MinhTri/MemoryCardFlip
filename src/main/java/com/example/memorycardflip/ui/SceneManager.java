@@ -139,10 +139,12 @@ public void init(Stage stage) {
      */
     public void replayGame() {
         if (currentGameState == null) {
+            // [UC4] Fallback an toàn nếu người chơi replay khi chưa có ván trước đó.
             LOGGER.warning("[UC-10] currentGameState null → fallback EASY");
             showGame(Difficulty.EASY);
             return;
         }
+        // [UC4] Lấy lại difficulty của ván vừa xong để tạo ván mới cùng cấp độ.
         showGame(currentGameState.getDifficulty());
     }
 

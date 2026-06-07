@@ -27,19 +27,28 @@ public class CardFlipView extends StackPane {
 
     public CardFlipView() {
         loadLayout();
-
         Image backImage = loadResourceImage(CARD_BACK_IMAGE);
         if (backImage != null) {
             backImageView.setImage(backImage);
         }
+        faceUp = false;
+        frontImageView.setVisible(false);
+        backImageView.setVisible(true);
+        contentLabel.setText(BACK_TEXT);
 
+        setBackTextStyle();
+        getStyleClass().add("card-back");
+
+        // FIX 1: Gắn mouse handler vào chính StackPane này.
+        // Trước đây setOnFlipRequested chỉ lưu Runnable nhưng không bao giờ
+        // gọi setOnMouseClicked → click hoàn toàn bị bỏ qua.
         setOnMouseClicked(event -> {
-            if (!isDisabled() && flipRequestedHandler != null) {
+            if (flipRequestedHandler != null && !matched && !isDisabled()) {
                 flipRequestedHandler.run();
             }
         });
     }
-
+    // 2.3.1
     public void setOnFlipRequested(Runnable flipRequestedHandler) {
         this.flipRequestedHandler = flipRequestedHandler;
     }
@@ -48,12 +57,17 @@ public class CardFlipView extends StackPane {
         setMinSize(width, height);
         setPrefSize(width, height);
         setMaxSize(width, height);
+        backImageView.setFitWidth(width * 0.66);
+        backImageView.setFitHeight(height * 0.66);
+        frontImageView.setFitWidth(width * 0.78);
+        frontImageView.setFitHeight(height * 0.68);
     }
-
+/*
+*2.3.5 Hiển thị mặt trước thẻ kèm hiệu ứng lật khi người chơi chọn thẻ.
+*/
     public void showFront(String symbol, String imageUrl) {
-        if (faceUp) {
-            return;
-        }
+        if (matched) return;
+        if (faceUp) return;
         animateFlip(() -> {
             faceUp = true;
             if (imageUrl != null && !imageUrl.isBlank()) {
@@ -76,11 +90,12 @@ public class CardFlipView extends StackPane {
             refreshStyle();
         });
     }
-
+/*
+*9.5.3 Ẩn mặt trước và quay lại mặt sau khi không ghép được cặp, cũng với hiệu ứng lật.
+*/
     public void showBack() {
-        if (!faceUp || matched) {
-            return;
-        }
+        if (matched) return;
+        if (!faceUp) return;
         animateFlip(() -> {
             faceUp = false;
             frontImageView.setVisible(false);
@@ -90,7 +105,7 @@ public class CardFlipView extends StackPane {
             refreshStyle();
         });
     }
-
+    // 9.4.3 Đánh dấu thẻ đã được ghép cặp thành công, giữ nguyên mặt trước và vô hiệu hóa tương tác.
     public void setMatched(boolean matched) {
         this.matched = matched;
         if (matched) {
@@ -105,6 +120,22 @@ public class CardFlipView extends StackPane {
             setVisible(true);
             setManaged(true);
             setMouseTransparent(false);
+        }
+    }
+
+    /**
+     * [UC2 v2.0] Highlight/bỏ highlight thẻ đầu tiên được chọn.
+     * Khi on=true: thêm drop shadow xanh để báo hiệu đang chờ thẻ thứ hai.
+     * Khi on=false: xóa hiệu ứng (sau khi có thẻ thứ hai hoặc mismatch).
+     *
+     * Precondition: thẻ đang ở trạng thái faceUp, chưa matched.
+     * Postcondition: glow effect được bật/tắt tương ứng.
+     */
+    public void showHighlight(boolean on) {
+        if (on) {
+            setStyle("-fx-effect: dropshadow(gaussian, #2563EB, 18, 0.75, 0, 0);");
+        } else {
+            setStyle("");
         }
     }
 

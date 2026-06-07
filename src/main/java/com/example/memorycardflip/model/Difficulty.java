@@ -19,6 +19,7 @@ public enum Difficulty {
     private final int gridSize;     // Số cột = số hàng
     private final int timeLimit;    // Giây
 
+    // [UC12] timeLimit là số giây tối đa mà bộ đếm ngược được phép chạy.
     Difficulty(String displayName, int gridSize, int timeLimit) {
         this.displayName = displayName;
         this.gridSize    = gridSize;
@@ -27,6 +28,7 @@ public enum Difficulty {
 
     public String getDisplayName() { return displayName; }
     public int getGridSize()       { return gridSize; }
+    /** [UC12] Trả về số giây tối đa để khởi tạo bộ đếm ngược. */
     public int getTimeLimit()      { return timeLimit; }
 
     /** Tổng số ô trong lưới */

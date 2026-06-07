@@ -1,47 +1,38 @@
 package com.example.memorycardflip.model;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Interface lưu trữ điểm số.
- * Có 2 implementation: JsonScoreStorage và SQLiteScoreStorage.
- */
 public interface ScoreStorage {
 
-    /** Lưu toàn bộ danh sách records */
     void save(List<ScoreRecord> records) throws Exception;
 
-    /** Tải toàn bộ danh sách records */
     List<ScoreRecord> load() throws Exception;
 
-    // ── Default methods (không cần override) ─────────────────
+    // ── Default methods ───────────────────────────────────────
 
-    /** Lấy top N điểm cao nhất theo difficulty */
     default List<ScoreRecord> getTopScores(Difficulty difficulty, int limit) throws Exception {
         return load().stream()
-                .filter(r -> r.difficulty() == difficulty)
-                .sorted(Comparator.comparingInt(ScoreRecord::score).reversed())
+                .filter(r -> r.getDifficulty() == difficulty)
+                .sorted(Comparator.comparingInt(ScoreRecord::getScore).reversed())
                 .limit(limit)
                 .toList();
     }
 
-    /** Lấy điểm cao nhất của một độ khó */
     default Optional<ScoreRecord> getHighScore(Difficulty difficulty) throws Exception {
         return load().stream()
-                .filter(r -> r.difficulty() == difficulty)
-                .max(Comparator.comparingInt(ScoreRecord::score));
+                .filter(r -> r.getDifficulty() == difficulty)
+                .max(Comparator.comparingInt(ScoreRecord::getScore));
     }
 
-    /** Thêm một record mới rồi lưu lại */
     default void addRecord(ScoreRecord record) throws Exception {
-        List<ScoreRecord> all = new java.util.ArrayList<>(load());
+        List<ScoreRecord> all = new ArrayList<>(load());
         all.add(record);
         save(all);
     }
 
-    /** Xoá toàn bộ dữ liệu */
     default void clear() throws Exception {
         save(List.of());
     }

@@ -55,7 +55,7 @@ public class Card {
     // ── Business Methods ──────────────────────────────────────
 
     /**
-     * Lật thẻ — chỉ cho phép khi chưa matched.
+     * 2.1.7 - Lật trạng thái thẻ từ úp sang ngửa (chỉ khi chưa matched).
      */
     public void flip() {
         if (!isMatched.get()) {
@@ -64,7 +64,7 @@ public class Card {
     }
 
     /**
-     * Úp thẻ về (khi không ghép được cặp).
+     * 9.3.4 - 9.3.5: Úp thẻ về khi không ghép được cặp.
      */
     public void faceDown() {
         if (!isMatched.get()) {
@@ -73,15 +73,15 @@ public class Card {
     }
 
     /**
-     * Đánh dấu thẻ đã được ghép cặp thành công.
+     * 9.2.1 - Đánh dấu thẻ đã được ghép cặp thành công.
      */
     public void match() {
         isMatched.set(true);
-        isFlipped.set(false);
+        isFlipped.set(false); // ← đổi true → false
     }
-
     /**
-     * Reset thẻ về trạng thái ban đầu (dùng khi restart game).
+     * [UC4 - Play again]
+     * Reset thẻ về trạng thái ban đầu khi chơi lại/restart game.
      */
     public void reset() {
         isFlipped.set(false);
@@ -89,7 +89,7 @@ public class Card {
     }
 
     /**
-     * Kiểm tra 2 thẻ có phải cặp không (cùng pairId, khác id).
+     * 9.1.5 - Kiểm tra 2 thẻ có phải cặp không (cùng pairId, khác id).
      */
     public boolean isPairOf(Card other) {
         if (other == null) return false;
@@ -97,10 +97,13 @@ public class Card {
     }
 
     /**
-     * Thẻ có thể click không (chưa matched và chưa lật).
+     * 2.1.6 - Kiểm tra xem thẻ có thể được chọn (clickable) hay không.
+     *  - Chỉ chặn khi đã matched, cho phép chọn lại nếu chỉ flipped mà chưa matched.
+     *  - Điều này cho phép người chơi có thể chọn lại thẻ đã flipped nhưng chưa matched để lật lại nếu muốn.
+     *  - Trước đây logic này bị nhầm lẫn giữa isFlipped và isMatched → dẫn đến việc thẻ đã flipped nhưng chưa matched lại không thể chọn lại để lật về sau. 
      */
     public boolean isClickable() {
-        return !isMatched.get() && !isFlipped.get();
+        return !isMatched.get() && !isFlipped.get(); // ← chỉ chặn khi đã matched
     }
 
     // ── equals / hashCode dựa trên id ─────────────────────────
@@ -109,6 +112,7 @@ public class Card {
         if (this == o) return true;
         if (!(o instanceof Card card)) return false;
         return id.equals(card.id);
+
     }
 
     @Override
