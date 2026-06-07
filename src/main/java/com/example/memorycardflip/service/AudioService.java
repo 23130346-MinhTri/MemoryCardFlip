@@ -13,6 +13,16 @@ public class AudioService {
     private boolean enabled = true;
     private double volume = 0.4;
 
+    private String lastPlayedEffect;
+    private String lastPlayedBGM;
+
+    public String getLastPlayedEffect() { return lastPlayedEffect; }
+    public String getLastPlayedBGM() { return lastPlayedBGM; }
+    public void clearTracking() {
+        this.lastPlayedEffect = null;
+        this.lastPlayedBGM = null;
+    }
+
     private AudioService() {}
 
     public static AudioService getInstance() {
@@ -21,6 +31,7 @@ public class AudioService {
     }
 
     public void playEffect(String resourcePath) {
+        this.lastPlayedEffect = resourcePath;
         try {
             URL url = getClass().getResource(resourcePath);
             if (url == null) {
@@ -78,6 +89,7 @@ public class AudioService {
     // ── BGM ───────────────────────────────────────────────────
 
     public void playBGM(String resourcePath) {
+        this.lastPlayedBGM = resourcePath;
         stopBGM();
         try {
             URL url = getClass().getResource(resourcePath);

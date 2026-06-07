@@ -10,6 +10,8 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.Pane?>
+
 
 <!--
     game.fxml — Màn hình chơi game chính
@@ -112,7 +114,9 @@
                     <Insets top="20" bottom="20" left="20" right="20"/>
                 </padding>
             </GridPane>
+            <Pane fx:id="particlePane" mouseTransparent="true"/>
         </StackPane>
+
     </center>
 
     <!-- ══════════════════════════════════════
