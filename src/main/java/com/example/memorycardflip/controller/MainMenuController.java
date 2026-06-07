@@ -57,6 +57,9 @@ public class MainMenuController implements Initializable {
     private boolean soundEnabled = true;
     public MainMenuController() {
     }
+    public Difficulty getSelectedDifficulty() {
+        return selectedDifficulty;
+    }
     // ── Lifecycle ─────────────────────────────────────────────
     @Override
     public void initialize(URL location, ResourceBundle resources) {
