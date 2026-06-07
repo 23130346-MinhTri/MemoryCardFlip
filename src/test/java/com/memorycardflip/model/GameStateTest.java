@@ -218,6 +218,18 @@ class GameStateTest {
 
     // ── SCORE ───────────────────────────────────────────
 
+    /**
+     * Score calculation tests.
+     *
+     * These tests verify:
+     * - base score when no matches
+     * - score increases with matched pairs
+     * - combo/streak bonuses (combo count increases score)
+     * - time bonus (more time remaining increases score)
+     *
+     * Keeping these checks in the model tests makes the scoring rules
+     * explicit and easy for other developers to find and modify.
+     */
     @Nested
     class ScoreTests {
 
@@ -235,6 +247,7 @@ class GameStateTest {
         }
 
         @Test
+        // Combo/streak bonus: increasing combo should increase the calculated score
         void comboBonus() {
             for (int i = 0; i < 4; i++) {
                 easyState.incrementMatchedPairs();
@@ -249,8 +262,31 @@ class GameStateTest {
 
             assertTrue(easyState.calculateScore() > base);
         }
+ // Test time bonus: higher remaining time should increase the calculated score
+        @Test
+        @DisplayName("Streak bonus: consecutive combos increase score progressively")
+        void streakBonus() {
+            for (int i = 0; i < 4; i++) {
+                easyState.incrementMatchedPairs();
+            }
+            for (int i = 0; i < 10; i++) {
+                easyState.incrementMoves();
+            }
+
+            int base = easyState.calculateScore();
+
+            easyState.incrementCombo();
+            int afterOneCombo = easyState.calculateScore();
+
+            easyState.incrementCombo();
+            int afterTwoCombos = easyState.calculateScore();
+
+            assertTrue(afterOneCombo > base, "One combo should increase score");
+            assertTrue(afterTwoCombos > afterOneCombo, "Additional combo should further increase score");
+        }
 
         @Test
+        // Time bonus: higher remaining time increases the calculated score
         void timeBonus() {
             for (int i = 0; i < 4; i++) {
                 easyState.incrementMatchedPairs();
