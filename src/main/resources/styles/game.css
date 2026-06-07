@@ -794,3 +794,89 @@
     -fx-opacity: 0.5;
     -fx-cursor: default;
 }
+
+/* ════════════════════════════════════════════════════════════
+   UC-12 NÂNG CẤP — Progress bar màu theo ngưỡng thời gian
+   ════════════════════════════════════════════════════════════ */
+
+/* Xanh lá — mặc định (> 50%) */
+.time-progress .bar {
+    -fx-background-color: linear-gradient(to right, #22c55e, #84cc16);
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 0;
+}
+
+/* Vàng — (20%–50%) */
+.time-progress-yellow .bar {
+    -fx-background-color: linear-gradient(to right, #f59e0b, #fbbf24);
+}
+
+/* Đỏ — (< 20%) */
+.time-progress-red .bar {
+    -fx-background-color: linear-gradient(to right, #ef4444, #dc2626);
+}
+
+/* ════════════════════════════════════════════════════════════
+   UC-12 NÂNG CẤP — Nút +10 giây
+   ════════════════════════════════════════════════════════════ */
+.extra-time-btn {
+    -fx-background-color: rgba(34,197,94,0.15);
+    -fx-border-color: rgba(34,197,94,0.40); -fx-border-width: 1;
+    -fx-border-radius: 7; -fx-background-radius: 7;
+    -fx-text-fill: #22c55e; -fx-font-size: 11px; -fx-font-weight: bold;
+    -fx-padding: 5 12 5 12; -fx-cursor: hand;
+}
+.extra-time-btn:hover {
+    -fx-background-color: rgba(34,197,94,0.28);
+    -fx-text-fill: #ffffff;
+}
+.extra-time-btn:disabled {
+    -fx-opacity: 0.45;
+    -fx-cursor: default;
+}
+
+/* ════════════════════════════════════════════════════════════
+   UC-03 NÂNG CẤP — Star rating và tip text
+   ════════════════════════════════════════════════════════════ */
+.star-rating {
+    -fx-font-size: 28px;
+    -fx-text-fill: #ffd700;
+    -fx-padding: 4 0 4 0;
+    -fx-effect: dropshadow(gaussian, rgba(255,215,0,0.35), 8, 0, 0, 0);
+}
+
+.tip-text {
+    -fx-font-size: 12px;
+    -fx-text-fill: #7ec8e3;
+    -fx-padding: 6 8 4 8;
+    -fx-background-color: rgba(74,144,217,0.08);
+    -fx-background-radius: 8;
+    -fx-border-color: rgba(74,144,217,0.18);
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-wrap-text: true;
+}
+
+/* ════════════════════════════════════════════════════════════
+   UC-04 NÂNG CẤP — Nút "Lên Level" (progressive)
+   ════════════════════════════════════════════════════════════ */
+.next-level-btn {
+    -fx-background-color: linear-gradient(to bottom, #7c3aed, #5b21b6);
+    -fx-border-color: #8b5cf6;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+}
+.next-level-btn:hover {
+    -fx-background-color: linear-gradient(to bottom, #8b5cf6, #7c3aed);
+    -fx-effect: dropshadow(gaussian, rgba(139,92,246,0.55), 10, 0, 0, 0);
+}
+.next-level-btn:pressed {
+    -fx-scale-x: 0.97; -fx-scale-y: 0.97;
+}

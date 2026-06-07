@@ -51,6 +51,8 @@ public class SceneManager {
     private Stage primaryStage;
     // [UC4] Giữ GameState hiện tại để biết difficulty khi người chơi bấm Play again.
     private GameState currentGameState;
+    // [UC4 - nâng cấp] Progressive mode: tự động đề xuất tăng độ khó sau WIN
+    private boolean progressiveMode = false;
 
     // ── Private constructor ───────────────────────────────────
     private SceneManager() {}
@@ -145,6 +147,31 @@ public void init(Stage stage) {
         // [UC4] Lấy lại difficulty của ván vừa xong để tạo ván mới cùng cấp độ.
         showGame(currentGameState.getDifficulty());
     }
+
+    /**
+     * [UC4 - nâng cấp] Chơi lại với độ khó tiếp theo (progressive mode).
+     * Được gọi từ ResultController khi người chơi chấp nhận tăng độ khó.
+     *
+     * @param difficulty Độ khó mới (đã được tính từ getNextDifficulty)
+     */
+    public void replayWithDifficulty(Difficulty difficulty) {
+        showGame(difficulty);
+    }
+
+    /**
+     * [UC4 - nâng cấp] Trả về độ khó kế tiếp sau độ khó hiện tại.
+     * EASY → MEDIUM → HARD → null (đã ở mức cao nhất).
+     */
+    public Difficulty getNextDifficulty(Difficulty current) {
+        return switch (current) {
+            case EASY   -> Difficulty.MEDIUM;
+            case MEDIUM -> Difficulty.HARD;
+            case HARD   -> null; // Đã max
+        };
+    }
+
+    public boolean isProgressiveMode() { return progressiveMode; }
+    public void setProgressiveMode(boolean progressiveMode) { this.progressiveMode = progressiveMode; }
 // ══════════════════════════════════════════════════════════
     // Quay về Menu
     // ══════════════════════════════════════════════════════════

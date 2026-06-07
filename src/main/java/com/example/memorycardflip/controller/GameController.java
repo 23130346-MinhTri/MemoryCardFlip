@@ -11,7 +11,7 @@ import com.example.memorycardflip.service.GameLogicService;
 import com.example.memorycardflip.service.GameTimerService;
 import com.example.memorycardflip.ui.CardFlipView;
 import com.example.memorycardflip.ui.SceneManager;
-import javafx.animation.PauseTransition;
+import javafx.animation.*;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -21,8 +21,6 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.geometry.Insets;
-import javafx.geometry.Bounds;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import javafx.stage.Stage;
@@ -66,7 +64,6 @@ public class GameController implements Initializable {
     @FXML private Label       lblStatus;
     @FXML private Button      btnPause;
     @FXML private Button      btnHint;
-    @FXML private Pane        particlePane;
 
     // =============== THÊM CÁC FXML BINDING MỚI ===============
     @FXML private Label lblScore;      // Hiển thị điểm số
@@ -93,6 +90,14 @@ public class GameController implements Initializable {
     private ComboNotificationController comboNotification;
     private StackPane notificationOverlay;
     private StackPane pausedOverlay;  // Overlay hiển thị khi tạm dừng
+
+    // [UC12 - nâng cấp] Blink animation và trạng thái cảnh báo timer
+    private Timeline blinkTimeline;
+    private boolean timerWarningActive = false;
+
+    // [UC12 - nâng cấp] Nút +10 giây - chỉ dùng 1 lần/ván
+    @FXML private Button btnExtraTime;
+    private boolean extraTimeUsed = false;
     // ══════════════════════════════════════════════════════════
     // Lifecycle
     // ══════════════════════════════════════════════════════════
@@ -214,9 +219,6 @@ public class GameController implements Initializable {
      * FIX: Đảm bảo tất cả UI components được khởi tạo đúng trước khi render
      */
     private void startBoard() {
-        if (particlePane != null) {
-            particlePane.getChildren().clear();
-        }
         // [UC-01] Đảm bảo difficulty không bị null trước khi tính totalPairs
         if (difficulty == null) {
             difficulty = Difficulty.EASY;
@@ -251,6 +253,18 @@ public class GameController implements Initializable {
         if (lblTime != null) {
             lblTime.setText(tr("default.time"));  // Vd: "01:00"
             lblTime.setStyle("");  // Clear màu warning nếu có
+        }
+
+        // [UC12 - nâng cấp] Reset blink animation và trạng thái cảnh báo
+        stopBlinkAnimation();
+        timerWarningActive = false;
+
+        // [UC12 - nâng cấp] Reset nút +10s cho ván mới
+        extraTimeUsed = false;
+        if (btnExtraTime != null) {
+            btnExtraTime.setDisable(false);
+            btnExtraTime.setText("+10s");
+            btnExtraTime.setOpacity(1.0);
         }
 
         if (lblScore != null) {
@@ -480,26 +494,6 @@ public class GameController implements Initializable {
                 // Phát âm thanh ghép đúng
                 AudioService.getInstance().playEffect("/assets/sounds/game-bonus.mp3");
 
-                // Phát hiệu ứng hạt lấp lánh (sparkle particles)
-                if (v1 != null && v2 != null && particlePane != null) {
-                    try {
-                        Bounds b1 = v1.localToScene(v1.getBoundsInLocal());
-                        Bounds p1 = particlePane.sceneToLocal(b1);
-                        double x1 = p1.getMinX() + p1.getWidth() / 2;
-                        double y1 = p1.getMinY() + p1.getHeight() / 2;
-
-                        Bounds b2 = v2.localToScene(v2.getBoundsInLocal());
-                        Bounds p2 = particlePane.sceneToLocal(b2);
-                        double x2 = p2.getMinX() + p2.getWidth() / 2;
-                        double y2 = p2.getMinY() + p2.getHeight() / 2;
-
-                        AnimationService.spawnSparkleParticles(particlePane, x1, y1, comboCount);
-                        AnimationService.spawnSparkleParticles(particlePane, x2, y2, comboCount);
-                    } catch (Exception ex) {
-                        System.err.println("Lỗi hiển thị hạt lấp lánh: " + ex.getMessage());
-                    }
-                }
-
 
 
 
@@ -609,6 +603,7 @@ public class GameController implements Initializable {
             // [UC3] Khóa trạng thái ván trước khi mở ResultScene để kết quả không còn thay đổi.
             stopTimer();
             disposeTimer();
+            stopBlinkAnimation(); // [UC12 - nâng cấp] Dừng nhấp nháy khi thắng
             lblStatus.setText(tr("status.win", totalPairs));
             if (gameState != null) gameState.setStatus(GameStatus.WON);
             PauseTransition p = new PauseTransition(Duration.millis(500));
@@ -719,26 +714,139 @@ public class GameController implements Initializable {
         if (lblScore != null && gameState != null) {
             lblScore.setText(String.valueOf(gameState.calculateScore()));
         }
-        if (gameState != null && gameState.getTimeRemaining() <= 10) {
+        int remaining = gameState != null ? gameState.getTimeRemaining() : 0;
+
+        // [UC12 - nâng cấp] Cập nhật màu progress bar theo ngưỡng thời gian
+        updateProgressBarColor(remaining);
+
+        if (remaining <= 10) {
             handleUCGM07TimerWarning();
+        } else if (timerWarningActive) {
+            // Thoát khỏi trạng thái cảnh báo nếu có thêm giờ (+10s)
+            timerWarningActive = false;
+            stopBlinkAnimation();
+            if (lblTime != null) lblTime.setStyle("");
         }
     }
     /**
-     * [UC12 - Count down timer] Cảnh báo người chơi khi sắp hết giờ.
-     *
-     * <p>Precondition: timeRemaining <= 10.</p>
-     * <p>Postcondition: Nhãn thời gian chuyển đỏ, đậm và status hiển thị cảnh báo.</p>
+     * [UC12 - nâng cấp] Đổi màu progress bar theo 3 ngưỡng:
+     * Xanh (>50%) → Vàng (20%-50%) → Đỏ (<20%).
      */
-    private void handleUCGM07TimerWarning() {
-        if (lblTime != null) {
-            lblTime.setStyle("-fx-text-fill: #ffeb3b; -fx-font-weight: bold;"); // Đổi màu chữ vàng sáng cho thời gian cảnh báo
-        }
-        if (timeProgressBar != null && !timeProgressBar.getStyleClass().contains("time-progress-warning")) {
+    private void updateProgressBarColor(int remaining) {
+        if (timeProgressBar == null || gameState == null) return;
+        int total = difficulty.getTimeLimit();
+        if (total == 0) return;
+        double ratio = (double) remaining / total;
+
+        timeProgressBar.getStyleClass().removeAll(
+                "time-progress-yellow", "time-progress-red", "time-progress-warning");
+
+        if (ratio > 0.5) {
+            // Xanh lá — style mặc định, không cần class thêm
+        } else if (ratio > 0.2) {
+            timeProgressBar.getStyleClass().add("time-progress-yellow");
+        } else {
+            timeProgressBar.getStyleClass().add("time-progress-red");
             timeProgressBar.getStyleClass().add("time-progress-warning");
         }
-        if (gameState != null && !gameState.isTimeUp()) {
-            lblStatus.setText(tr("timer.warning", gameState.getTimeRemaining()));
+    }
+
+    /**
+     * [UC12 - Count down timer] Cảnh báo người chơi khi sắp hết giờ (≤ 10 giây).
+     * Nâng cấp: nhấp nháy đỏ/trắng cho lblTime khi còn ≤ 5 giây.
+     *
+     * <p>Precondition: timeRemaining <= 10.</p>
+     * <p>Postcondition: Nhãn thời gian nhấp nháy đỏ, progress bar đỏ, status hiển thị cảnh báo.</p>
+     */
+    private void handleUCGM07TimerWarning() {
+        if (gameState == null) return;
+        int remaining = gameState.getTimeRemaining();
+
+        // Chỉ khởi tạo blink 1 lần khi vào vùng ≤ 5 giây
+        if (remaining <= 5 && !timerWarningActive) {
+            timerWarningActive = true;
+            startBlinkAnimation();
         }
+
+        // Khi còn 6-10s: chỉ đổi màu vàng, không blink
+        if (remaining > 5 && lblTime != null) {
+            lblTime.setStyle("-fx-text-fill: #ffeb3b; -fx-font-weight: bold;");
+        }
+
+        if (!gameState.isTimeUp()) {
+            lblStatus.setText(tr("timer.warning", remaining));
+        }
+    }
+    /**
+     * [UC12 - nâng cấp] Bắt đầu animation nhấp nháy đỏ/trắng cho lblTime.
+     * Chạy liên tục cho đến khi stopBlinkAnimation() được gọi.
+     */
+    private void startBlinkAnimation() {
+        stopBlinkAnimation(); // Đảm bảo không có timeline cũ
+        if (lblTime == null) return;
+
+        blinkTimeline = new Timeline(
+            new KeyFrame(Duration.ZERO,
+                e -> lblTime.setStyle("-fx-text-fill: #ff3333; -fx-font-weight: bold; -fx-font-size: 18px;")),
+            new KeyFrame(Duration.millis(300),
+                e -> lblTime.setStyle("-fx-text-fill: #ffffff; -fx-font-weight: bold; -fx-font-size: 18px;"))
+        );
+        blinkTimeline.setCycleCount(Timeline.INDEFINITE);
+        blinkTimeline.play();
+    }
+
+    /**
+     * [UC12 - nâng cấp] Dừng animation nhấp nháy và reset style lblTime.
+     */
+    private void stopBlinkAnimation() {
+        if (blinkTimeline != null) {
+            blinkTimeline.stop();
+            blinkTimeline = null;
+        }
+        if (lblTime != null) {
+            lblTime.setStyle("");
+        }
+    }
+
+    /**
+     * [UC12 - nâng cấp] Xử lý nút +10 giây.
+     * Dùng được 1 lần/ván, trừ 50 điểm thưởng (hintPenalty).
+     */
+    @FXML
+    public void onExtraTimeClick() {
+        if (gameState == null || gameState.getStatus() != GameStatus.PLAYING) return;
+        if (extraTimeUsed) return;
+
+        extraTimeUsed = true;
+        int newTime = gameState.getTimeRemaining() + 10;
+        gameState.setTimeRemaining(newTime);
+
+        // Tính điểm phạt 50 điểm cho việc dùng extra time
+        gameState.useHint(); // tái dùng hint penalty (50đ)
+
+        // Cập nhật UI nút
+        if (btnExtraTime != null) {
+            btnExtraTime.setDisable(true);
+            btnExtraTime.setText("✓ +10s");
+            btnExtraTime.setOpacity(0.5);
+        }
+
+        // Reset cảnh báo nếu thời gian đã đủ
+        if (newTime > 5) {
+            timerWarningActive = false;
+            stopBlinkAnimation();
+        }
+
+        // Hiệu ứng flash xanh nhấy lên lblTime để feedback
+        if (lblTime != null) {
+            lblTime.setStyle("-fx-text-fill: #22c55e; -fx-font-weight: bold;");
+            new Timeline(new KeyFrame(Duration.millis(600),
+                    e -> lblTime.setStyle(""))).play();
+        }
+
+        renderUCGM06Time();
+        updateProgressBarColor(newTime);
+        lblStatus.setText("+10 giây! (-50 điểm)");
     }
     /**
      * [UC12 - Count down timer] Xử lý thua game khi hết giờ.
@@ -749,6 +857,7 @@ public class GameController implements Initializable {
     private void handleUCGM09LoseGame() {
         stopTimer();
         disposeTimer();
+        stopBlinkAnimation(); // [UC12 - nâng cấp] Dừng nhấp nháy khi thua
         if (gameState != null) {
             gameState.setTimeRemaining(0);
             // [UC3] Đánh dấu LOST để ResultController hiển thị GAME OVER.
@@ -879,6 +988,7 @@ public class GameController implements Initializable {
         pausedOverlay.setVisible(true);
 
         stopTimer();
+        stopBlinkAnimation(); // [UC12] Dừng nhấp nháy khi pause
         gameState.setStatus(GameStatus.PAUSED);
         if (lblStatus != null) lblStatus.setText(tr("status.pause"));
         if (btnPause != null) btnPause.setText(tr("button.resume"));
@@ -936,6 +1046,14 @@ public class GameController implements Initializable {
         if (lblStatus != null) lblStatus.setText(tr("status.resume"));
         if (btnPause != null) btnPause.setText(tr("button.pause"));
         AudioService.getInstance().resumeBGM();
+
+        // [UC12] Khôi phục blink nếu vẫn còn trong vùng cảnh báo
+        if (gameState.getTimeRemaining() <= 5) {
+            timerWarningActive = true;
+            startBlinkAnimation();
+        } else if (gameState.getTimeRemaining() <= 10) {
+            if (lblTime != null) lblTime.setStyle("-fx-text-fill: #ffeb3b; -fx-font-weight: bold;");
+        }
     }
     /**
      * Tạo overlay tạm dừng với nút Resume bên trong.
@@ -973,11 +1091,30 @@ public class GameController implements Initializable {
         }
 
         // Tìm một cặp thẻ chưa matched
-        Card[] pair = gameState.findFirstUnmatchedPair();
-        if (pair == null || pair.length < 2) return;
+        Card firstHintCard = null;
+        Card secondHintCard = null;
+        Card[] cards = gameState.getCards();
+        if (cards == null || cards.length == 0) return;
 
-        final Card fCard = pair[0];
-        final Card sCard = pair[1];
+        for (int i = 0; i < cards.length; i++) {
+            Card c1 = cards[i];
+            if (c1.isMatched()) continue;
+            for (int j = i + 1; j < cards.length; j++) {
+                Card c2 = cards[j];
+                if (c2.isMatched()) continue;
+                if (c1.getPairId().equals(c2.getPairId())) {
+                    firstHintCard = c1;
+                    secondHintCard = c2;
+                    break;
+                }
+            }
+            if (firstHintCard != null) break;
+        }
+
+        if (firstHintCard == null || secondHintCard == null) return;
+
+        final Card fCard = firstHintCard;
+        final Card sCard = secondHintCard;
 
         CardFlipView v1 = viewMap.get(fCard.getId());
         CardFlipView v2 = viewMap.get(sCard.getId());
@@ -1014,7 +1151,7 @@ public class GameController implements Initializable {
         v2.showHighlight(true);
 
         // Lập lịch úp lại sau 2 giây
-        PauseTransition delay = new PauseTransition(Duration.seconds(2));
+        PauseTransition delay = new PauseTransition(Duration.seconds(1));
         delay.setOnFinished(e -> {
             // Úp lại
             fCard.faceDown();
@@ -1032,7 +1169,6 @@ public class GameController implements Initializable {
             // Phát âm thanh lật úp lại
             AudioService.getInstance().playEffect("/assets/sounds/resume.mp3");
         });
-
         delay.play();
     }
 
