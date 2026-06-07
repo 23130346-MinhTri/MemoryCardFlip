@@ -14,20 +14,10 @@ import java.util.ResourceBundle;
  * [UC3 - View result]
  * Controller của màn hình kết quả sau khi người chơi thắng hoặc thua.
  *
- * Controller lấy GameState hiện tại từ SceneManager, đọc các thống kê cuối ván
- * và hiển thị lên result.fxml: trạng thái WIN/LOSE, độ khó, điểm, số lượt,
- * thời gian còn lại, số cặp đã ghép và thông tin high score.
+ * Nâng cấp:
+ * - Đánh giá sao 1–5★ dựa trên thời gian còn lại + độ chính xác
+ * - Gợi ý cải thiện thông minh dựa trên stats ván vừa chơi
  */
-/**
- * <p><b>UC-13 Sequence references:</b></p>
-        * <ul>
- *   <li>13.1.2  — SceneManager tải result.fxml, tạo ResultController và truyền GameState</li>
-        *   <li>13.1.3  — initialize() lấy GameState và gọi loadUCRS01DisplayResult()</li>
-        *   <li>13.1.4  — loadUCRS01DisplayResult() gọi ScoreManager.saveScore(gameState, "Player")</li>
-        *   <li>13.1.9  — Kiểm tra isNewHighScore() và hiển thị "🏆 NEW HIGH SCORE!" nếu phá kỷ lục</li>
-        *   <li>13.1.10 — Màn hình Result hiển thị đầy đủ điểm, lượt, thời gian còn lại</li>
-        * </ul>
-        */
 public class ResultController implements Initializable {
     @FXML private Label lblResultTitle;          // [UC3] Tiêu đề kết quả: YOU WIN hoặc GAME OVER
     @FXML private Label lblDifficultyValue;      // [UC3] Độ khó của ván vừa kết thúc
@@ -37,6 +27,9 @@ public class ResultController implements Initializable {
     @FXML private Label lblPairsValue;           // [UC3] Số cặp đã ghép / tổng số cặp
     @FXML private Label lblNewHighScore;         // [UC3] Hiển thị kỷ lục hoặc điểm cao hiện tại
     @FXML private Label lblSummary;              // [UC3] Câu tổng kết theo kết quả thắng/thua
+    @FXML private Label lblStarRating;           // [UC3 - nâng cấp] Đánh giá sao 1–5★
+    @FXML private Label lblTip;                  // [UC3 - nâng cấp] Gợi ý cải thiện thông minh
+    @FXML private javafx.scene.control.Button btnNextLevel; // [UC4 - nâng cấp] Nút lên level tiếp theo
 
     private GameState gameState;
     private final ScoreManager scoreManager = ScoreManager.getInstance();
@@ -49,22 +42,8 @@ public class ResultController implements Initializable {
     }
 
     /**
-     * [UC-03] Hiển thị kết quả của ván vừa kết thúc.
-     *
-     * <p>Use Case này trình bày kết quả cho người chơi khi ván đã WIN hoặc LOSE.</p>
-     * <p>Precondition: SceneManager đang giữ currentGameState của ván vừa xong.</p>
-     * <p>Postcondition: UI kết quả hiển thị trạng thái WIN/LOSE, điểm số, thời gian và số lượt.</p>
-     */
-    /**
-     * [UC-13 — 13.1.4 → 13.1.10] kết quả điểm và lưu điểm.
-     *
-     * <p><b>Precondition:</b> gameState != null (hoặc null → hiển thị fallback).</p>
-     * <p><b>Postcondition:</b></p>
-     * <ul>
-     *   <li>UI kết quả hiển thị WIN/LOSE, điểm số, số lượt, thời gian, số cặp.</li>
-     *   <li>Điểm đã được lưu vào ScoreManager cache và file JSON.</li>
-     *   <li>Nếu thắng và là kỷ lục mới → lblNewHighScore hiển thị "🏆 Kỷ lục mới!".</li>
-     * </ul>
+     * [UC-03 / UC-13] Hiển thị kết quả của ván vừa kết thúc.
+     * Nâng cấp: thêm đánh giá sao và gợi ý thông minh.
      */
     private void loadUCRS01DisplayResult() {
         if (gameState == null) {
@@ -78,11 +57,13 @@ public class ResultController implements Initializable {
             lblPairsValue.setText("0 / 0");
             lblNewHighScore.setText("---");
             lblSummary.setText("Không tìm thấy dữ liệu ván chơi.");
+            if (lblStarRating != null) lblStarRating.setText("☆☆☆☆☆");
+            if (lblTip != null) lblTip.setText("");
             return;
         }
 
         boolean won = gameState.getStatus() == GameStatus.WON;
-        // [UC3] Chọn tiêu đề và màu style theo trạng thái cuối ván.
+
         lblResultTitle.setText(won ? "🎉 YOU WIN! 🎉" : "💀 GAME OVER 💀");
         lblResultTitle.getStyleClass().setAll("result-title", won ? "result-win" : "result-lose");
 
@@ -96,34 +77,26 @@ public class ResultController implements Initializable {
         lblScoreValue.setText(String.valueOf(score));
         lblMovesValue.setText(String.valueOf(gameState.getMoves()));
 
-        // [UC12] Định dạng thời gian còn lại theo MM:SS để người chơi xem lại kết quả.
         int remaining = gameState.getTimeRemaining();
         lblTimeRemainingValue.setText(String.format("%02d:%02d", remaining / 60, remaining % 60));
 
         int totalPairs = gameState.getDifficulty().totalPairs();
         lblPairsValue.setText(gameState.getMatchedPairs() + " / " + totalPairs);
 
-        // [UC3] Sau khi hiển thị thống kê, chỉ lưu điểm khi ván thắng.
         if (won) {
-            System.out.println("===== SAVING SCORE =====");
-            System.out.println("Matched pairs: " + gameState.getMatchedPairs());
-            System.out.println("Total pairs: " + gameState.getDifficulty().totalPairs());
-            String playerName = "Player";
-            scoreManager.saveScore(gameState, playerName);
+            scoreManager.saveScore(gameState, "Player");
         }
 
-        // [UC3] Chỉ hiển thị phần kỷ lục khi người chơi thắng.
+        // [UC3] High score
         if (won) {
             int bestScore = scoreManager.getBestScore(gameState.getDifficulty());
             boolean isNewHighScore = scoreManager.isNewHighScore(
-                    gameState.getDifficulty(),
-                    gameState.calculateScore()
-            );
+                    gameState.getDifficulty(), gameState.calculateScore());
             if (isNewHighScore) {
                 lblNewHighScore.setText("🏆 " + gameState.calculateScore() + " (Kỷ lục mới!)");
                 lblNewHighScore.setStyle("-fx-text-fill: #ffd700;");
             } else {
-                lblNewHighScore.setText( ""+ bestScore);
+                lblNewHighScore.setText("" + bestScore);
                 lblNewHighScore.setStyle("-fx-text-fill: #7ec8e3;");
             }
         } else {
@@ -131,16 +104,148 @@ public class ResultController implements Initializable {
             lblNewHighScore.setText("---");
         }
 
-        // [UC3] Câu tổng kết cuối màn hình giúp người chơi hiểu kết quả ván.
+        // [UC3 - nâng cấp] Đánh giá sao
+        if (lblStarRating != null) {
+            int stars = calculateStarRating(won, totalPairs);
+            lblStarRating.setText(buildStarString(stars));
+            lblStarRating.setStyle(getStarStyle(stars));
+        }
+
+        // [UC3 - nâng cấp] Gợi ý thông minh
+        if (lblTip != null) {
+            lblTip.setText(buildSmartTip(won, totalPairs));
+        }
+
+        // [UC4 - nâng cấp] Hiện/ẩn nút "Lên Level" dựa trên kết quả và độ khó
+        if (btnNextLevel != null) {
+            com.example.memorycardflip.model.Difficulty nextDiff =
+                    SceneManager.getInstance().getNextDifficulty(gameState.getDifficulty());
+            if (won && nextDiff != null) {
+                btnNextLevel.setVisible(true);
+                btnNextLevel.setText("⬆ " + nextDiff.getDisplayName().toUpperCase());
+            } else {
+                // Thua, hoặc đã ở HARD — ẩn nút
+                btnNextLevel.setVisible(false);
+                btnNextLevel.setManaged(false);
+            }
+        }
+
+        // [UC3] Summary
         lblSummary.setText(won
                 ? "Xuất sắc! Bạn đã hoàn thành " + totalPairs + " cặp thẻ."
                 : "Bạn đã thua vì hết giờ. Cố gắng lần sau nhé!");
     }
 
     /**
+     * [UC3 - nâng cấp] Tính số sao (1–5) dựa trên:
+     * - Thắng/thua
+     * - Tỷ lệ thời gian còn lại (time efficiency)
+     * - Tỷ lệ đúng/sai (move accuracy)
+     */
+    private int calculateStarRating(boolean won, int totalPairs) {
+        if (!won) {
+            // Thua: tối đa 2 sao dựa trên số cặp đã ghép được
+            int matched = gameState.getMatchedPairs();
+            if (matched == 0) return 1;
+            double matchRatio = (double) matched / totalPairs;
+            return matchRatio >= 0.5 ? 2 : 1;
+        }
+
+        int stars = 0;
+
+        // Tiêu chí 1: Thắng = 2 sao cơ bản
+        stars += 2;
+
+        // Tiêu chí 2: Thời gian còn lại ≥ 30% = +1 sao
+        int timeLimit = gameState.getDifficulty().getTimeLimit();
+        double timeRatio = timeLimit > 0 ? (double) gameState.getTimeRemaining() / timeLimit : 0;
+        if (timeRatio >= 0.3) stars++;
+
+        // Tiêu chí 3: Độ chính xác (moves tối thiểu = totalPairs*2)
+        // moves ≤ totalPairs * 2.5 = +1 sao (ít lật lại thừa)
+        int moves = gameState.getMoves();
+        double moveEfficiency = totalPairs > 0 ? (double) (totalPairs * 2) / moves : 0;
+        if (moveEfficiency >= 0.8) stars++;
+
+        return Math.min(5, stars);
+    }
+
+    /** Xây dựng chuỗi sao hiển thị */
+    private String buildStarString(int stars) {
+        return "★".repeat(stars) + "☆".repeat(5 - stars);
+    }
+
+    /** Màu sắc theo số sao */
+    private String getStarStyle(int stars) {
+        return switch (stars) {
+            case 5 -> "-fx-text-fill: #ffd700; -fx-font-size: 28px;";
+            case 4 -> "-fx-text-fill: #f5c842; -fx-font-size: 28px;";
+            case 3 -> "-fx-text-fill: #f59e0b; -fx-font-size: 28px;";
+            case 2 -> "-fx-text-fill: #94a3b8; -fx-font-size: 28px;";
+            default -> "-fx-text-fill: #64748b; -fx-font-size: 28px;";
+        };
+    }
+
+    /**
+     * [UC3 - nâng cấp] Gợi ý cải thiện thông minh dựa trên stats thực tế.
+     * Phân tích điểm yếu cụ thể thay vì text cố định.
+     */
+    private String buildSmartTip(boolean won, int totalPairs) {
+        if (!won) {
+            int matched = gameState.getMatchedPairs();
+            int remaining = totalPairs - matched;
+            if (matched == 0) {
+                return "💡 Còn " + remaining + " cặp chưa ghép. Hãy thử độ khó dễ hơn trước!";
+            }
+            return "💡 Bạn đã ghép được " + matched + "/" + totalPairs
+                    + " cặp. Thêm " + remaining + " cặp nữa là xong — tăng thêm thời gian nào!";
+        }
+
+        // Phân tích từng chỉ số
+        int moves = gameState.getMoves();
+        int minMoves = totalPairs * 2;
+        int wrongMoves = moves - minMoves;
+
+        int timeLimit = gameState.getDifficulty().getTimeLimit();
+        int timeUsed = timeLimit - gameState.getTimeRemaining();
+        double timeRatio = timeLimit > 0 ? (double) timeUsed / timeLimit : 1;
+
+        int combo = gameState.getComboCount();
+
+        // Ưu tiên gợi ý theo vấn đề nổi bật nhất
+        if (wrongMoves >= totalPairs) {
+            return "💡 Bạn lật sai " + wrongMoves + " lần! Hãy ghi nhớ vị trí thẻ tốt hơn.";
+        }
+        if (timeRatio > 0.85) {
+            return "💡 Bạn dùng " + (int)(timeRatio * 100) + "% thời gian. Thử lật nhanh hơn nhé!";
+        }
+        if (combo < 3) {
+            return "💡 Combo cao nhất của bạn là x" + combo + ". Ghép liên tiếp để nhân điểm!";
+        }
+        // Nếu chơi tốt
+        if (wrongMoves <= 2 && timeRatio < 0.5) {
+            return "🏆 Hoàn hảo! Chỉ " + wrongMoves + " lần sai và còn " +
+                    (int)((1 - timeRatio) * 100) + "% thời gian. Thử khó hơn đi!";
+        }
+        return "✨ Chơi tốt lắm! Còn " + gameState.getTimeRemaining() + " giây dư.";
+    }
+
+    /**
+     * [UC4 - nâng cấp] Chơi lại với độ khó tiếp theo (progressive mode).
+     * Chỉ hiển thị khi người chơi vừa thắng và chưa ở độ khó HARD.
+     */
+    @FXML
+    public void onUCRS04NextLevel() {
+        if (gameState == null) return;
+        com.example.memorycardflip.model.Difficulty nextDiff =
+                SceneManager.getInstance().getNextDifficulty(gameState.getDifficulty());
+        if (nextDiff != null) {
+            SceneManager.getInstance().replayWithDifficulty(nextDiff);
+        }
+    }
+
+    /**
      * [UC4 - Play again] Chơi lại cùng độ khó hiện tại từ màn kết quả.
-     *
-     * <p>Postcondition: SceneManager tạo GameState mới và mở lại GameScene với cùng difficulty.</p>
      */
     @FXML
     public void onUCRS02Replay() {
@@ -150,8 +255,6 @@ public class ResultController implements Initializable {
 
     /**
      * [UC-RS-03] Quay lại menu chính.
-     *
-     * <p>Postcondition: Main menu hiển thị, game state hiện tại được dọn.</p>
      */
     @FXML
     public void onUCRS03BackToMenu() {

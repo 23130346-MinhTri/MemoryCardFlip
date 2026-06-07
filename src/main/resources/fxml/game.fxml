@@ -149,6 +149,11 @@
                         text="💡 Gợi ý (3)"
                         onAction="#onHintClick"
                         styleClass="hint-btn"/>
+                <!-- [UC12 - nâng cấp] Nút +10 giây dùng 1 lần/ván, trừ 50 điểm -->
+                <Button fx:id="btnExtraTime"
+                        text="+10s"
+                        onAction="#onExtraTimeClick"
+                        styleClass="extra-time-btn"/>
                 <Button fx:id="btnPause"
                         text="⏸ Tạm dừng"
                         onAction="#onTogglePause"

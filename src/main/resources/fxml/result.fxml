@@ -30,6 +30,13 @@
                maxWidth="Infinity"
                alignment="CENTER"/>
 
+        <!-- [UC3 - nâng cấp] Đánh giá sao 1–5★ -->
+        <Label fx:id="lblStarRating"
+               text="☆☆☆☆☆"
+               styleClass="star-rating"
+               maxWidth="Infinity"
+               alignment="CENTER"/>
+
         <!-- [UC3] Khung thống kê chi tiết lấy dữ liệu từ GameState trong ResultController -->
         <VBox spacing="16"
               alignment="CENTER"
@@ -79,12 +86,25 @@
                wrapText="true"
                alignment="CENTER"/>
 
+        <!-- [UC3 - nâng cấp] Gợi ý cải thiện thông minh -->
+        <Label fx:id="lblTip"
+               text=""
+               styleClass="tip-text"
+               wrapText="true"
+               alignment="CENTER"/>
+
         <!-- [UC3][UC4] Các nút hành động sau khi xem kết quả -->
-        <HBox alignment="CENTER" spacing="20">
+        <HBox alignment="CENTER" spacing="12">
             <!-- [UC4] Chơi lại cùng độ khó của ván vừa kết thúc -->
             <Button text="CHƠI LẠI"
                     onAction="#onUCRS02Replay"
                     styleClass="primary-btn"/>
+
+            <!-- [UC4 - nâng cấp] Lên độ khó tiếp theo (progressive mode) -->
+            <Button fx:id="btnNextLevel"
+                    text="⬆ LÊN LEVEL"
+                    onAction="#onUCRS04NextLevel"
+                    styleClass="next-level-btn"/>
 
             <Button text="VỀ MENU"
                     onAction="#onUCRS03BackToMenu"
