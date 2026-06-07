@@ -63,6 +63,8 @@ public class GameController implements Initializable {
     @FXML private ProgressBar timeProgressBar;  // [UC12] Thanh tiến trình giảm dần theo timeRemaining
     @FXML private Label       lblStatus;
     @FXML private Button      btnPause;
+    @FXML private Button      btnHint;
+
     // =============== THÊM CÁC FXML BINDING MỚI ===============
     @FXML private Label lblScore;      // Hiển thị điểm số
     @FXML private Label lblMoves;      // Hiển thị số lượt di chuyển
@@ -227,8 +229,8 @@ public class GameController implements Initializable {
         // Tính toán số cặp thẻ dựa trên độ khó
         totalPairs   = difficulty.totalPairs();
 
-        
-            // [11.2.1] Khi chơi lại, ẩn combo notification để không giữ trạng thái cũ.
+
+        // [11.2.1] Khi chơi lại, ẩn combo notification để không giữ trạng thái cũ.
         if (comboNotification != null) {
             comboNotification.hide();
         }
@@ -270,6 +272,12 @@ public class GameController implements Initializable {
             btnPause.setText(tr("button.pause"));  // Nút Pause
             btnPause.setDisable(false);  // Kích hoạt nút
         }
+
+        if (btnHint != null) {
+            btnHint.setText("💡 Gợi ý (3)");
+            btnHint.setDisable(false);
+        }
+
 
         if (lblCombo != null) {
             lblCombo.setText("x0");  // Combo counter bắt đầu từ 0
@@ -463,8 +471,12 @@ public class GameController implements Initializable {
                 firstCard.match();
                 secondCard.match();
 
+                // Phát âm thanh ghép đúng
+                AudioService.getInstance().playEffect("/assets/sounds/game-bonus.mp3");
 
-                
+
+
+
                 // 9.2.5: [11.1.9-11.1.10]  Cập nhật HUD (điểm, combo, moves)
                 updateHUD();
 
@@ -490,7 +502,7 @@ public class GameController implements Initializable {
                     } catch (Exception ignored) {
                     }
                 }
-                
+
 
                 // 9.2.7: PauseTransition(280ms) để hiển thị hiệu ứng matched
                 PauseTransition pause = new PauseTransition(Duration.millis(280));
@@ -898,7 +910,6 @@ public class GameController implements Initializable {
         if (lblStatus != null) lblStatus.setText(tr("status.resume"));
         if (btnPause != null) btnPause.setText(tr("button.pause"));
         AudioService.getInstance().resumeBGM();
-        AudioService.getInstance().playEffect("/assets/sounds/resume.mp3");
     }
     /**
      * Tạo overlay tạm dừng với nút Resume bên trong.
@@ -925,6 +936,98 @@ public class GameController implements Initializable {
         // [UC4] Nút "Chơi lại" ngay trong GameScene: dựng lại bàn chơi hiện tại.
         javafx.application.Platform.runLater(this::startBoard);
     }
+    @FXML
+    private void onHintClick() {
+        if (gameState == null || gameState.getStatus() != GameStatus.PLAYING || gameState.isResolving()) {
+            return;
+        }
+        if (gameState.getHintCount() <= 0) {
+            if (btnHint != null) btnHint.setDisable(true);
+            return;
+        }
+
+        // Tìm một cặp thẻ chưa matched
+        Card firstHintCard = null;
+        Card secondHintCard = null;
+        Card[] cards = gameState.getCards();
+        if (cards == null || cards.length == 0) return;
+
+        for (int i = 0; i < cards.length; i++) {
+            Card c1 = cards[i];
+            if (c1.isMatched()) continue;
+            for (int j = i + 1; j < cards.length; j++) {
+                Card c2 = cards[j];
+                if (c2.isMatched()) continue;
+                if (c1.getPairId().equals(c2.getPairId())) {
+                    firstHintCard = c1;
+                    secondHintCard = c2;
+                    break;
+                }
+            }
+            if (firstHintCard != null) break;
+        }
+
+        if (firstHintCard == null || secondHintCard == null) return;
+
+        final Card fCard = firstHintCard;
+        final Card sCard = secondHintCard;
+
+        CardFlipView v1 = viewMap.get(fCard.getId());
+        CardFlipView v2 = viewMap.get(sCard.getId());
+        if (v1 == null || v2 == null) return;
+
+        // Khóa tương tác
+        gameState.setResolving(true);
+
+        // Giảm số lượt gợi ý và tính điểm phạt
+        gameState.useHint();
+
+        // Cập nhật giao diện nút Hint
+        if (btnHint != null) {
+            btnHint.setText("💡 Gợi ý (" + gameState.getHintCount() + ")");
+            if (gameState.getHintCount() <= 0) {
+                btnHint.setDisable(true);
+            }
+        }
+
+        // Cập nhật điểm HUD
+        updateHUD();
+
+        // Phát nhạc hiệu ứng lật lên
+        AudioService.getInstance().playEffect("/assets/sounds/resume.mp3");
+
+        // Lật ngửa 2 thẻ
+        fCard.flip();
+        sCard.flip();
+        v1.showFront(fCard.getSymbol(), fCard.getImageURL());
+        v2.showFront(sCard.getSymbol(), sCard.getImageURL());
+
+        // Highlight 2 thẻ gợi ý
+        v1.showHighlight(true);
+        v2.showHighlight(true);
+
+        // Lập lịch úp lại sau 2 giây
+        PauseTransition delay = new PauseTransition(Duration.seconds(1));
+        delay.setOnFinished(e -> {
+            // Úp lại
+            fCard.faceDown();
+            sCard.faceDown();
+            v1.showBack();
+            v2.showBack();
+
+            // Tắt highlight
+            v1.showHighlight(false);
+            v2.showHighlight(false);
+
+            // Mở khóa tương tác
+            gameState.setResolving(false);
+
+            // Phát âm thanh lật úp lại
+            AudioService.getInstance().playEffect("/assets/sounds/resume.mp3");
+        });
+        delay.play();
+    }
+
     @FXML
     public void onBackToMenu() {
         stopTimer();

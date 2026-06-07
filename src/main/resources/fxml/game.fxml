@@ -141,6 +141,10 @@
                 <padding>
                     <Insets top="6" bottom="10" left="16" right="16"/>
                 </padding>
+                <Button fx:id="btnHint"
+                        text="💡 Gợi ý (3)"
+                        onAction="#onHintClick"
+                        styleClass="hint-btn"/>
                 <Button fx:id="btnPause"
                         text="⏸ Tạm dừng"
                         onAction="#onTogglePause"
