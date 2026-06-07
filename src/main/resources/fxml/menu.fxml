@@ -30,7 +30,7 @@
                 <!-- Mini card row -->
                 <HBox alignment="CENTER" spacing="10" styleClass="card-icon-row">
                     <Label text="🌙" styleClass="mini-card"/>
-                    <Label text="⭐" styleClass="mini-card mini-card-lg"/>
+                    <Label text="⭐" styleClass="mini-card, mini-card-lg"/>
                     <Label text="🔮" styleClass="mini-card"/>
                     <Label text="🎯" styleClass="mini-card"/>
                     <Label text="🦋" styleClass="mini-card"/>
@@ -44,15 +44,15 @@
             <HBox alignment="CENTER" spacing="10" styleClass="highscore-bar">
                 <VBox alignment="CENTER" spacing="4" styleClass="hs-card">
                     <Label text="EASY" styleClass="hs-label"/>
-                    <Label fx:id="scoreEasy" text="0" styleClass="hs-value hs-easy"/>
+                    <Label fx:id="scoreEasy" text="0" styleClass="hs-value, hs-easy"/>
                 </VBox>
                 <VBox alignment="CENTER" spacing="4" styleClass="hs-card">
                     <Label text="MEDIUM" styleClass="hs-label"/>
-                    <Label fx:id="scoreMedium" text="0" styleClass="hs-value hs-medium"/>
+                    <Label fx:id="scoreMedium" text="0" styleClass="hs-value, hs-medium"/>
                 </VBox>
                 <VBox alignment="CENTER" spacing="4" styleClass="hs-card">
                     <Label text="HARD" styleClass="hs-label"/>
-                    <Label fx:id="scoreHard" text="0" styleClass="hs-value hs-hard"/>
+                    <Label fx:id="scoreHard" text="0" styleClass="hs-value, hs-hard"/>
                 </VBox>
             </HBox>
 
@@ -64,51 +64,51 @@
 
                 <!-- Easy -->
                 <Button fx:id="btnEasy"
-                    onAction="#onStartEasy"
-                        styleClass="diff-btn btn-easy"
+                    onAction="#onSelectDifficultyEasy"
+                        styleClass="diff-btn, btn-easy"
                         maxWidth="320">
                     <graphic>
                         <HBox alignment="CENTER_LEFT" spacing="14">
-                            <Label text="🍀" styleClass="btn-icon btn-icon-easy"/>
+                            <Label text="🍀" styleClass="btn-icon, btn-icon-easy"/>
                             <VBox spacing="2" HBox.hgrow="ALWAYS">
-                                <Label text="Easy" styleClass="btn-name btn-name-easy"/>
-                                <Label text="4×4 · 8 cặp · 30 giây" styleClass="btn-desc"/>
+                                <Label text="Easy" styleClass="btn-name, btn-name-easy"/>
+                                <Label text="4×4 · 8 cặp · 60 giây" styleClass="btn-desc"/>
                             </VBox>
-                            <Label text="Dễ" styleClass="btn-badge btn-badge-easy"/>
+                            <Label text="Dễ" styleClass="btn-badge, btn-badge-easy"/>
                         </HBox>
                     </graphic>
                 </Button>
 
                 <!-- Medium -->
                 <Button fx:id="btnMedium"
-                    onAction="#onStartMedium"
-                        styleClass="diff-btn btn-medium"
+                    onAction="#onSelectDifficultyMedium"
+                        styleClass="diff-btn, btn-medium"
                         maxWidth="320">
                     <graphic>
                         <HBox alignment="CENTER_LEFT" spacing="14">
-                            <Label text="🔥" styleClass="btn-icon btn-icon-medium"/>
+                            <Label text="🔥" styleClass="btn-icon, btn-icon-medium"/>
                             <VBox spacing="2" HBox.hgrow="ALWAYS">
-                                <Label text="Medium" styleClass="btn-name btn-name-medium"/>
-                                <Label text="6×6 · 18 cặp · 60 giây" styleClass="btn-desc"/>
+                                <Label text="Medium" styleClass="btn-name, btn-name-medium"/>
+                                <Label text="6×6 · 18 cặp · 90 giây" styleClass="btn-desc"/>
                             </VBox>
-                            <Label text="Vừa" styleClass="btn-badge btn-badge-medium"/>
+                            <Label text="Vừa" styleClass="btn-badge, btn-badge-medium"/>
                         </HBox>
                     </graphic>
                 </Button>
 
                 <!-- Hard -->
                 <Button fx:id="btnHard"
-                    onAction="#onStartHard"
-                        styleClass="diff-btn btn-hard"
+                    onAction="#onSelectDifficultyHard"
+                        styleClass="diff-btn, btn-hard"
                         maxWidth="320">
                     <graphic>
                         <HBox alignment="CENTER_LEFT" spacing="14">
-                            <Label text="💀" styleClass="btn-icon btn-icon-hard"/>
+                            <Label text="💀" styleClass="btn-icon, btn-icon-hard"/>
                             <VBox spacing="2" HBox.hgrow="ALWAYS">
-                                <Label text="Hard" styleClass="btn-name btn-name-hard"/>
-                                <Label text="8×8 · 32 cặp · 90 giây" styleClass="btn-desc"/>
+                                <Label text="Hard" styleClass="btn-name, btn-name-hard"/>
+                                <Label text="8×8 · 32 cặp · 120 giây" styleClass="btn-desc"/>
                             </VBox>
-                            <Label text="Khó" styleClass="btn-badge btn-badge-hard"/>
+                            <Label text="Khó" styleClass="btn-badge, btn-badge-hard"/>
                         </HBox>
                     </graphic>
                 </Button>

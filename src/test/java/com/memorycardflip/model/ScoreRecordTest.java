@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @DisplayName("ScoreRecord Tests")
 class ScoreRecordTest {
-
+    
     // ── Constructor / Compact constructor ─────────────────────
 
     @Nested
@@ -24,12 +24,12 @@ class ScoreRecordTest {
         void shouldCreateValidRecord() {
             ScoreRecord r = ScoreRecord.of("Minh", Difficulty.EASY, 500, 10, 25L);
             assertAll(
-                    () -> assertEquals("Minh",         r.playerName()),
-                    () -> assertEquals(Difficulty.EASY, r.difficulty()),
-                    () -> assertEquals(500,             r.score()),
-                    () -> assertEquals(10,              r.moves()),
-                    () -> assertEquals(25L,             r.timeUsed()),
-                    () -> assertNotNull(r.timestamp())
+                    () -> assertEquals("Minh",         r.getPlayerName()),
+                    () -> assertEquals(Difficulty.EASY, r.getDifficulty()),
+                    () -> assertEquals(500,             r.getScore()),
+                    () -> assertEquals(10,              r.getMoves()),
+                    () -> assertEquals(25L,             r.getTimeUsed()),
+                    () -> assertNotNull(r.getTimestamp())
             );
         }
 
@@ -37,14 +37,14 @@ class ScoreRecordTest {
         @DisplayName("playerName null → mặc định 'Anonymous'")
         void nullPlayerNameShouldDefaultToAnonymous() {
             ScoreRecord r = ScoreRecord.of(null, Difficulty.EASY, 100, 5, 10L);
-            assertEquals("Anonymous", r.playerName());
+            assertEquals("Anonymous", r.getPlayerName());
         }
 
         @Test
         @DisplayName("playerName blank → mặc định 'Anonymous'")
         void blankPlayerNameShouldDefaultToAnonymous() {
             ScoreRecord r = ScoreRecord.of("   ", Difficulty.EASY, 100, 5, 10L);
-            assertEquals("Anonymous", r.playerName());
+            assertEquals("Anonymous", r.getPlayerName());
         }
 
         @Test
@@ -72,12 +72,21 @@ class ScoreRecordTest {
         @DisplayName("timestamp null → tự set Instant.now()")
         void nullTimestampShouldDefaultToNow() {
             ScoreRecord r = new ScoreRecord("A", Difficulty.EASY, 100, 5, 10L, null);
-            assertNotNull(r.timestamp());
+            assertNotNull(r.getTimestamp());
         }
     }
 
     // ── fromGameState() ───────────────────────────────────────
 
+    /**
+     * Tests for `fromGameState()` conversion.
+     *
+     * Verifies that `ScoreRecord.fromGameState()` correctly computes
+     * `timeUsed`, `moves` and produces a positive `score` based on the
+     * completed `GameState`. Note: combo/streak bonuses are applied in the
+     * scoring logic (covered by `GameState` tests); this test ensures the
+     * leaderboard record reflects those derived scoring values.
+     */
     @Nested
     @DisplayName("fromGameState()")
     class FromGameStateTests {
@@ -86,18 +95,23 @@ class ScoreRecordTest {
         @DisplayName("Tạo đúng từ GameState hoàn chỉnh")
         void shouldCreateFromCompletedGameState() {
             GameState state = new GameState(Difficulty.EASY);
-            state.setMatchedPairs(8);
-            state.setMoves(15);
+            for (int i = 0; i < Difficulty.EASY.totalPairs(); i++) {
+                state.incrementMatchedPairs();
+            }
+            for (int i = 0; i < 15; i++) {
+                state.incrementMoves();
+            }
+
             state.setTimeRemaining(20); // 60 - 20 = 40s đã dùng
 
             ScoreRecord r = ScoreRecord.fromGameState("Nam", state);
 
             assertAll(
-                    () -> assertEquals("Nam",          r.playerName()),
-                    () -> assertEquals(Difficulty.EASY, r.difficulty()),
-                    () -> assertEquals(40L,             r.timeUsed()),
-                    () -> assertEquals(15,              r.moves()),
-                    () -> assertTrue(r.score() > 0)
+                    () -> assertEquals("Nam",          r.getPlayerName()),
+                    () -> assertEquals(Difficulty.EASY, r.getDifficulty()),
+                    () -> assertEquals(40L,             r.getTimeUsed()),
+                    () -> assertEquals(15,              r.getMoves()),
+                    () -> assertTrue(r.getScore() > 0)
             );
         }
     }

@@ -2,67 +2,78 @@ package com.example.memorycardflip.model;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
 
-import java.io.*;
+import java.io.Reader;
+import java.io.Writer;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Implementation lưu điểm dưới dạng file JSON.
- */
 public class JsonScoreStorage implements ScoreStorage {
 
-    private static final String DATA_DIR = ".memorycardflip";
-    private static final String FILE_NAME = "scores.json";
+    private static final Gson GSON = new GsonBuilder()
+            .registerTypeAdapter(
+                    Instant.class,
+                    (JsonSerializer<Instant>)
+                            (src, type, ctx) ->
+                                    new JsonPrimitive(src.toEpochMilli()))
+            .registerTypeAdapter(
+                    Instant.class,
+                    (JsonDeserializer<Instant>)
+                            (json, type, ctx) ->
+                                    Instant.ofEpochMilli(json.getAsLong()))
+            .create();
 
-    private final Path filePath;
-    private final Gson gson;
+    private final Path saveFile;
 
     public JsonScoreStorage() {
-        this.gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .create();
+        this(Path.of(
+                System.getProperty("user.home"),
+                ".memorycardflip",
+                "scores.json"
+        ));
+    }
 
-        String userHome = System.getProperty("user.home");
-        Path dataDir = Paths.get(userHome, DATA_DIR);
-
-        try {
-            if (!Files.exists(dataDir)) {
-                Files.createDirectories(dataDir);
-            }
-            this.filePath = dataDir.resolve(FILE_NAME);
-        } catch (IOException e) {
-            throw new RuntimeException("Không thể tạo thư mục dữ liệu: " + dataDir, e);
-        }
+    public JsonScoreStorage(Path saveFile) {
+        this.saveFile = saveFile;
     }
 
     @Override
     public void save(List<ScoreRecord> records) throws Exception {
-        try (Writer writer = new FileWriter(filePath.toFile())) {
-            gson.toJson(records, writer);
+
+        Files.createDirectories(saveFile.getParent());
+
+        try (Writer writer = Files.newBufferedWriter(saveFile)) {
+            GSON.toJson(records, writer);
         }
     }
 
     @Override
     public List<ScoreRecord> load() throws Exception {
-        if (!Files.exists(filePath)) {
+
+        if (!Files.exists(saveFile)) {
             return new ArrayList<>();
         }
 
-        try (Reader reader = new FileReader(filePath.toFile())) {
-            Type listType = new TypeToken<List<ScoreRecord>>() {}.getType();
-            List<ScoreRecord> records = gson.fromJson(reader, listType);
-            return records != null ? records : new ArrayList<>();
-        }
-    }
+        try (Reader reader = Files.newBufferedReader(saveFile)) {
 
-    public Path getFilePath() {
-        return filePath;
+            Type listType =
+                    new TypeToken<List<ScoreRecord>>() {
+                    }.getType();
+
+            List<ScoreRecord> result =
+                    GSON.fromJson(reader, listType);
+
+            return result != null
+                    ? result
+                    : new ArrayList<>();
+        }
     }
 }

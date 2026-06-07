@@ -36,6 +36,7 @@ public class ResultController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        // [UC3] Nhận lại GameState của ván vừa kết thúc trước khi render màn kết quả.
         gameState = SceneManager.getInstance().getCurrentGameState();
         loadUCRS01DisplayResult();
     }
@@ -46,6 +47,7 @@ public class ResultController implements Initializable {
      */
     private void loadUCRS01DisplayResult() {
         if (gameState == null) {
+            // [UC3] Trường hợp phòng vệ: không có GameState thì hiển thị kết quả rỗng.
             lblResultTitle.setText("KẾT QUẢ");
             lblResultTitle.getStyleClass().setAll("result-title", "result-lose");
             lblDifficultyValue.setText("-");
@@ -65,10 +67,12 @@ public class ResultController implements Initializable {
         lblResultTitle.setText(won ? "🎉 YOU WIN! 🎉" : "💀 GAME OVER 💀");
         lblResultTitle.getStyleClass().setAll("result-title", won ? "result-win" : "result-lose");
 
+        // [UC3] Hiển thị độ khó kèm kích thước lưới để người chơi biết ván vừa chơi.
         lblDifficultyValue.setText(gameState.getDifficulty().getDisplayName() +
                 " (" + gameState.getDifficulty().getGridSize() + "×" +
                 gameState.getDifficulty().getGridSize() + ")");
 
+        // [UC3] Lấy thống kê chính từ GameState và đổ lên các label trong result.fxml.
         int score = gameState.calculateScore();
         lblScoreValue.setText(String.valueOf(score));
         lblMovesValue.setText(String.valueOf(gameState.getMoves()));
@@ -96,6 +100,7 @@ public class ResultController implements Initializable {
                 lblNewHighScore.setStyle("-fx-text-fill: #7ec8e3;");
             }
         } else {
+            // [13.2.2] Người chơi thua → không hiển thị New High Score
             lblNewHighScore.setText("---");
         }
 
@@ -244,6 +249,7 @@ public class ResultController implements Initializable {
      */
     @FXML
     public void onUCRS02Replay() {
+        // [UC4] Người chơi bấm "CHƠI LẠI" sau khi xem kết quả.
         SceneManager.getInstance().replayGame();
     }
 
@@ -252,6 +258,7 @@ public class ResultController implements Initializable {
      */
     @FXML
     public void onUCRS03BackToMenu() {
+        // [UC3] Rời màn kết quả và quay lại menu chính.
         SceneManager.getInstance().showMenu();
     }
 }

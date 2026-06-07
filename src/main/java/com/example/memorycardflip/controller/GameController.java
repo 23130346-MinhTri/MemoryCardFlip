@@ -270,6 +270,7 @@ public class GameController implements Initializable {
             btnExtraTime.setText("+10s");
             btnExtraTime.setOpacity(1.0);
         }
+
         if (lblScore != null) {
             lblScore.setText(tr("default.score"));  // Vd: "0"
         }
@@ -731,7 +732,6 @@ public class GameController implements Initializable {
             if (lblTime != null) lblTime.setStyle("");
         }
     }
-
     /**
      * [UC12 - nâng cấp] Đổi màu progress bar theo 3 ngưỡng:
      * Xanh (>50%) → Vàng (20%-50%) → Đỏ (<20%).
@@ -781,7 +781,6 @@ public class GameController implements Initializable {
             lblStatus.setText(tr("timer.warning", remaining));
         }
     }
-
     /**
      * [UC12 - nâng cấp] Bắt đầu animation nhấp nháy đỏ/trắng cho lblTime.
      * Chạy liên tục cho đến khi stopBlinkAnimation() được gọi.

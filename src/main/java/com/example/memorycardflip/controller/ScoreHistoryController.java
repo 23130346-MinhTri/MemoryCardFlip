@@ -2,14 +2,10 @@ package com.example.memorycardflip.controller;
 
 import com.example.memorycardflip.model.Difficulty;
 import com.example.memorycardflip.model.ScoreRecord;
-import com.example.memorycardflip.controller.ScoreManager;
 import com.example.memorycardflip.ui.SceneManager;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.beans.binding.Bindings;
 
 import java.net.URL;
 import java.util.List;
@@ -23,6 +19,7 @@ public class ScoreHistoryController implements Initializable {
     @FXML private TableColumn<ScoreRecord, Integer> colScore;
     @FXML private TableColumn<ScoreRecord, Integer> colMoves;
     @FXML private TableColumn<ScoreRecord, String> colTimeUsed;
+    @FXML private ComboBox<Difficulty> comboDifficulty;
     @FXML private ComboBox<String> comboFilter;
     @FXML private Label lblTotalGames;
 
@@ -40,16 +37,16 @@ public class ScoreHistoryController implements Initializable {
                 new javafx.beans.property.SimpleStringProperty(cellData.getValue().formattedTimestamp()));
 
         colDifficulty.setCellValueFactory(cellData ->
-                new javafx.beans.property.SimpleStringProperty(cellData.getValue().difficulty().getDisplayName()));
+                new javafx.beans.property.SimpleStringProperty(cellData.getValue().getDifficulty().getDisplayName()));
 
         colScore.setCellValueFactory(cellData ->
                 javafx.beans.binding.Bindings.createObjectBinding(
-                        () -> cellData.getValue().score()
+                        () -> cellData.getValue().getScore()
                 ));
 
         colMoves.setCellValueFactory(cellData ->
                 javafx.beans.binding.Bindings.createObjectBinding(
-                        () -> cellData.getValue().moves()
+                        () -> cellData.getValue().getMoves()
                 ));
 
         colTimeUsed.setCellValueFactory(cellData ->
@@ -62,6 +59,11 @@ public class ScoreHistoryController implements Initializable {
         comboFilter.setOnAction(e -> filterHistory());
     }
 
+    /**
+     * [UC-06] Tải toàn bộ lịch sử điểm từ ScoreManager.
+     *
+     * <p>Postcondition: bảng lịch sử được điền đầy đủ dữ liệu và tổng số ván được cập nhật.</p>
+     */
     private void loadAllHistory() {
         List<ScoreRecord> allScores = scoreManager.getAllScores();
         tableView.getItems().setAll(allScores);
@@ -77,13 +79,31 @@ public class ScoreHistoryController implements Initializable {
         } else {
             Difficulty diff = Difficulty.valueOf(filter);
             List<ScoreRecord> filtered = allScores.stream()
-                    .filter(r -> r.difficulty() == diff)
+                    .filter(r -> r.getDifficulty() == diff)
                     .toList();
             tableView.getItems().setAll(filtered);
         }
         lblTotalGames.setText("Tổng số ván: " + tableView.getItems().size());
     }
+    /**
+     * [UC-06] Xác nhận và xóa toàn bộ lịch sử điểm.
+     *
+     * <p>Use Case này yêu cầu người chơi xác nhận trước khi xóa điểm vĩnh viễn.</p>
+     */
+    @FXML
+    public void onClearAll() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Xóa điểm");
+        alert.setHeaderText("Xóa tất cả điểm số?");
+        alert.setContentText("Hành động này không thể hoàn tác!");
 
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                scoreManager.clearAllScores();
+                loadAllHistory();
+            }
+        });
+    }
     @FXML
     public void onBackToMenu() {
         SceneManager.getInstance().showMenu();
